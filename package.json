@@ -1,0 +1,14 @@
+{
+  "name": "freesee",
+  "version": "0.0.1",
+  "description": "Simple door opener and user managment system",
+  "bin": "server.js",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "node-getopt": "^0.2.3",
+    "querystring": "^0.2.0",
+    "sqlite": "^2.8.0"
+  }
+}
