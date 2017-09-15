@@ -1,0 +1,41 @@
+
+body {
+	margin: 0;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	> .main-bar {
+		flex: 1 1 100%;
+		display: flex;
+		flex-flow: row;
+		position: relative;
+		overflow-x: auto;
+
+		> .main-panel {
+			flex: 1 1 100%;
+			background-color: lightgrey;
+			display: flex;
+			flex-direction: row;
+			position: relative;
+
+			> * {
+				flex: 1;
+			}
+		}
+	}
+
+	> .footer {
+		background-color: yellow;
+	}
+}
+
+/* === Utilities === */
+
+.dropdown-menu > li {
+	padding: 0 10px;
+}
+
+.disabled {
+	color: grey;
+}

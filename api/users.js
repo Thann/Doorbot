@@ -6,7 +6,8 @@ var error = require('../lib/errors');
 var helpers = require('../lib/helpers');
 
 module.exports = function(app) {
-	app.get("/auth", auth);
+	//app.get("/auth", auth);
+	app.post("/auth", auth);
 	app.post("/users", create);
 	app.get("/users/:id", read);
 	app.patch("/users/:id", update);
@@ -14,19 +15,26 @@ module.exports = function(app) {
 }
 
 async function auth(request, response) {
-	console.log("AUTH:", request.query)
-	if (!request.query.username || !request.query.password) {
+	//console.log("AUTH:", request.query)
+	console.log("AUTH:", request.body)
+	//if (!request.query.username || !request.query.password) {
+	if (!request.body.username || !request.body.password) {
 		response.writeHead(400);
 		response.write("username and password are required.");
 		return response.end();
 	}
-	user = await db.get("SELECT * FROM users where username = ?", request.query.username)
+	//user = await db.get("SELECT * FROM users where username = ?", request.query.username)
+	user = await db.get("SELECT * FROM users where username = ?", request.body.username)
+	password = request.body.password
 	// console.log("RES:",user)
 	if (user) {
 		console.log("HX",
-			crypto.createHash("sha256", user.pw_salt||'').update(request.query.password).digest('hex'))
-		if ((!user.pw_salt && request.query.password == user.password_hash) ||
-				(crypto.createHash("sha256", user.pw_salt).update(request.query.password).digest('hex') == user.password_hash)) {
+			//crypto.createHash("sha256", user.pw_salt||'').update(request.query.password).digest('hex'))
+			crypto.createHash("sha256", user.pw_salt||'').update(password).digest('hex'))
+		//if ((!user.pw_salt && request.query.password == user.password_hash) ||
+				//(crypto.createHash("sha256", user.pw_salt).update(request.query.password).digest('hex') == user.password_hash)) {
+		if ((!user.pw_salt && password == user.password_hash) ||
+				(crypto.createHash("sha256", user.pw_salt).update(password).digest('hex') == user.password_hash)) {
 
 			var sesh = crypto.createHash("sha256").update(Math.random().toString()).digest('hex')
 			await db.run("UPDATE users SET session_cookie = ? WHERE id = ?", sesh, user.id)
@@ -103,7 +111,7 @@ async function update(request, response) {
 	// 	return response.end();
 	// }
 
-	user = await helpers.check_cookie(request, response, request.parmms.id)
+	user = await helpers.check_cookie(request, response, request.params.id)
 	console.log("USER", user)
 	if (!user.admin) {
 		response.writeHead(403);
@@ -111,7 +119,6 @@ async function update(request, response) {
 		response.end();
 		return;
 	}
-
 
 	// var salt = crypto.createHash("sha256").update(Math.random().toString()).digest('hex');
 	var pw = crypto.createHash("sha256").update(Math.random().toString()).digest('hex').substring(1, 15);
