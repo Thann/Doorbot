@@ -11,7 +11,7 @@ module.exports = {
 	},
 	resolve: { alias: {
 		app: __dirname + '/webapp',
-		utils: 'app/utils',
+		models: 'app/models',
 		styles: 'app/styles',
 	} },
 	plugins: [

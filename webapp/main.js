@@ -3,8 +3,6 @@
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js');
 
-// require('utils/rivets_extensions.js');
-
 // Load all views in an extensible way.
 // "views/sample_view.js" becomes "views.SampleView".
 var views = load_module(require.context('app/views', true, /\.js$/));
@@ -15,14 +13,11 @@ module.exports = {
 	Views: views,
 	AppConfig: require('app/config.json'),
 
-	// Core Services
-	UserService: require('utils/user_service.js'),
-
 	// Run this after extensions have been loaded.
 	init: function() {
 		var self = this;
 		$(document).ready(function() {
-			(new self.Views.Layout()).render();
+			self.Layout = new self.Views.Layout();
 		});
 	}
 };

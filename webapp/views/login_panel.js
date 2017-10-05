@@ -1,11 +1,9 @@
-// WelcomePanel
+// LoginPanel
 
-require('styles/welcome_panel.css');
-
-var UserService = require('utils/user_service.js');
+require('styles/login_panel.css');
 
 module.exports = Backbone.View.extend({
-	id: 'WelcomePanel',
+	id: 'LoginPanel',
 	template: `<h2>Welcome To Doorbot <span rv-if="scope.OrgName"> for { scope.OrgName }</span>!</h2>
 		<h4>
 			An <a href="https://github.com/thann/doorbot" target="_blank" rel="nofollow">open source</a>
@@ -20,36 +18,25 @@ module.exports = Backbone.View.extend({
 			<input placeholder="password" type="password", name="password">
 			<input type="submit" value="Login">
 		</form>
+		<div rv-value="errors"></div>
 	`,
 	events: {
-		// 'keyup input': 'login'
 		'submit form': 'login'
-	},
-	initialize: function() {
-		var x = (new (Backbone.Model.extend({
-			url: 'users/admin'
-		}))).fetch()
 	},
 	render: function(){
 		this.scope = {};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, {scope: this.scope});
-
 		return this;
 	},
 	login: function(evt) {
-		console.log("Keyup", this.$('input[name="username"]'))
 		evt.preventDefault();
-		// if (evt.keyCode == 13){
-			var x = (new (Backbone.Model.extend({
-				url: 'auth'
-			}))({
-				username: this.$('input[name="username"]')[0].value,
-				password: this.$('input[name="password"]')[0].value,
-			}))
-			console.log('XXX', x)
-			x.save()
-		// }
-
+		Doorbot.User.login(
+			this.$('input[name="username"]')[0].value,
+			this.$('input[name="password"]')[0].value,
+			_.bind(function() { // on error
+				this.scope.error = 'incorrect username or password';
+			}, this)
+		);
 	}
 });
