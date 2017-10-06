@@ -4,12 +4,13 @@ require('styles/header.css');
 module.exports = Backbone.View.extend({
 	id: 'Header',
 	template: `
-		<div class="fa fa-bars toggle-left-sidebar"></div>
 		<span>
-			<span rv-if="scope.orgName">Doorbot</span>
-			<span rv-if="scope.orgName"><a href="#">{ scope.orgName }</a> / { scope.roomName }</span>
+			<span>Doorbot</span>
+			<span rv-if="orgName"><a href="#">{ orgName }</a> / { roomName }</span>
 		</span>
 	`,
+		//<div class="fa fa-bars toggle-left-sidebar"></div>
+		//
 		// <div data-subview="user_menu"></div>
 	// initialize: function() {
 	// 	Backbone.Subviews.add( this );
@@ -18,12 +19,11 @@ module.exports = Backbone.View.extend({
 	// 	user_menu: function() { return new Doorbot.Views.UserMenu(); },
 	// },
 	render: function() {
-		this.scope = {};
-		this.scope.orgName = Doorbot.AppConfig.OrgName;
-
+		this.scope = {
+			orgName: Doorbot.AppConfig.OrgName,
+		};
 		this.$el.html(this.template);
-		Rivets.bind(this.$el, {scope: this.scope});
-
+		Rivets.bind(this.$el, this.scope);
 		return this;
 	},
 });

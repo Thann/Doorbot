@@ -4,7 +4,7 @@ require('styles/login_panel.css');
 
 module.exports = Backbone.View.extend({
 	id: 'LoginPanel',
-	template: `<h2>Welcome To Doorbot <span rv-if="scope.OrgName"> for { scope.OrgName }</span>!</h2>
+	template: `<h2>Welcome To Doorbot <span rv-if="OrgName"> for { OrgName }</span>!</h2>
 		<h4>
 			An <a href="https://github.com/thann/doorbot" target="_blank" rel="nofollow">open source</a>
 			door-opening platform that respects your privacy and freedom!
@@ -26,7 +26,7 @@ module.exports = Backbone.View.extend({
 	render: function(){
 		this.scope = {};
 		this.$el.html(this.template);
-		Rivets.bind(this.$el, {scope: this.scope});
+		Rivets.bind(this.$el, this.scope);
 		return this;
 	},
 	login: function(evt) {

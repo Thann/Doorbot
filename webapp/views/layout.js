@@ -14,7 +14,7 @@ module.exports = Backbone.View.extend({
 		</div>
 		<div class="footer hidden"></div>
 	`,
-	doorsTemplate: '<div data-subview="doors"></div>',
+	mainTemplate: '<div data-subview="main"></div>',
 	loginTemplate: '<div data-subview="login"></div>',
 	adminTemplate: '<div data-subview="admin"></div>',
 	events: {
@@ -23,7 +23,7 @@ module.exports = Backbone.View.extend({
 		},
 	},
 	subviewCreators: {
-		doors: function() { return new Doorbot.Views.DoorsPanel(); },
+		main: function() { return new Doorbot.Views.MainPanel(); },
 		login: function() { return new Doorbot.Views.LoginPanel(); },
 		header: function() { return new Doorbot.Views.Header(); },
 		sidebar: function() { return new Doorbot.Views.Sidebar(); },
@@ -39,7 +39,8 @@ module.exports = Backbone.View.extend({
 				"admin": "admin",
 			},
 			default: function() {
-				layout.render(Doorbot.User.isAuthed ? layout.doorsTemplate : undefined);
+				console.log("RENDER DEFAULT: ", Doorbot.User.isAuthed)
+				layout.render(Doorbot.User.isAuthed ? layout.mainTemplate : undefined);
 			},
 			login: function() {
 				console.log("LOGN..")
@@ -55,7 +56,8 @@ module.exports = Backbone.View.extend({
 		Doorbot.User.on('relog', function(logged_in) {
 			console.log("RELOG!!", logged_in);
 			if (logged_in) {
-				Doorbot.Router.navigate('', {trigger: true});
+				Doorbot.Router.navigate('', {trigger: false});
+				Doorbot.Router.default()
 			} else {
 				Doorbot.Router.navigate('login', {trigger: true});
 			}

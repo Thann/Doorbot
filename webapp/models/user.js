@@ -17,7 +17,9 @@ const UserModel = Backbone.Model.extend({
 			if (username) {
 				// Check if logged in by calling API
 				this.set('username', username);
-				this.fetch();
+				this.fetch({error: function(model) {
+					model.trigger('relog', false);
+				}});
 			} else {
 				this.trigger('relog', false);
 			}
