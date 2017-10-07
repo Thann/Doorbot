@@ -49,6 +49,7 @@ module.exports = Backbone.View.extend({
 		}))();
 		this.doors.on('sync', _.bind(function() {
 			console.log("DOOR SYNC", this.scope)
+			if (this.users) { this.users.fetch(); }
 			//TODO: render should not be nessicary
 			this.render()
 		}, this));
@@ -63,7 +64,6 @@ module.exports = Backbone.View.extend({
 				//TODO: render should not be nessicary
 				this.render()
 			}, this));
-			this.users.fetch();
 		}
 	},
 	render: function(){

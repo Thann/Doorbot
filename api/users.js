@@ -135,7 +135,7 @@ async function read(request, response) {
 	response.write(JSON.stringify({
 		admin: !!user.admin,
 		username: user.username,
-		requires_reset: !user.salt,
+		requires_reset: !user.pw_salt,
 	}));
 	response.end();
 }
@@ -143,9 +143,10 @@ async function read(request, response) {
 async function update(request, response) {
 	console.log("BODY:", request.body);
 	var user = await helpers.check_cookie(request, response)
-	if (!user.admin && !request.body.password) {
+	if (!user.admin && (
+			!request.body.password || request.body.password.length < 8)) {
 		response.writeHead(400);
-		response.write("password is required.");
+		response.write("password must be at least 8 characters.");
 		return response.end();
 	}
 
@@ -155,6 +156,20 @@ async function update(request, response) {
 		response.write("Can only update your own info.");
 		return response.end();
 	}
+
+	if (!user.admin && request.body.admin) {
+		response.writeHead(403);
+		response.write("Cant make yourself admin.");
+		return response.end();
+	}
+	// if (request.body.admin == undefined) {
+	// 	var admin =
+	// } else {
+	// 	var admin =
+	// }
+	// for
+	//TODO: update username and stuff. (PUT?)
+
 
 	if (request.params.id != user.username) {
 		var salt = null;

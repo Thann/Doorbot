@@ -8,7 +8,7 @@ module.exports = Backbone.View.extend({
 			<span>Doorbot</span>
 			<span rv-if="orgName">- { orgName }</span>
 		</a>
-		<a href="#login" class="pull-right">{ user.attributes.username }</a>
+		<a href="#login" rv-show="user.isAuthed" class="pull-right">{ user.attributes.username }</a>
 	`,
 	render: function() {
 		this.scope = {

@@ -6,7 +6,6 @@ const UserModel = Backbone.Model.extend({
 	idAttribute: 'username',
 	init: function() {
 		this.on('sync', function(m) {
-			console.log("USR SYNC!", m)
 			this.isAuthed = true;
 			this.trigger('relog', true);
 			window.localStorage.setItem('Doorbot_LatestUser', m.get('username'));
@@ -16,7 +15,7 @@ const UserModel = Backbone.Model.extend({
 			var username = window.localStorage.getItem('Doorbot_LatestUser');
 			if (username) {
 				// Check if logged in by calling API
-				this.set('username', username);
+				this.set('username', username, {trigger: false});
 				this.fetch({error: function(model) {
 					model.trigger('relog', false);
 				}});
@@ -38,8 +37,6 @@ const UserModel = Backbone.Model.extend({
 			success: function(model, response, options) {
 				self.set('username', model.get('username'), {silent: true});
 				self.fetch();
-				// 	{success: function() {
-				// }});
 			},
 			error: function(model, response, options) {
 				self.trigger('login_error');
@@ -54,12 +51,7 @@ const UserModel = Backbone.Model.extend({
 		m.sync(null, m, {
 			url: 'auth',
 			method: 'DELETE',
-			success: function() {
-				console.log("SUCCESS!")
-				self.trigger('relog', false);
-			},
 			error: function() {
-				console.log("FAIL!!", arguments)
 				self.isAuthed = false;
 				self.clear({silent: true});
 				self.trigger('relog', false);

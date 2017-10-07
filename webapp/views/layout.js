@@ -40,7 +40,11 @@ module.exports = Backbone.View.extend({
 			},
 			default: function() {
 				console.log("RENDER DEFAULT: ", Doorbot.User.isAuthed)
-				layout.render(Doorbot.User.isAuthed ? layout.mainTemplate : undefined);
+				if (!Doorbot.User.isAuthed) {
+					Doorbot.Router.navigate('login', {trigger: true});
+				} else {
+					layout.render(layout.mainTemplate);
+				}
 			},
 			login: function() {
 				console.log("LOGN..")
@@ -50,6 +54,14 @@ module.exports = Backbone.View.extend({
 				console.log("ADMN..")
 				layout.render(layout.adminTemplate);
 			},
+			execute: function() {
+				if (loading) {
+					layout.render();
+					loading = false;
+				} else {
+					Backbone.Router.prototype.execute.apply(this, arguments);
+				}
+			}
 		}))();
 
 		Doorbot.User = new UserModel();
@@ -65,7 +77,7 @@ module.exports = Backbone.View.extend({
 			}
 		});
 
-		// Backbone.history.start({silent: true});
+		var loading = true;
 		Backbone.history.start();
 		Doorbot.User.init();
 	},
@@ -73,7 +85,6 @@ module.exports = Backbone.View.extend({
 		document.title = 'Doorbot - '+(Doorbot.AppConfig.OrgName||'');
 	},
 	render: function(tmpl){
-		console.log("RRR", tmpl)
 		this.setTitle();
 		this.$el.html(this.template);
 		if (tmpl) this.$('.main-panel').html(tmpl);
