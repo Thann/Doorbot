@@ -4,22 +4,15 @@ require('styles/header.css');
 module.exports = Backbone.View.extend({
 	id: 'Header',
 	template: `
-		<span>
+		<a href="#">
 			<span>Doorbot</span>
-			<span rv-if="orgName"><a href="#">{ orgName }</a> / { roomName }</span>
-		</span>
+			<span rv-if="orgName">- { orgName }</span>
+		</a>
+		<a href="#login" class="pull-right">{ user.attributes.username }</a>
 	`,
-		//<div class="fa fa-bars toggle-left-sidebar"></div>
-		//
-		// <div data-subview="user_menu"></div>
-	// initialize: function() {
-	// 	Backbone.Subviews.add( this );
-	// },
-	// subviewCreators: {
-	// 	user_menu: function() { return new Doorbot.Views.UserMenu(); },
-	// },
 	render: function() {
 		this.scope = {
+			user: Doorbot.User,
 			orgName: Doorbot.AppConfig.OrgName,
 		};
 		this.$el.html(this.template);

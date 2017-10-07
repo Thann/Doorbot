@@ -7,6 +7,7 @@ var helpers = require('../lib/helpers');
 
 module.exports = function(app) {
 	app.post("/auth", auth);
+	app.delete("/auth", logout);
 	app.get("/users", index);
 	app.post("/users", create);
 	app.get("/users/:id", read);
@@ -45,6 +46,20 @@ async function auth(request, response) {
 	return response.end();
 }
 
+async function logout(request, response) {
+	console.log("LOGOUT:", request.body)
+	var user = await helpers.check_cookie(request, response)
+	if (user) {
+		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
+			user.id);
+		response.setHeader('Set-Cookie', 'Session=; HttpOnly');
+		response.writeHead(200);
+		return response.end();
+	}
+	response.writeHead(401);
+	return response.end();
+}
+
 async function index(request, response) {
 	var user = await helpers.check_cookie(request, response)
 	if (!user.admin) {
@@ -52,15 +67,16 @@ async function index(request, response) {
 		response.write("Must be admin");
 		return response.end();
 	}
-	var users = await db.all("SELECT * FROM users");
+	var users = await db.all("SELECT users.*, group_concat(permissions.door_id) as doors FROM users LEFT JOIN permissions on users.id = permissions.user_id GROUP BY users.id")
 
 	response.writeHead(200);
 	var user_l = [];
-	for (var usr in users) {
-		users_l.push({
-			username: usr.username,
+	for (const usr of users) {
+		user_l.push({
+			doors: usr.doors,
 			admin: !!usr.admin,
-			requires_reset: !user.salt,
+			username: usr.username,
+			requires_reset: !usr.salt,
 		});
 	}
 	response.write(JSON.stringify(user_l));
@@ -86,7 +102,7 @@ async function create(request, response) {
 	// Give the user a random un-hashed password
 	var pw = crypto.createHash("sha256").update(Math.random().toString()).digest('hex').substring(1, 15);
 	try {
-		await db.run("INSERT INTO users (username, password_hash, admin) VALUES (?,?,?,?)",
+		await db.run("INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)",
 			request.body.username, pw, !!request.body.admin);
 	} catch(e) {
 		response.writeHead(400);
@@ -106,13 +122,13 @@ async function create(request, response) {
 
 async function read(request, response) {
 	var user = await helpers.check_cookie(request, response)
-	if (request.params.id != user.id) {
+	if (request.params.id != user.username) {
 		if (user.admin) {
 			user = await db.get("SELECT * FROM users where username = ?", request.params.id);
 		} else {
 			response.writeHead(403);
-			response.end();
-			throw new error.HandledError();
+			response.write("Only admins can view others.");
+			return response.end();
 		}
 	}
 	response.writeHead(200);
@@ -126,25 +142,36 @@ async function read(request, response) {
 
 async function update(request, response) {
 	console.log("BODY:", request.body);
-	if (!request.body.password) {
+	var user = await helpers.check_cookie(request, response)
+	if (!user.admin && !request.body.password) {
 		response.writeHead(400);
 		response.write("password is required.");
 		return response.end();
 	}
 
-	var user = await helpers.check_cookie(request, response, request.params.id)
-	console.log("Update_USER", user)
-	if (request.params.id != user.id) {
+	console.log("Update_USER", user, !user.admin, request.params.id, user.username)
+	if (!user.admin && request.params.id != user.username) {
 		response.writeHead(403);
 		response.write("Can only update your own info.");
 		return response.end();
 	}
 
-	var salt = crypto.createHash("sha256").update(Math.random().toString()).digest('hex');
-	var pw_hash = crypto.createHash("sha256", salt).update(request.body.password).digest('hex');
+	if (request.params.id != user.username) {
+		var salt = null;
+		if (request.body.password) {
+			var pw_hash = request.body.password;
+		} else {
+			var pw_hash = crypto.createHash("sha256").update(Math.random().toString()).digest('hex').substring(1, 15);
+		}
+	} else {
+		var salt = crypto.createHash("sha256").update(Math.random().toString()).digest('hex');
+		var pw_hash = crypto.createHash("sha256", salt).update(request.body.password).digest('hex');
+	}
+
 	try {
-		await db.run("UPDATE users SET pw_salt = ? , password_hash = ? WHERE username = ?",
-			salt, pw_hash, user.id);
+		var f = await db.run("UPDATE users SET pw_salt = ? , password_hash = ? WHERE username = ?",
+			salt, pw_hash, request.params.id);
+		console.log("UPDATE:", f)
 	} catch(e) {
 		response.writeHead(400);
 		response.write("DB update error.");
@@ -168,7 +195,7 @@ async function del_user(request, response) {
 		return response.end();
 	}
 	try {
-		await db.run("DELETE users WHERE id = ?", request.params.id);
+		await db.run("DELETE users WHERE username = ?", request.params.id);
 	} catch(e) {
 		response.writeHead(400); //TODO: 404?
 		response.write("DB delete error.");

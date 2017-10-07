@@ -21,9 +21,10 @@ async function index(request, response) {
 	if (user.admin) {
 		var doors = await db.all("SELECT * FROM doors");
 	} else {
-		var doors = await db.all("SELECT * FROM doors INNER JOIN permissions on door.id = permissions.door_id WHERE permissions.user_id = ?",
+		var doors = await db.all("SELECT * FROM doors INNER JOIN permissions on doors.id = permissions.door_id WHERE permissions.user_id = ?",
 			user.id);
 	}
+	//TODO: check if available
 
 	response.writeHead(200);
 	var door_l = [];
@@ -74,14 +75,11 @@ async function create(request, response) {
 
 async function read(request, response) {
 	var user = await helpers.check_cookie(request, response)
-	if (request.params.id != user.id) {
-		if (user.admin) {
-			var door = await db.get("SELECT * FROM doors WHERE id = ?", request.params.id)
-		} else {
-			response.writeHead(403);
-			response.end();
-			throw new error.HandledError();
-		}
+	if (user.admin) {
+		var door = await db.get("SELECT * FROM doors WHERE id = ?", request.params.id)
+	} else {
+		var door = await db.get("SELECT * FROM doors INNER JOIN permissions on doors.id = permissions.door_id WHERE permissions.user_id = ? AND doors.id = ?",
+			user.id, request.params.id);
 	}
 
 	if (!door) {
@@ -153,7 +151,7 @@ async function del_door(request, response) {
 }
 
 async function open(request, response) {
-	var user = await helpers.check_cookie(request, response, request.params.id)
+	var user = await helpers.check_cookie(request, response)
 	console.log("permit_DOOR", user)
 	if (!user.admin) {
 		var perm = await db.get("SELECT * FROM permissions WHERE door_id = ? AND user_id = ?",
@@ -167,6 +165,7 @@ async function open(request, response) {
 	}
 
 	//TODO: open the door!
+
 	await db.run("INSERT INTO entry_log (user_id, door_id) VALUES (?,?)",
 		request.params.id, user.id);
 
@@ -196,7 +195,7 @@ async function connect(request, response) {
 }
 
 async function permit(request, response) {
-	user = await helpers.check_cookie(request, response, request.params.id)
+	user = await helpers.check_cookie(request, response)
 	console.log("permit_DOOR", user)
 	if (!user.admin) {
 		response.writeHead(403);

@@ -57,9 +57,11 @@ module.exports = Backbone.View.extend({
 			console.log("RELOG!!", logged_in);
 			if (logged_in) {
 				Doorbot.Router.navigate('', {trigger: false});
-				Doorbot.Router.default()
+				Doorbot.Router.default();
+				//TODO: remove router?
 			} else {
-				Doorbot.Router.navigate('login', {trigger: true});
+				Doorbot.Router.navigate('login', {trigger: false});
+				Doorbot.Router.login();
 			}
 		});
 
@@ -68,7 +70,7 @@ module.exports = Backbone.View.extend({
 		Doorbot.User.init();
 	},
 	setTitle: function() {
-		document.title = Doorbot.AppConfig.OrgName||''+' - Doorbot';
+		document.title = 'Doorbot - '+(Doorbot.AppConfig.OrgName||'');
 	},
 	render: function(tmpl){
 		console.log("RRR", tmpl)

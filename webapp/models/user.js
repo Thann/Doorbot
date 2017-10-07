@@ -6,10 +6,10 @@ const UserModel = Backbone.Model.extend({
 	idAttribute: 'username',
 	init: function() {
 		this.on('sync', function(m) {
-			if (!this.isAuthed) {
-				this.isAuthed = true;
-				this.trigger('relog', true);
-			}
+			console.log("USR SYNC!", m)
+			this.isAuthed = true;
+			this.trigger('relog', true);
+			window.localStorage.setItem('Doorbot_LatestUser', m.get('username'));
 		});
 
 		if(typeof(Storage) !== "undefined") {
@@ -37,9 +37,9 @@ const UserModel = Backbone.Model.extend({
 		})).save(undefined, {
 			success: function(model, response, options) {
 				self.set('username', model.get('username'), {silent: true});
-				self.fetch({success: function() {
-					window.localStorage.setItem('Doorbot_LatestUser', username);
-				}});
+				self.fetch();
+				// 	{success: function() {
+				// }});
 			},
 			error: function(model, response, options) {
 				self.trigger('login_error');
@@ -47,6 +47,24 @@ const UserModel = Backbone.Model.extend({
 			}
 		});
 	},
+	logout: function() {
+		console.log("logging out..", this);
+		var self = this;
+		var m = new Backbone.Model()
+		m.sync(null, m, {
+			url: 'auth',
+			method: 'DELETE',
+			success: function() {
+				console.log("SUCCESS!")
+				self.trigger('relog', false);
+			},
+			error: function() {
+				console.log("FAIL!!", arguments)
+				self.isAuthed = false;
+				self.clear({silent: true});
+				self.trigger('relog', false);
+			}
+		});
+	}
 });
-
 module.exports = UserModel;
