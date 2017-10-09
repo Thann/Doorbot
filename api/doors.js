@@ -4,16 +4,21 @@ var db = require('../lib/db');
 var crypto = require('crypto');
 var error = require('../lib/errors');
 var helpers = require('../lib/helpers');
+var expressWs = require('express-ws');
+var DOOR_SOCKETS = {};
 
 module.exports = function(app) {
-	app.get("/doors", index);
-	app.post("/doors", create);
-	app.get("/doors/:id", read);
-	app.patch("/doors/:id", update);
+	var wsApp = expressWs(app);
+	app.   get("/doors", index);
+	app.  post("/doors", create);
+	app.   get("/doors/:id", read);
+	app. patch("/doors/:id", update);
 	app.delete("/doors/:id", del_door);
-	app.post("/doors/:id/open", open);
-	app.post("/doors/:id/connect", connect);
-	app.post("/doors/:id/permit/:user_id", permit);
+	app.   get("/doors/:id/logs", logs);
+	app.  post("/doors/:id/open", open);
+	app.    ws("/doors/:id/connect", connect);
+	app.  post("/doors/:id/permit/:user_id", permit);
+	app.delete("/doors/:id/permit/:user_id", deny);
 }
 
 async function index(request, response) {
@@ -24,7 +29,6 @@ async function index(request, response) {
 		var doors = await db.all("SELECT * FROM doors INNER JOIN permissions on doors.id = permissions.door_id WHERE permissions.user_id = ?",
 			user.id);
 	}
-	//TODO: check if available
 
 	response.writeHead(200);
 	var door_l = [];
@@ -32,7 +36,8 @@ async function index(request, response) {
 		door_l.push({
 			id: door.id,
 			name: door.name,
-			token: user.admin ? door.token : null
+			token: user.admin ? door.token : null,
+			available: DOOR_SOCKETS[door.id] && DOOR_SOCKETS[door.id].readyState == 1,
 		});
 	}
 	response.write(JSON.stringify(door_l));
@@ -150,6 +155,28 @@ async function del_door(request, response) {
 	response.end();
 }
 
+async function logs(request, response) {
+	var user = await helpers.check_cookie(request, response)
+	if (!user.admin) {
+		response.writeHead(403);
+		response.write("Must be admin");
+		return response.end();
+	}
+	try {
+		var page = parseInt(request.params.page||1)-1;
+	} catch(e) {
+		response.writeHead(400);
+		response.write("page must be an int");
+		return response.end();
+	}
+	var logs = await db.all("SELECT * FROM entry_logs WHERE door_id = ? LIMIT ? OFFSET ?",
+		request.params.id, 50, page*50);
+
+	response.writeHead(200);
+	response.write(JSON.stringify(logs));
+	response.end();
+}
+
 async function open(request, response) {
 	var user = await helpers.check_cookie(request, response)
 	console.log("permit_DOOR", user)
@@ -164,7 +191,16 @@ async function open(request, response) {
 		}
 	}
 
-	//TODO: open the door!
+	//TODO: check constraints
+	try {
+		// open the door
+		DOOR_SOCKETS[request.params.id].send('open');
+	} catch(e) {
+		console.warn("ERROR: could not open door:", e);
+		response.writeHead(504);
+		response.write("door could not be opened.");
+		return response.end();
+	}
 
 	await db.run("INSERT INTO entry_log (user_id, door_id) VALUES (?,?)",
 		request.params.id, user.id);
@@ -173,25 +209,18 @@ async function open(request, response) {
 	response.end();
 }
 
-async function connect(request, response) {
-	//TODO: header instead?
-	if (!request.body.token) {
-		response.writeHead(400);
-		response.write("token is required.");
-		return response.end();
+async function connect(ws, request, next) {
+	if (!request.headers.authorization) {
+		return ws.close(1007, "no token");
 	}
-	var door = await db.get("SELECT * FROM door WHERE id = ? AND token = ?",
-		request.params.id, request.body.token);
+	var door = await db.get("SELECT * FROM doors WHERE id = ? AND token = ?",
+		request.params.id, request.headers.authorization);
 
 	if (!door) {
-		response.writeHead(404);
-		return response.end();
+		return ws.close(1007, "bad token");
 	}
 
-	//TODO: connect the door!
-
-	response.writeHead(200);
-	response.end();
+	DOOR_SOCKETS[request.params.id] = ws;
 }
 
 async function permit(request, response) {
@@ -213,8 +242,28 @@ async function permit(request, response) {
 	}
 
 	response.writeHead(200);
-	response.write(JSON.stringify({
-		name: user.admin,
-	}));
 	response.end();
 }
+
+async function deny(request, response) {
+	user = await helpers.check_cookie(request, response)
+	console.log("deny_DOOR", user)
+	if (!user.admin) {
+		response.writeHead(403);
+		response.write("Must be admin");
+		return response.end();
+	}
+
+	try {
+		var resp = await db.run("DELETE permissions WHERE door_id = ? AND user_id = ?",
+			request.params.id, token.params.user_id);
+	} catch(e) {
+		response.writeHead(400);
+		response.write("Door doesn't permit user.");
+		return response.end();
+	}
+
+	response.writeHead(200);
+	response.end();
+}
+

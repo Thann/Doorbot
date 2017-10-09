@@ -17,7 +17,7 @@ module.exports = Backbone.View.extend({
 
 		<div rv-each-door="doors">
 			<span rv-text="door:name"></span>
-			<button class="btn btn-default open-door" rv-data-id="door:id">open</button>
+			<button rv-show="door:available" class="btn btn-default open-door" rv-data-id="door:id">open</button>
 		</div>
 
 		<br>
@@ -59,9 +59,12 @@ module.exports = Backbone.View.extend({
 			this.users = new (Backbone.Collection.extend({
 				url: 'users'
 			}))();
-			this.users.on('sync', _.bind(function() {
+			this.users.on('sync', _.bind(function(coll) {
 				console.log("USER SYNC", this.scope)
 				//TODO: render should not be nessicary
+				for (const m of coll.models) {
+					console.log("MMM", m)
+				}
 				this.render()
 			}, this));
 		}

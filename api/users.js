@@ -6,13 +6,14 @@ var error = require('../lib/errors');
 var helpers = require('../lib/helpers');
 
 module.exports = function(app) {
-	app.post("/auth", auth);
+	app.  post("/auth", auth);
 	app.delete("/auth", logout);
-	app.get("/users", index);
-	app.post("/users", create);
-	app.get("/users/:id", read);
-	app.patch("/users/:id", update);
+	app.   get("/users", index);
+	app.  post("/users", create);
+	app.   get("/users/:id", read);
+	app. patch("/users/:id", update);
 	app.delete("/users/:id", del_user);
+	app.   get("/users/:id/logs", logs);
 }
 
 async function auth(request, response) {
@@ -162,12 +163,6 @@ async function update(request, response) {
 		response.write("Cant make yourself admin.");
 		return response.end();
 	}
-	// if (request.body.admin == undefined) {
-	// 	var admin =
-	// } else {
-	// 	var admin =
-	// }
-	// for
 	//TODO: update username and stuff. (PUT?)
 
 
@@ -218,5 +213,27 @@ async function del_user(request, response) {
 	}
 
 	response.writeHead(200);
+	response.end();
+}
+
+async function logs(request, response) {
+	var user = await helpers.check_cookie(request, response)
+	if (!user.admin && request.params.id != user.username) {
+		response.writeHead(403);
+		response.write("Must be admin");
+		return response.end();
+	}
+	try {
+		var page = parseInt(request.params.page||1)-1;
+	} catch(e) {
+		response.writeHead(400);
+		response.write("page must be an int");
+		return response.end();
+	}
+	var logs = await db.all("SELECT * FROM entry_logs INNER JOIN users on entry_logs.user_id = users.id WHERE users.username = ? LIMIT ? OFFSET ?",
+		request.params.id, 50, page*50);
+
+	response.writeHead(200);
+	response.write(JSON.stringify(logs));
 	response.end();
 }
