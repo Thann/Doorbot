@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
+const util = require('util');
 const WebSocket = require('ws');
 const gpio = require('rpi-gpio');
 
@@ -10,6 +11,7 @@ var options = {
 	door: "1",
 	gpio: "8",
 	locktime: 5000,
+	pingtime: 5000,
 };
 
 var getopts = require("node-getopt").create([
@@ -52,33 +54,46 @@ function open() {
 	}, options.locktime);
 }
 
-const ws = new WebSocket(
-	'ws'+(options.insecure?'':'s')+'://'+options.server+':'+options.port+'/doors/'+options.door+'/connect', {
-	perMessageDeflate: false,
-	headers: {
-		'Authorization': options.token
-	}
-});
+var ws;
+function connect() {
+	ws = new WebSocket(
+		util.format('ws%s://%s:%s/doors/%s/connect',
+			options.insecure?'':'s',
+			options.server,
+			options.port,
+			options.door), {
+		perMessageDeflate: false,
+		headers: {
+			'Authorization': options.token
+		},
+	});
 
-// ws.on('open', function() {
-// 	ws.send('something');
-// });
+	ws.on('error', function(e) {
+		console.log("Connection Error:", e.code)
+	});
 
-ws.on('close', function(code, reason) {
-	console.log("CLOSE:", code, reason)
-	if (code == 1007) safeExit();
-});
+	ws.on('open', function() {
+		console.log("success")
+	});
 
-ws.on('message', function incoming(data) {
-	console.log("WS:", data);
-	open();
-});
+	ws.on('close', function(code, reason) {
+		console.log("CLOSE:", code, reason)
+		if (code == 1007) safeExit();
+	});
+
+	ws.on('message', function incoming(data) {
+		console.log("WS:", data);
+		open();
+	});
+}
 
 function safeExit() {
 	if (!options.dummy) {
 		gpio.write(options.gpio, false, function() {
 			process.exit(0);
 		});
+	} else {
+		process.exit(0);
 	}
 }
 
@@ -87,6 +102,11 @@ process.on('SIGINT', safeExit);
 process.on('SIGTERM', safeExit);
 
 setInterval(function() {
-	//TODO: retry connection
-	ws.send("hey!");
-}, 5000);
+	if (ws.readyState != 1) {
+		console.log("Retrying connection");
+		connect();
+	} else {
+		ws.ping();
+	}
+}, options.pingtime);
+connect();

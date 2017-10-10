@@ -13,8 +13,9 @@ var options = {
 };
 
 var getopts = require("node-getopt").create([
-	['p', 'port=',   'Set listen port'],
-	['',  'watch',   'Recompile webapp on file modification'],
+	['p', 'port=', 'Set listen port'],
+	['',  'watch', 'Recompile webapp on file modification'],
+	['',  'build', 'Compile webapp'],
 	['h', 'help',    '']
 ]).bindHelp();
 var opt = getopts.parseSystem();
@@ -58,8 +59,8 @@ process.on('unhandledRejection', function(err, promise) {
 });
 
 // --Watch
-if (options.watch) {
-	var watcher = require('child_process').spawn('webpack', ['--watch', '--colors']);
+if (options.watch || options.build) {
+	var watcher = require('child_process').spawn('webpack', ['--color', options.watch?'--watch':null]);
 
 	watcher.stdout.on('data', function(data) {
 		console.log(data.toString());
