@@ -2,14 +2,18 @@
 'use strict';
 
 const WebSocket = require('ws');
+const gpio = require('rpi-gpio');
 
 var options = {
 	server: "localhost",
 	port: "3000",
 	door: "1",
+	gpio: "8",
+	locktime: 5000,
 };
 
 var getopts = require("node-getopt").create([
+	['x', 'dummy',   'Don\'t use GPIO, print instead'],
 	['g', 'gpio=',   'GPIO pins to open the door'],
 	['d', 'door=',   'Connect to server with door_id'],
 	['t', 'token=',  'Connect to server with token'],
@@ -35,6 +39,19 @@ process.on('unhandledRejection', function(err, promise) {
 		console.error("UHR", err, promise);
 });
 
+var lock = false;
+if (!options.dummy) gpio.setup(parseInt(options.gpio));
+function open() {
+	if (options.dummy) return console.log("Dummy Open");
+	if (lock) return console.warn('ERROR: locked');
+	lock = true;
+	gpio.write(options.gpio, true);
+	setTimeout(function() {
+		gpio.write(options.gpio, false);
+		lock = false;
+	}, options.locktime);
+}
+
 const ws = new WebSocket(
 	'ws'+(options.insecure?'':'s')+'://'+options.server+':'+options.port+'/doors/'+options.door+'/connect', {
 	perMessageDeflate: false,
@@ -43,17 +60,25 @@ const ws = new WebSocket(
 	}
 });
 
-ws.on('open', function open() {
-	ws.send('something');
-});
+// ws.on('open', function() {
+// 	ws.send('something');
+// });
 
-ws.on('close', function close(code, reason) {
+ws.on('close', function(code, reason) {
 	console.log("CLOSE:", code, reason)
 	if (code == 1007) process.exit(0);
 });
 
 ws.on('message', function incoming(data) {
 	console.log("WS:", data);
+	open();
+});
+
+process.on('SIGINT', () => process.exit());
+process.on('SIGTERM', () => process.exit());
+process.on('exit', function() {
+	// Lock the door on quit
+	if (!options.dummy) gpio.write(options.gpio, false);
 });
 
 setInterval(function() {

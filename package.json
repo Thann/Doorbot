@@ -29,6 +29,7 @@
     "querystring": "^0.2.0",
     "rivets": "github:blikblum/rivets#svelte",
     "rivets-backbone-adapter": "^2.2.0",
+    "rpi-gpio": "^0.9.1",
     "sass-loader": "^3.2.0",
     "sqlite": "^2.8.0",
     "style-loader": "^0.13.0",
