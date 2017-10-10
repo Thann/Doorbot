@@ -66,7 +66,7 @@ const ws = new WebSocket(
 
 ws.on('close', function(code, reason) {
 	console.log("CLOSE:", code, reason)
-	if (code == 1007) process.exit(0);
+	if (code == 1007) safeExit();
 });
 
 ws.on('message', function incoming(data) {
@@ -74,12 +74,17 @@ ws.on('message', function incoming(data) {
 	open();
 });
 
-process.on('SIGINT', () => process.exit());
-process.on('SIGTERM', () => process.exit());
-process.on('exit', function() {
-	// Lock the door on quit
-	if (!options.dummy) gpio.write(options.gpio, false);
-});
+function safeExit() {
+	if (!options.dummy) {
+		gpio.write(options.gpio, false, function() {
+			process.exit(0);
+		});
+	}
+}
+
+// Lock the door on quit
+process.on('SIGINT', safeExit);
+process.on('SIGTERM', safeExit);
 
 setInterval(function() {
 	//TODO: retry connection
