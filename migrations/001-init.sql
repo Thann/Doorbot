@@ -5,9 +5,11 @@ CREATE TABLE users (
     pw_salt VARCHAR(255),
     password_hash VARCHAR(255),
     admin BOOLEAN DEFAULT 0,
+    keycode INTEGER UNIQUE,
     session_cookie VARCHAR(255) UNIQUE,
     session_created DATETIME
 );
+CREATE INDEX idx_keycodes on users (keycode);
 CREATE INDEX idx_usernames on users (username);
 INSERT into users (username, password_hash, admin) VALUES ('admin', 'admin', 1);
 

@@ -1,0 +1,18 @@
+version: '2'
+services:
+  server:
+    image: thann/doorbot
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - db:/usr/src/app/db
+  # door:
+  #   image: doorbot
+  #   restart: unless-stopped
+  #   command: door -k -s server -t "abc123"
+
+
+volumes:
+  db:

@@ -1,4 +1,3 @@
-*.db
-*.sqlite
+db/
 dist/
 node_modules/

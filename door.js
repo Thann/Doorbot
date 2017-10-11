@@ -81,7 +81,7 @@ function connect() {
 		if (code == 1007) safeExit();
 	});
 
-	ws.on('message', function incoming(data) {
+	ws.on('message', function(data) {
 		console.log("WS:", data);
 		open();
 	});
