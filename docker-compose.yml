@@ -8,10 +8,15 @@ services:
       - "3000:3000"
     volumes:
       - db:/usr/src/app/db
-  # door:
-  #   image: doorbot
-  #   restart: unless-stopped
-  #   command: door -k -s server -t "abc123"
+
+  #door:
+    #image: thann/doorbot
+    #restart: unless-stopped
+    #cap_add:
+      #- SYS_RAWIO
+    #devices:
+      #- "/dev/mem:/dev/mem"
+    #command: door -k -s server -t "abc123"
 
 
 volumes:

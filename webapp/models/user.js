@@ -8,6 +8,10 @@ const UserModel = Backbone.Model.extend({
 		this.on('sync', function(m) {
 			this.isAuthed = true;
 			this.trigger('relog', true);
+			if (this.redir) {
+				this.redir = false;
+				Doorbot.Router.navigate('', {trigger: true});
+			}
 			window.localStorage.setItem('Doorbot_LatestUser', m.get('username'));
 		});
 
@@ -36,6 +40,7 @@ const UserModel = Backbone.Model.extend({
 		})).save(undefined, {
 			success: function(model, response, options) {
 				self.set('username', model.get('username'), {silent: true});
+				self.redir = true;
 				self.fetch();
 			},
 			error: function(model, response, options) {

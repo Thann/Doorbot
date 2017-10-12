@@ -102,7 +102,6 @@ async function read(request, response) {
 }
 
 async function update(request, response) {
-	console.log("BODY:", request.body);
 	if (!request.body.name) {
 		response.writeHead(400);
 		response.write("name is required.");
@@ -110,7 +109,6 @@ async function update(request, response) {
 	}
 
 	var user = await helpers.check_cookie(request, response, request.params.id)
-	console.log("Update_DOOR", user)
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -120,7 +118,6 @@ async function update(request, response) {
 	try {
 		var resp = await db.run("UPDATE doors SET name = ? WHERE id = ?",
 			request.body.name, request.params.id);
-		console.log("DOOR_UPDATE_DB_RESP:", resp)
 	} catch(e) {
 		response.writeHead(400);
 		response.write("DB update error.");
@@ -131,7 +128,6 @@ async function update(request, response) {
 	response.write(JSON.stringify({
 		id: request.params.id,
 		name: request.body.name,
-		// token: door.token,
 	}));
 	response.end();
 }
@@ -179,7 +175,6 @@ async function logs(request, response) {
 
 async function open(request, response) {
 	var user = await helpers.check_cookie(request, response)
-	console.log("permit_DOOR", user)
 	if (!user.admin) {
 		var perm = await db.get("SELECT * FROM permissions WHERE door_id = ? AND user_id = ?",
 			request.params.id, user.id);
@@ -225,7 +220,6 @@ async function connect(ws, request, next) {
 
 async function permit(request, response) {
 	user = await helpers.check_cookie(request, response)
-	console.log("permit_DOOR", user)
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -247,7 +241,6 @@ async function permit(request, response) {
 
 async function deny(request, response) {
 	user = await helpers.check_cookie(request, response)
-	console.log("deny_DOOR", user)
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");

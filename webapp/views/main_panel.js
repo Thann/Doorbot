@@ -1,4 +1,4 @@
-// DoorsPanel
+// MainPanel
 
 // require('styles/main_panel.css');
 

@@ -17,7 +17,6 @@ module.exports = function(app) {
 }
 
 async function auth(request, response) {
-	console.log("AUTH:", request.body)
 	if (!request.body.username || !request.body.password) {
 		response.writeHead(400);
 		response.write("username and password are required.");
@@ -48,7 +47,6 @@ async function auth(request, response) {
 }
 
 async function logout(request, response) {
-	console.log("LOGOUT:", request.body)
 	var user = await helpers.check_cookie(request, response)
 	if (user) {
 		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
@@ -77,6 +75,7 @@ async function index(request, response) {
 			doors: usr.doors,
 			admin: !!usr.admin,
 			username: usr.username,
+			password: user.salt? null:user.password_hash,
 			requires_reset: !usr.salt,
 		});
 	}
@@ -85,7 +84,6 @@ async function index(request, response) {
 }
 
 async function create(request, response) {
-	console.log("BODY:", request.body);
 	if (!request.body.username) {
 		response.writeHead(400);
 		response.write("username is required.");
@@ -93,7 +91,6 @@ async function create(request, response) {
 	}
 
 	var user = await helpers.check_cookie(request, response)
-	console.log("USER", user)
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -142,7 +139,6 @@ async function read(request, response) {
 }
 
 async function update(request, response) {
-	console.log("BODY:", request.body);
 	var user = await helpers.check_cookie(request, response)
 	if (!user.admin && (
 			!request.body.password || request.body.password.length < 8)) {
@@ -164,7 +160,6 @@ async function update(request, response) {
 		return response.end();
 	}
 	//TODO: update username and stuff. (PUT?)
-
 
 	if (request.params.id != user.username) {
 		var salt = null;
