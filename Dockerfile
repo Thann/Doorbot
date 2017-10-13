@@ -1,9 +1,12 @@
+#FROM arm32v7/node
 FROM node:alpine
 EXPOSE 3000
 ENTRYPOINT ["node"]
 CMD ["server"]
 
 # Install dependencies
+#RUN apt update && \
+    #apt upgrade
 RUN apk update && \
     apk upgrade
 RUN apk add git python make g++
