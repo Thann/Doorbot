@@ -10,10 +10,10 @@ module.exports = function(app) {
 	app.delete("/auth", logout);
 	app.   get("/users", index);
 	app.  post("/users", create);
-	app.   get("/users/:id", read);
-	app. patch("/users/:id", update);
-	app.delete("/users/:id", del_user);
-	app.   get("/users/:id/logs", logs);
+	app.   get("/users/:username", read);
+	app. patch("/users/:username", update);
+	app.delete("/users/:username", del_user);
+	app.   get("/users/:username/logs", logs);
 }
 
 async function auth(request, response) {
@@ -44,6 +44,7 @@ async function auth(request, response) {
 			response.setHeader('Set-Cookie', 'Session='+sesh+'; HttpOnly');
 			response.writeHead(200);
 			response.write(JSON.stringify({
+				id: user.id,
 				username: user.username,
 				requires_reset: !user.pw_salt,
 			}));
@@ -83,6 +84,7 @@ async function index(request, response) {
 	var user_l = [];
 	for (const usr of users) {
 		user_l.push({
+			id: usr.id,
 			doors: usr.doors,
 			admin: !!usr.admin,
 			username: usr.username,
@@ -112,7 +114,8 @@ async function create(request, response) {
 	var pw = crypto.createHash("sha256")
 		.update(Math.random().toString()).digest('hex').substring(1, 15);
 	try {
-		await db.run("INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)",
+		var r = await db.run(
+			"INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)",
 			request.body.username, pw, !!request.body.admin);
 	} catch(e) {
 		response.writeHead(400);
@@ -122,6 +125,7 @@ async function create(request, response) {
 
 	response.writeHead(200);
 	response.write(JSON.stringify({
+		id: r.stmt.lastID,
 		admin: !!request.body.admin,
 		username: request.body.username,
 		password: pw,
@@ -132,10 +136,14 @@ async function create(request, response) {
 
 async function read(request, response) {
 	var user = await helpers.check_cookie(request, response)
-	if (request.params.id != user.username) {
+	if (request.params.username != user.username) {
 		if (user.admin) {
-			user = await db.get("SELECT * FROM users where username = ?",
-				request.params.id);
+			// user = await db.get("SELECT * FROM users where username = ?",
+			user = await db.get(`
+				SELECT users.*, group_concat(permissions.door_id) as doors FROM users
+				LEFT JOIN permissions on users.id = permissions.user_id
+				WHERE username = ?`,
+				request.params.username);
 		} else {
 			response.writeHead(403);
 			response.write("Only admins can view others.");
@@ -144,6 +152,8 @@ async function read(request, response) {
 	}
 	response.writeHead(200);
 	response.write(JSON.stringify({
+		id: user.id,
+		doors: user.doors,
 		admin: !!user.admin,
 		username: user.username,
 		requires_reset: !user.pw_salt,
@@ -160,8 +170,8 @@ async function update(request, response) {
 		return response.end();
 	}
 
-	console.log("Update_USER", user, !user.admin, request.params.id, user.username)
-	if (!user.admin && request.params.id != user.username) {
+	console.log("Update_USER", user, !user.admin, request.params.username, user.username)
+	if (!user.admin && request.params.username != user.username) {
 		response.writeHead(403);
 		response.write("Can only update your own info.");
 		return response.end();
@@ -174,7 +184,7 @@ async function update(request, response) {
 	}
 	//TODO: update username and stuff. (PUT?)
 
-	if (request.params.id != user.username) {
+	if (request.params.username != user.username) {
 		var salt = null;
 		if (request.body.password) {
 			var pw_hash = request.body.password;
@@ -194,7 +204,7 @@ async function update(request, response) {
 		var f = await db.run(`
 			UPDATE users SET pw_salt = ? , password_hash = ?
 			WHERE username = ?`,
-			salt, pw_hash, request.params.id);
+			salt, pw_hash, request.params.username);
 		console.log("UPDATE:", f)
 	} catch(e) {
 		response.writeHead(400);
@@ -204,6 +214,7 @@ async function update(request, response) {
 
 	response.writeHead(200);
 	response.write(JSON.stringify({
+		id: user.id,
 		admin: user.admin,
 		username: user.username,
 		requires_reset: false,
@@ -218,21 +229,20 @@ async function del_user(request, response) {
 		response.write("Must be admin");
 		return response.end();
 	}
-	try {
-		await db.run("DELETE users WHERE username = ?", request.params.id);
-	} catch(e) {
-		response.writeHead(400); //TODO: 404?
-		response.write("DB delete error.");
-		return response.end();
+	var r = await db.run("DELETE FROM users WHERE username = ?",
+			request.params.username);
+	if (!r.stmt.changes) {
+		response.writeHead(404);
+	} else {
+		response.writeHead(200);
 	}
 
-	response.writeHead(200);
 	response.end();
 }
 
 async function logs(request, response) {
 	var user = await helpers.check_cookie(request, response)
-	if (!user.admin && request.params.id != user.username) {
+	if (!user.admin && request.params.username != user.username) {
 		response.writeHead(403);
 		response.write("Must be admin");
 		return response.end();
@@ -249,7 +259,7 @@ async function logs(request, response) {
 		INNER JOIN users on entry_logs.user_id = users.id
 		INNER JOIN doors on entry_logs.door_id = doors.id
 		WHERE users.username = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
-		request.params.id, 50, page*50);
+		request.params.username, 50, page*50);
 
 	response.writeHead(200);
 	response.write(JSON.stringify(logs));

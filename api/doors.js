@@ -145,15 +145,12 @@ async function del_door(request, response) {
 		response.write("Must be admin");
 		return response.end();
 	}
-	try {
-		await db.run("DELETE doors WHERE id = ?", request.params.id);
-	} catch(e) {
-		response.writeHead(400); //TODO: 404?
-		response.write("DB delete error.");
-		return response.end();
+	var r = await db.run("DELETE FROM doors WHERE id = ?", request.params.id);
+	if (!r.stmt.changes) {
+		response.writeHead(404);
+	} else {
+		response.writeHead(200);
 	}
-
-	response.writeHead(200);
 	response.end();
 }
 
@@ -245,9 +242,9 @@ async function permit(request, response) {
 
 	try {
 		await db.run("INSERT INTO permissions (door_id, user_id) VALUES (?,?)",
-			request.params.id, token.params.user_id);
+			request.params.id, request.params.user_id);
 	} catch(e) {
-		response.writeHead(400);
+		response.writeHead(409);
 		response.write("Door already permits user.");
 		return response.end();
 	}
@@ -264,16 +261,16 @@ async function deny(request, response) {
 		return response.end();
 	}
 
-	try {
-		var resp = await db.run("DELETE permissions WHERE door_id = ? AND user_id = ?",
-			request.params.id, token.params.user_id);
-	} catch(e) {
-		response.writeHead(400);
+	var r = await db.run("DELETE FROM permissions WHERE door_id = ? AND user_id = ?",
+		request.params.id, request.params.user_id);
+
+	if (!r.stmt.changes) {
+		response.writeHead(404);
 		response.write("Door doesn't permit user.");
-		return response.end();
+	} else {
+		response.writeHead(200);
 	}
 
-	response.writeHead(200);
 	response.end();
 }
 

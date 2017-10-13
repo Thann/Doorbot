@@ -34,13 +34,12 @@ module.exports = Backbone.View.extend({
 				<a rv-href="'#user/' |+ user:username" rv-text="user:username"></a>
 				<span rv-text="user:password"></span>
 				<span rv-text="user:doors"></span>
-				<button class="btn btn-default edit-user" rv-data-id="user:id">Edit</button>
 			</div>
 		</div>
 	`,
 	events: {
-		'click .doors .new': 'createDoor',
 		'click .open-door': 'openDoor',
+		'click .doors .new': 'createDoor',
 		'click .users .new': 'createUser',
 	},
 	initialize: function() {
