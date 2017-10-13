@@ -6,15 +6,36 @@ Uses a raspberrypi and a solid-state relay to unlock the door
 A node server running optionally elseware manages the users and serves the WebUI
 
 # Setup
-### Server
-`npm install thann/doorbot`
+### Hardware
+You need is a RasberryPi and a Relay.
+[Install rasbian](https://www.raspberrypi.org/downloads/raspbian/)
+then plugin the relay.
 
-CD into the folder then run the server: `./server`
+![raspberry-pi](https://github.com/Thann/Doorbot/raw/master/docs/images/raspi.jpg)
+
+### Server
+The server can be run on the PI or anywhere else. Docker images exist for ARM and x86.
+
+The `docker-compose.yml` file has been configured for ARM so from the PI,
+from the cloned repo, run:
+
+`sudo docker-compose up -d`
 
 Navigate to http://localhost:3000 and login with the username and password `admin`
 Change your password then add users and doors.
+When creating a user they are given a random password, that you should email them.
+
+**Alternativly**, if you dont want to use docker, from the cloned repo run:
+
+`npm install` then `./server --build`
 
 ### Door
-Setup a raspberrypi with a solid state relay on the GPIO pins, then run:
+Once you have added a door in the WebUI,
+copy the token then paste it into `docker-compose.yml` replacing "abc123"
 
-`./door -k -p 3000 -t <TOKEN>`
+Then re-run `sudo docker-compose up -d`
+After refreshing the WebUI, you should see the "Open" button appear for the door.
+
+**Alternativly**, if you dont want to use docker, from the cloned repo run:
+
+`./door -k -s <SERVER_IP> -t <TOKEN>`

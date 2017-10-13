@@ -1,7 +1,7 @@
 version: '2'
 services:
   server:
-    image: thann/doorbot
+    image: thann/doorbot:arm
     build: .
     restart: unless-stopped
     ports:
@@ -10,7 +10,7 @@ services:
       - db:/usr/src/app/db
 
   door:
-    image: thann/doorbot
+    image: thann/doorbot:arm
     restart: unless-stopped
     privileged: true
     command: door -k -s server -t "abc123"
