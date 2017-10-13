@@ -31,7 +31,7 @@ module.exports = Backbone.View.extend({
 			<button rv-hide="creatingUser" class="btn btn-default new">New</button>
 
 			<div rv-each-user="users">
-				<span rv-text="user:username"></span>
+				<a rv-href="'#user/' |+ user:username" rv-text="user:username"></a>
 				<span rv-text="user:password"></span>
 				<span rv-text="user:doors"></span>
 				<button class="btn btn-default edit-user" rv-data-id="user:id">Edit</button>
@@ -62,9 +62,9 @@ module.exports = Backbone.View.extend({
 			this.users.on('sync', _.bind(function(coll) {
 				console.log("USER SYNC", this.scope)
 				//TODO: render should not be nessicary
-				for (const m of coll.models) {
-					console.log("MMM", m)
-				}
+				// for (const m of coll.models) {
+				// 	console.log("MMM", m)
+				// }
 				this.render()
 			}, this));
 		}

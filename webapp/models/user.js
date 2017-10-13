@@ -40,7 +40,7 @@ const UserModel = Backbone.Model.extend({
 		})).save(undefined, {
 			success: function(model, response, options) {
 				self.set('username', model.get('username'), {silent: true});
-				self.redir = true;
+				self.redir = model.get('requires_reset') !== true;
 				self.fetch();
 			},
 			error: function(model, response, options) {

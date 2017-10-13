@@ -26,7 +26,10 @@ async function index(request, response) {
 	if (user.admin) {
 		var doors = await db.all("SELECT * FROM doors");
 	} else {
-		var doors = await db.all("SELECT * FROM doors INNER JOIN permissions on doors.id = permissions.door_id WHERE permissions.user_id = ?",
+		var doors = await db.all(`
+			SELECT * FROM doors
+			INNER JOIN permissions on doors.id = permissions.door_id
+			WHERE permissions.user_id = ?`,
 			user.id);
 	}
 
@@ -83,7 +86,10 @@ async function read(request, response) {
 	if (user.admin) {
 		var door = await db.get("SELECT * FROM doors WHERE id = ?", request.params.id)
 	} else {
-		var door = await db.get("SELECT * FROM doors INNER JOIN permissions on doors.id = permissions.door_id WHERE permissions.user_id = ? AND doors.id = ?",
+		var door = await db.get(`
+			SELECT * FROM doors
+			INNER JOIN permissions on doors.id = permissions.door_id
+			WHERE permissions.user_id = ? AND doors.id = ?`,
 			user.id, request.params.id);
 	}
 
@@ -165,7 +171,10 @@ async function logs(request, response) {
 		response.write("page must be an int");
 		return response.end();
 	}
-	var logs = await db.all("SELECT * FROM entry_logs WHERE door_id = ? LIMIT ? OFFSET ?",
+	var logs = await db.all(`
+		SELECT entry_logs.*, users.username FROM entry_logs
+		INNER JOIN users on entry_logs.user_id = users.id
+		WHERE door_id = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
 		request.params.id, 50, page*50);
 
 	response.writeHead(200);
@@ -176,7 +185,15 @@ async function logs(request, response) {
 async function open(request, response) {
 	var user = await helpers.check_cookie(request, response)
 	if (!user.admin) {
-		var perm = await db.get("SELECT * FROM permissions WHERE door_id = ? AND user_id = ?",
+		if (!user.salt) {
+			response.writeHead(422);
+			response.write("Your password has been set by an admin and requires reset.");
+			return response.end();
+		}
+
+		var perm = await db.get(`
+			SELECT * FROM permissions
+			WHERE door_id = ? AND user_id = ?`,
 			request.params.id, user.id);
 
 		if (!perm) {
@@ -197,7 +214,7 @@ async function open(request, response) {
 		return response.end();
 	}
 
-	await db.run("INSERT INTO entry_log (user_id, door_id) VALUES (?,?)",
+	await db.run("INSERT INTO entry_logs (user_id, door_id) VALUES (?,?)",
 		request.params.id, user.id);
 
 	response.writeHead(200);
@@ -227,7 +244,7 @@ async function permit(request, response) {
 	}
 
 	try {
-		var resp = await db.run("INSERT INTO permissions (door_id, user_id) VALUES (?,?)",
+		await db.run("INSERT INTO permissions (door_id, user_id) VALUES (?,?)",
 			request.params.id, token.params.user_id);
 	} catch(e) {
 		response.writeHead(400);
