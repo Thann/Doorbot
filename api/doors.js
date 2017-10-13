@@ -1,11 +1,11 @@
 // REST API for doors.
 
-var db = require('../lib/db');
-var crypto = require('crypto');
-var error = require('../lib/errors');
-var helpers = require('../lib/helpers');
-var expressWs = require('express-ws');
-var DOOR_SOCKETS = {};
+const db = require('../lib/db');
+const crypto = require('crypto');
+const error = require('../lib/errors');
+const helpers = require('../lib/helpers');
+const expressWs = require('express-ws');
+const DOOR_SOCKETS = {};
 
 module.exports = function(app) {
 	var wsApp = expressWs(app);
@@ -22,7 +22,7 @@ module.exports = function(app) {
 }
 
 async function index(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (user.admin) {
 		var doors = await db.all("SELECT * FROM doors");
 	} else {
@@ -34,7 +34,7 @@ async function index(request, response) {
 	}
 
 	response.writeHead(200);
-	var door_l = [];
+	const door_l = [];
 	for (const door of doors) {
 		door_l.push({
 			id: door.id,
@@ -54,7 +54,7 @@ async function create(request, response) {
 		return response.end();
 	}
 
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -62,9 +62,10 @@ async function create(request, response) {
 		return;
 	}
 
-	var token = crypto.createHash("sha256").update(Math.random().toString()).digest('hex');
+	const token = crypto.createHash("sha256")
+		.update(Math.random().toString()).digest('hex');
 	try {
-		var resp = await db.run("INSERT INTO doors (name, token) VALUES (?,?)",
+		var r = await db.run("INSERT INTO doors (name, token) VALUES (?,?)",
 			request.body.name, token);
 	} catch(e) {
 		response.writeHead(400);
@@ -74,7 +75,7 @@ async function create(request, response) {
 
 	response.writeHead(200);
 	response.write(JSON.stringify({
-		id: resp.stmt.lastID,
+		id: r.stmt.lastID,
 		name: request.body.name,
 		token: token,
 	}));
@@ -82,9 +83,10 @@ async function create(request, response) {
 }
 
 async function read(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (user.admin) {
-		var door = await db.get("SELECT * FROM doors WHERE id = ?", request.params.id)
+		var door = await db.get(
+			"SELECT * FROM doors WHERE id = ?", request.params.id);
 	} else {
 		var door = await db.get(`
 			SELECT * FROM doors
@@ -114,7 +116,7 @@ async function update(request, response) {
 		return response.end();
 	}
 
-	var user = await helpers.check_cookie(request, response, request.params.id)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -122,7 +124,7 @@ async function update(request, response) {
 	}
 
 	try {
-		var resp = await db.run("UPDATE doors SET name = ? WHERE id = ?",
+		await db.run("UPDATE doors SET name = ? WHERE id = ?",
 			request.body.name, request.params.id);
 	} catch(e) {
 		response.writeHead(400);
@@ -139,13 +141,13 @@ async function update(request, response) {
 }
 
 async function del_door(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
 		return response.end();
 	}
-	var r = await db.run("DELETE FROM doors WHERE id = ?", request.params.id);
+	const r = await db.run("DELETE FROM doors WHERE id = ?", request.params.id);
 	if (!r.stmt.changes) {
 		response.writeHead(404);
 	} else {
@@ -155,7 +157,7 @@ async function del_door(request, response) {
 }
 
 async function logs(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -168,7 +170,7 @@ async function logs(request, response) {
 		response.write("page must be an int");
 		return response.end();
 	}
-	var logs = await db.all(`
+	const logs = await db.all(`
 		SELECT entry_logs.*, users.username FROM entry_logs
 		INNER JOIN users on entry_logs.user_id = users.id
 		WHERE door_id = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
@@ -180,7 +182,7 @@ async function logs(request, response) {
 }
 
 async function open(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		if (!user.salt) {
 			response.writeHead(422);
@@ -188,7 +190,7 @@ async function open(request, response) {
 			return response.end();
 		}
 
-		var perm = await db.get(`
+		const perm = await db.get(`
 			SELECT * FROM permissions
 			WHERE door_id = ? AND user_id = ?`,
 			request.params.id, user.id);
@@ -199,6 +201,8 @@ async function open(request, response) {
 			return response.end();
 		}
 	}
+
+	const method = "web:"+request.connection.remoteAddress;
 
 	//TODO: check constraints
 	try {
@@ -211,8 +215,8 @@ async function open(request, response) {
 		return response.end();
 	}
 
-	await db.run("INSERT INTO entry_logs (user_id, door_id) VALUES (?,?)",
-		request.params.id, user.id);
+	await db.run("INSERT INTO entry_logs (user_id, door_id, method) VALUES (?,?,?)",
+		request.params.id, user.id, method);
 
 	response.writeHead(200);
 	response.end();
@@ -222,7 +226,7 @@ async function connect(ws, request, next) {
 	if (!request.headers.authorization) {
 		return ws.close(1007, "no token");
 	}
-	var door = await db.get("SELECT * FROM doors WHERE id = ? AND token = ?",
+	const door = await db.get("SELECT * FROM doors WHERE id = ? AND token = ?",
 		request.params.id, request.headers.authorization);
 
 	if (!door) {
@@ -233,7 +237,7 @@ async function connect(ws, request, next) {
 }
 
 async function permit(request, response) {
-	user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response)
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -254,14 +258,15 @@ async function permit(request, response) {
 }
 
 async function deny(request, response) {
-	user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response)
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
 		return response.end();
 	}
 
-	var r = await db.run("DELETE FROM permissions WHERE door_id = ? AND user_id = ?",
+	const r = await db.run(
+		"DELETE FROM permissions WHERE door_id = ? AND user_id = ?",
 		request.params.id, request.params.user_id);
 
 	if (!r.stmt.changes) {

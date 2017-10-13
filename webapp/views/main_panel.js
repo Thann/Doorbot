@@ -17,6 +17,7 @@ module.exports = Backbone.View.extend({
 
 		<div rv-each-door="doors">
 			<span rv-text="door:name"></span>
+			<span rv-hide="door:available" rv-text="door:token"></span>
 			<button rv-show="door:available" class="btn btn-default open-door" rv-data-id="door:id">open</button>
 		</div>
 

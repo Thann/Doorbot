@@ -33,6 +33,7 @@ CREATE TABLE entry_logs (
     id INTEGER PRIMARY KEY,
     user_id INTEGER,
     door_id INTEGER,
+    method VARCHAR(255),
     time DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(door_id) REFERENCES doors(id)

@@ -1,9 +1,9 @@
 // REST API for users.
 
-var db = require('../lib/db');
-var crypto = require('crypto');
-var error = require('../lib/errors');
-var helpers = require('../lib/helpers');
+const db = require('../lib/db');
+const crypto = require('crypto');
+const error = require('../lib/errors');
+const helpers = require('../lib/helpers');
 
 module.exports = function(app) {
 	app.  post("/auth", auth);
@@ -22,9 +22,9 @@ async function auth(request, response) {
 		response.write("username and password are required.");
 		return response.end();
 	}
-	var user = await db.get("SELECT * FROM users where username = ?",
+	const user = await db.get("SELECT * FROM users where username = ?",
 		request.body.username);
-	var password = request.body.password
+	const password = request.body.password;
 	if (user) {
 		// console.log("HX",
 		// 	//crypto.createHash("sha256", user.pw_salt||'').update(request.query.password).digest('hex'))
@@ -35,7 +35,9 @@ async function auth(request, response) {
 				(crypto.createHash("sha256", user.pw_salt)
 					.update(password).digest('hex') == user.password_hash)) {
 
-			var sesh = crypto.createHash("sha256").update(Math.random().toString()).digest('hex')
+			const sesh = crypto.createHash("sha256")
+				.update(Math.random().toString()).digest('hex');
+
 			await db.run(`
 				UPDATE users
 				SET session_cookie = ? , session_created = CURRENT_TIMESTAMP
@@ -56,7 +58,7 @@ async function auth(request, response) {
 }
 
 async function logout(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (user) {
 		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
 			user.id);
@@ -69,19 +71,19 @@ async function logout(request, response) {
 }
 
 async function index(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
 		return response.end();
 	}
-	var users = await db.all(`
+	const users = await db.all(`
 		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
 		LEFT JOIN permissions on users.id = permissions.user_id
 		GROUP BY users.id`);
 
 	response.writeHead(200);
-	var user_l = [];
+	const user_l = [];
 	for (const usr of users) {
 		user_l.push({
 			id: usr.id,
@@ -103,7 +105,7 @@ async function create(request, response) {
 		return response.end();
 	}
 
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -111,8 +113,9 @@ async function create(request, response) {
 	}
 
 	// Give the user a random un-hashed password
-	var pw = crypto.createHash("sha256")
+	const pw = crypto.createHash("sha256")
 		.update(Math.random().toString()).digest('hex').substring(1, 15);
+
 	try {
 		var r = await db.run(
 			"INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)",
@@ -135,7 +138,7 @@ async function create(request, response) {
 }
 
 async function read(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	var user = await helpers.check_cookie(request, response);
 	if (request.params.username != user.username) {
 		if (user.admin) {
 			// user = await db.get("SELECT * FROM users where username = ?",
@@ -162,7 +165,7 @@ async function read(request, response) {
 }
 
 async function update(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin && (
 			!request.body.password || request.body.password.length < 8)) {
 		response.writeHead(400);
@@ -201,7 +204,7 @@ async function update(request, response) {
 	}
 
 	try {
-		var f = await db.run(`
+		const f = await db.run(`
 			UPDATE users SET pw_salt = ? , password_hash = ?
 			WHERE username = ?`,
 			salt, pw_hash, request.params.username);
@@ -223,13 +226,13 @@ async function update(request, response) {
 }
 
 async function del_user(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		response.writeHead(403);
 		response.write("Must be admin");
 		return response.end();
 	}
-	var r = await db.run("DELETE FROM users WHERE username = ?",
+	const r = await db.run("DELETE FROM users WHERE username = ?",
 			request.params.username);
 	if (!r.stmt.changes) {
 		response.writeHead(404);
@@ -241,7 +244,7 @@ async function del_user(request, response) {
 }
 
 async function logs(request, response) {
-	var user = await helpers.check_cookie(request, response)
+	const user = await helpers.check_cookie(request, response);
 	if (!user.admin && request.params.username != user.username) {
 		response.writeHead(403);
 		response.write("Must be admin");
@@ -254,7 +257,7 @@ async function logs(request, response) {
 		response.write("page must be an int");
 		return response.end();
 	}
-	var logs = await db.all(`
+	const logs = await db.all(`
 		SELECT entry_logs.*, doors.name as door FROM entry_logs
 		INNER JOIN users on entry_logs.user_id = users.id
 		INNER JOIN doors on entry_logs.door_id = doors.id

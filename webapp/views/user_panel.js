@@ -76,9 +76,9 @@ module.exports = Backbone.View.extend({
 	},
 	dingleDoors: function() {
 		if (!this.user.get('doors')) return this.render();
+		var permitted = ','+this.user.get('doors')+',';
 		this.doors.each(_.bind(function(d) {
-			const r = new RegExp("(^|,)"+d.id+"(,|$)");
-			if (this.user.get('doors').match(r))
+			if (permitted.indexOf(','+d.id+',') >= 0)
 				d.set('allowed', true);
 		}, this));
 		this.render();
