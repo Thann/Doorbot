@@ -184,7 +184,7 @@ async function logs(request, response) {
 async function open(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		if (!user.salt) {
+		if (!user.pw_salt) {
 			response.writeHead(422);
 			response.write("Your password has been set by an admin and requires reset.");
 			return response.end();

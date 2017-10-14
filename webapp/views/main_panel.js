@@ -34,7 +34,7 @@ module.exports = Backbone.View.extend({
 			<div rv-each-user="users">
 				<a rv-href="'#user/' |+ user:username" rv-text="user:username"></a>
 				<span rv-text="user:password"></span>
-				<span rv-text="user:doors"></span>
+				<span rv-text="user.doors"></span>
 			</div>
 		</div>
 	`,
@@ -48,7 +48,6 @@ module.exports = Backbone.View.extend({
 			url: 'doors',
 		}))();
 		this.doors.on('sync', _.bind(function() {
-			console.log("DOOR SYNC", this.scope)
 			if (this.users) { this.users.fetch(); }
 			//TODO: render should not be nessicary
 			this.render()
@@ -60,11 +59,16 @@ module.exports = Backbone.View.extend({
 				url: 'users'
 			}))();
 			this.users.on('sync', _.bind(function(coll) {
-				console.log("USER SYNC", this.scope)
+				// Turn door numbers into names
+				coll.each(_.bind(function(user) {
+					user.doors = [];
+					const permitted = ','+user.get('doors')+',';
+					this.doors.each(_.bind(function(d) {
+						if (permitted.indexOf(','+d.id+',') >= 0)
+							user.doors.push(d.get('name'));
+					}, this));
+				}, this));
 				//TODO: render should not be nessicary
-				// for (const m of coll.models) {
-				// 	console.log("MMM", m)
-				// }
 				this.render()
 			}, this));
 		}
