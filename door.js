@@ -9,7 +9,7 @@ var options = {
 	server: "localhost",
 	port: "3000",
 	door: "1",
-	gpio: "8",
+	gpio: "10",
 	locktime: 5000,
 	pingtime: 5000,
 };
