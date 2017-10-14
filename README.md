@@ -12,9 +12,9 @@ You need is a RasberryPi and a Relay.
 then plugin the relay.
 It's recomended to use a signal pin above 8, because they will default to Low,
 and wont open the door on reboot.
+[pin-layout](https://github.com/Thann/Doorbot/blob/master/docs/images/pins.png)
 
 ![raspberry-pi](https://github.com/Thann/Doorbot/raw/master/docs/images/raspi.jpg)
-[pin layout](https://www.raspberrypi.org/documentation/usage/gpio/)
 
 ### Server
 The server can be run on the PI or anywhere else. Docker images exist for ARM and x86.
