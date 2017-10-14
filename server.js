@@ -16,10 +16,17 @@ var getopts = require("node-getopt").create([
 	['p', 'port=', 'Set listen port'],
 	['',  'watch', 'Recompile webapp on file modification'],
 	['',  'build', 'Compile webapp'],
-	['h', 'help',    '']
-]).bindHelp();
-var opt = getopts.parseSystem();
+	['h', 'help']
+]).bindHelp().setHelp(
+	"Doorbot: server w/ webui to manage users and doors.\n" +
+	"Usage: node server [OPTION]\n" +
+	"\n" +
+	"[[OPTIONS]]\n" +
+	"\n" +
+	"Repository: https://github.com/Thann/Doorbot"
+);
 
+var opt = getopts.parseSystem();
 if (opt.argv.length > 0) {
 	console.error("ERROR: Unexpected argument(s): " + opt.argv.join(', '));
 	console.error(getopts.getHelp());

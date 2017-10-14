@@ -19,7 +19,7 @@ and wont open the door on reboot.
 ### Server
 The server can be run on the PI or anywhere else. Docker images exist for ARM and x86.
 
-The `docker-compose.yml` file has been configured for ARM so from the PI,
+The `docker-compose.yml` file has been configured for ARM so on the PI,
 from the cloned repo, run:
 
 `sudo docker-compose up -d`

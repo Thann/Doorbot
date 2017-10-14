@@ -6,7 +6,7 @@ CMD ["server"]
 
 # Install dependencies
 #RUN apt update && \
-    #apt upgrade
+#    apt upgrade
 RUN apk update && \
     apk upgrade
 RUN apk add git python make g++

@@ -18,18 +18,30 @@ var getopts = require("node-getopt").create([
 	['x', 'dummy',   'Don\'t use GPIO, print instead'],
 	['g', 'gpio=',   'GPIO pins to open the door'],
 	['d', 'door=',   'Connect to server with door_id'],
-	['t', 'token=',  'Connect to server with token'],
+	['t', 'token=',  'Connect to server with token (required)'],
 	['s', 'server=', 'Connect to server at address'],
 	['p', 'port=',   'Connect to server on port'],
 	['k', 'insecure','Don\'t validate SSL'],
 	['h', 'help',    '']
-]).bindHelp();
+]).bindHelp().setHelp(
+	"Doorbot: connects to a server and registers a door to open.\n" +
+	"Usage: node door [OPTION]\n" +
+	"\n" +
+	"[[OPTIONS]]\n" +
+	"\n" +
+	"Repository: https://github.com/Thann/Doorbot"
+);
 var opt = getopts.parseSystem();
 
 if (opt.argv.length > 0) {
 	console.error("ERROR: Unexpected argument(s): " + opt.argv.join(', '));
 	console.error(getopts.getHelp());
 	process.exit(1);
+}
+
+if (!opt.options.token) {
+	console.error("ERROR: token is required");
+	process.exit(0);
 }
 
 // Merge opts into options
