@@ -166,14 +166,19 @@ async function read(request, response) {
 
 async function update(request, response) {
 	const user = await helpers.check_cookie(request, response);
-	if (!user.admin && (
+	const args = helpers.parse_args({
+		"admin": Boolean,
+		"password": String,
+		"keycode": parseInt,
+	}, request);
+
+	console.log("Update_USER", user, !user.admin, request.params.username, user.username)	if (!user.admin && (
 			!request.body.password || request.body.password.length < 8)) {
 		response.writeHead(400);
 		response.write("password must be at least 8 characters.");
 		return response.end();
 	}
 
-	console.log("Update_USER", user, !user.admin, request.params.username, user.username)
 	if (!user.admin && request.params.username != user.username) {
 		response.writeHead(403);
 		response.write("Can only update your own info.");
@@ -185,7 +190,6 @@ async function update(request, response) {
 		response.write("Cant make yourself admin.");
 		return response.end();
 	}
-	//TODO: update username and stuff. (PUT?)
 
 	if (request.params.username != user.username) {
 		var salt = null;
@@ -204,10 +208,11 @@ async function update(request, response) {
 	}
 
 	try {
-		const f = await db.run(`
+		// const f = await db.run(`
+		const f = await helpers.db_run_set(`
 			UPDATE users SET pw_salt = ? , password_hash = ?
 			WHERE username = ?`,
-			salt, pw_hash, request.params.username);
+			args, salt, pw_hash, request.params.username);
 		console.log("UPDATE:", f)
 	} catch(e) {
 		response.writeHead(400);
