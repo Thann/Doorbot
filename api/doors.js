@@ -27,7 +27,7 @@ async function index(request, response) {
 		var doors = await db.all("SELECT * FROM doors");
 	} else {
 		var doors = await db.all(`
-			SELECT * FROM doors
+			SELECT doors.* FROM doors
 			INNER JOIN permissions on doors.id = permissions.door_id
 			WHERE permissions.user_id = ?`,
 			user.id);
