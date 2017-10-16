@@ -216,7 +216,7 @@ async function open(request, response) {
 	}
 
 	await db.run("INSERT INTO entry_logs (user_id, door_id, method) VALUES (?,?,?)",
-		request.params.id, user.id, method);
+		user.id, request.params.id, method);
 
 	response.writeHead(200);
 	response.end();
