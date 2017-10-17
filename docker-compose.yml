@@ -8,8 +8,9 @@ services:
       - "3000:3000"
     volumes:
       - db:/usr/src/app/db
-    # Handy for webdev
-    #  - ./dist:/usr/src/app/dist
+    # Handy for dev
+    #  - ./api:/usr/src/app/api
+    #  - ./webapp:/usr/src/app/webapp
     #command: server --watch
 
   door:
