@@ -27,7 +27,7 @@
     "node-getopt": "^0.2.3",
     "node-sass": "^3.4.2",
     "querystring": "^0.2.0",
-    "rivets": "github:blikblum/rivets#svelte",
+    "rivets": "github:blikblum/rivets#971a83581611d125bb78f10a822d20b67b8d2b88",
     "rivets-backbone-adapter": "^2.2.0",
     "rpi-gpio": "^0.9.1",
     "sass-loader": "^3.2.0",
