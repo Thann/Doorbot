@@ -50,7 +50,7 @@ module.exports = Backbone.View.extend({
 		this.doors.on('sync', _.bind(function() {
 			if (this.users) { this.users.fetch(); }
 			//TODO: render should not be nessicary
-			this.render()
+			this.render();
 		}, this));
 		this.doors.fetch();
 
@@ -69,7 +69,7 @@ module.exports = Backbone.View.extend({
 					}, this));
 				}, this));
 				//TODO: render should not be nessicary
-				this.render()
+				this.render();
 			}, this));
 		}
 	},
@@ -109,7 +109,6 @@ module.exports = Backbone.View.extend({
 	},
 	openDoor: function(e) {
 		var id = $(e.currentTarget).data('id');
-		console.log("OPENING DOOR", id)
 		var door = this.doors.find({id: $(e.currentTarget).data('id')});
 		door.sync(null, this, {url: door.url()+'/open', method: 'POST'});
 	},

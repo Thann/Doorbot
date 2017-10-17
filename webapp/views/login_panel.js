@@ -62,7 +62,10 @@ module.exports = Backbone.View.extend({
 		Doorbot.User.save({
 			password: this.$('.change input[name="password"]')[0].value,
 		}, {
-			patch: true
+			patch: true,
+			success: function() {
+				Doorbot.Router.navigate('', {trigger: true});
+			}
 		});
 	},
 });
