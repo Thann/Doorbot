@@ -67,7 +67,8 @@ process.on('unhandledRejection', function(err, promise) {
 
 // --Watch
 if (options.watch || options.build) {
-	var watcher = require('child_process').spawn('webpack', ['--color', options.watch?'--watch':null]);
+	var watcher = require('child_process').spawn(
+		'node_modules/.bin/webpack', ['--color', options.watch?'--watch':null]);
 
 	watcher.stdout.on('data', function(data) {
 		console.log(data.toString());

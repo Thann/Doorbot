@@ -17,8 +17,8 @@ module.exports = function(app) {
 	app.   get("/doors/:id/logs", logs);
 	app.  post("/doors/:id/open", open);
 	app.    ws("/doors/:id/connect", connect);
-	app.  post("/doors/:id/permit/:user_id", permit);
-	app.delete("/doors/:id/permit/:user_id", deny);
+	app.  post("/doors/:id/permit/:username", permit);
+	app.delete("/doors/:id/permit/:username", deny);
 }
 
 async function index(request, response) {
@@ -89,7 +89,7 @@ async function read(request, response) {
 			"SELECT * FROM doors WHERE id = ?", request.params.id);
 	} else {
 		var door = await db.get(`
-			SELECT * FROM doors
+			SELECT doors.* FROM doors
 			INNER JOIN permissions on doors.id = permissions.door_id
 			WHERE permissions.user_id = ? AND doors.id = ?`,
 			user.id, request.params.id);
@@ -245,8 +245,11 @@ async function permit(request, response) {
 	}
 
 	try {
-		await db.run("INSERT INTO permissions (door_id, user_id) VALUES (?,?)",
-			request.params.id, request.params.user_id);
+		//TOOD: add constraints, created, expiration
+		var r = await db.run(`
+			INSERT INTO permissions (user_id, door_id)
+			SELECT users.id , ? FROM users WHERE username = ?`,
+			request.params.id, request.params.username);
 	} catch(e) {
 		response.writeHead(409);
 		response.write("Door already permits user.");
@@ -265,9 +268,10 @@ async function deny(request, response) {
 		return response.end();
 	}
 
-	const r = await db.run(
-		"DELETE FROM permissions WHERE door_id = ? AND user_id = ?",
-		request.params.id, request.params.user_id);
+	const r = await db.run(`
+		DELETE FROM permissions WHERE door_id = ? AND user_id IN
+		( SELECT id FROM users WHERE username = ? )`,
+		request.params.id, request.params.username);
 
 	if (!r.stmt.changes) {
 		response.writeHead(404);

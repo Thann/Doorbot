@@ -8,10 +8,13 @@ services:
       - "3000:3000"
     volumes:
       - db:/usr/src/app/db
+    # Handy for webdev
+    #  - ./dist:/usr/src/app/dist
+    #command: server --watch
 
   door:
     image: thann/doorbot:arm
-    restart: unless-stopped
+    #restart: unless-stopped
     privileged: true
     command: door -k -s server -t "abc123"
 

@@ -94,7 +94,7 @@ module.exports = Backbone.View.extend({
 		var door = this.doors.find({id: $(e.currentTarget).data('id')});
 		door.sync(null, this, {
 			method: 'POST',
-			url: door.url()+'/permit/'+this.user.get('id'),
+			url: door.url()+'/permit/'+this.user.get('username'),
 			// error: _.bind(function(e) {
 			// 	console.log("success", e)
 			// 	this.dingleDoors();
@@ -107,7 +107,7 @@ module.exports = Backbone.View.extend({
 		var door = this.doors.find({id: $(e.currentTarget).data('id')});
 		door.sync(null, this, {
 			method: 'DELETE',
-			url: door.url()+'/permit/'+this.user.get('id'),
+			url: door.url()+'/permit/'+this.user.get('username'),
 		});
 		door.attributes.allowed = false;
 		this.render();

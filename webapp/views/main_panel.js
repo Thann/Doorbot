@@ -60,6 +60,7 @@ module.exports = Backbone.View.extend({
 			}))();
 			this.users.on('sync', _.bind(function(coll) {
 				// Turn door numbers into names
+				if (coll.each)
 				coll.each(_.bind(function(user) {
 					user.doors = [];
 					const permitted = ','+user.get('doors')+',';
