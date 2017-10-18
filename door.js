@@ -41,7 +41,8 @@ if (opt.argv.length > 0) {
 
 if (!opt.options.token) {
 	console.error("ERROR: token is required");
-	process.exit(0);
+	console.error(getopts.getHelp());
+	process.exit(1);
 }
 
 // Merge opts into options

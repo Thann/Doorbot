@@ -4,8 +4,6 @@
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
-// var https = require('https');
-var qs = require('querystring');
 var app = express();
 
 var options = {

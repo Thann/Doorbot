@@ -26,11 +26,6 @@ async function auth(request, response) {
 		request.body.username);
 	const password = request.body.password;
 	if (user) {
-		// console.log("HX",
-		// 	//crypto.createHash("sha256", user.pw_salt||'').update(request.query.password).digest('hex'))
-		// 	crypto.createHash("sha256", user.pw_salt||'').update(password).digest('hex'))
-		// //if ((!user.pw_salt && request.query.password == user.password_hash) ||
-		// 		//(crypto.createHash("sha256", user.pw_salt).update(request.query.password).digest('hex') == user.password_hash)) {
 		if ((!user.pw_salt && password == user.password_hash) ||
 				(crypto.createHash("sha256", user.pw_salt)
 					.update(password).digest('hex') == user.password_hash)) {
@@ -141,7 +136,6 @@ async function read(request, response) {
 	var user = await helpers.check_cookie(request, response);
 	if (request.params.username != user.username) {
 		if (user.admin) {
-			// user = await db.get("SELECT * FROM users where username = ?",
 			user = await db.get(`
 				SELECT users.*, group_concat(permissions.door_id) as doors FROM users
 				LEFT JOIN permissions on users.id = permissions.user_id
