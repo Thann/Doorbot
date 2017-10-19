@@ -147,6 +147,10 @@ async function read(request, response) {
 			return response.end();
 		}
 	}
+	if (!user.id) {
+		response.writeHead(404);
+		return response.end();
+	}
 	response.writeHead(200);
 	response.write(JSON.stringify({
 		id: user.id,
