@@ -22,14 +22,14 @@ COPY package-lock.json /usr/src/app/
 RUN npm install --only=production
 
 # Bundle app source
-COPY webapp /usr/src/app/webapp
-COPY api /usr/src/app/api
-COPY lib /usr/src/app/lib
-COPY door.js /usr/src/app/
-COPY server.js /usr/src/app/
-COPY webpack.config.js /usr/src/app/
-COPY dist/index.html /usr/src/app/dist
 COPY migrations /usr/src/app/migrations
+COPY server.js /usr/src/app/
+COPY door.js /usr/src/app/
+COPY lib /usr/src/app/lib
+COPY api /usr/src/app/api
+COPY dist/index.html /usr/src/app/dist
+COPY webpack.config.js /usr/src/app/
+COPY webapp /usr/src/app/webapp
 
 # Build
 RUN node_modules/.bin/webpack
