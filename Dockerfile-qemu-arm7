@@ -1,0 +1,40 @@
+FROM resin/armv7hf-debian
+EXPOSE 3000
+ENTRYPOINT ["node"]
+CMD ["server"]
+
+RUN [ "cross-build-start" ]
+
+# Add node
+RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+
+# Install dependencies
+RUN apt update && \
+    apt upgrade
+RUN apt install nodejs git python make g++
+
+# Create app directory
+RUN mkdir -p /usr/src/app/dist
+WORKDIR /usr/src/app
+
+# Install app dependencies
+COPY package.json /usr/src/app/
+COPY package-lock.json /usr/src/app/
+
+RUN npm install --only=production
+
+# Bundle app source
+COPY migrations /usr/src/app/migrations
+COPY server.js /usr/src/app/
+COPY door.js /usr/src/app/
+COPY lib /usr/src/app/lib
+COPY api /usr/src/app/api
+COPY dist/index.html /usr/src/app/dist
+COPY webpack.config.js /usr/src/app/
+COPY webapp /usr/src/app/webapp
+
+# Build
+RUN node_modules/.bin/webpack
+
+RUN [ "cross-build-end" ]
+
