@@ -38,7 +38,8 @@ async function auth(request, response) {
 				SET session_cookie = ? , session_created = CURRENT_TIMESTAMP
 				WHERE id = ?`,
 				sesh, user.id);
-			response.setHeader('Set-Cookie', 'Session='+sesh+'; HttpOnly');
+			response.setHeader('Set-Cookie',
+				'Session='+sesh+'; HttpOnly; Max-Age=2592000');
 			response.writeHead(200);
 			response.write(JSON.stringify({
 				id: user.id,
