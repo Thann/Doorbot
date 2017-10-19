@@ -11,7 +11,9 @@ module.exports = Backbone.View.extend({
 		</h4>
 		It's a simple user-management platform that uses a raspberry pi for opening doors and logging entry.
 		<br>
-		For help getting started see <a href="#">the wiki</a>
+		For help getting started see the
+		<a href="https://github.com/Thann/Doorbot" target="_blank">readme</a>
+
 		<br><br>
 		<form rv-hide="user.isAuthed" action="auth" class="login">
 			<input placeholder="username" type="text", name="username">
