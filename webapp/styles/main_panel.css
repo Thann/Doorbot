@@ -1,0 +1,11 @@
+#MainPanel {
+	padding-top: 20px;
+
+	.btn {
+		width: 75%;
+		height: 75px;
+		display: block;
+		max-width: 300px;
+		margin: 25px auto 0 auto;
+	}
+}

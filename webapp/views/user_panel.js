@@ -95,10 +95,6 @@ module.exports = Backbone.View.extend({
 		door.sync(null, this, {
 			method: 'POST',
 			url: door.url()+'/permit/'+this.user.get('username'),
-			// error: _.bind(function(e) {
-			// 	console.log("success", e)
-			// 	this.dingleDoors();
-			// }, this)
 		});
 		door.attributes.allowed = true;
 		this.render();

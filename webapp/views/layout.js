@@ -17,7 +17,8 @@ module.exports = Backbone.View.extend({
 	loading: true,
 	mainTemplate: '<div data-subview="main"></div>',
 	userTemplate: '<div data-subview="user"></div>',
-	doorTemplate: '<div data-subview="door"></div>',
+	// doorTemplate: '<div data-subview="door"></div>',
+	adminTemplate: '<div data-subview="admin"></div>',
 	loginTemplate: '<div data-subview="login"></div>',
 	events: {
 		'click #Header .toggle-left-sidebar': function() {
@@ -28,6 +29,7 @@ module.exports = Backbone.View.extend({
 		main: function() { return new Doorbot.Views.MainPanel(); },
 		user: function() { return new Doorbot.Views.UserPanel(); },
 		// door: function() { return new Doorbot.Views.DoorPanel(); },
+		admin: function() { return new Doorbot.Views.AdminPanel(); },
 		login: function() { return new Doorbot.Views.LoginPanel(); },
 		header: function() { return new Doorbot.Views.Header(); },
 		sidebar: function() { return new Doorbot.Views.Sidebar(); },
@@ -41,8 +43,10 @@ module.exports = Backbone.View.extend({
 			routes: {
 				"": "mainTemplate",
 				"login": "loginTemplate",
+				"admin": "adminTemplate",
 				"user/:id": "userTemplate",
-				"door/:id": "doorTemplate",
+				// "door/:id": "doorTemplate",
+				"*notFound": "",
 			},
 			execute: function(cb, args, name) {
 				this.args = args;
@@ -52,7 +56,7 @@ module.exports = Backbone.View.extend({
 					layout.render(layout[name]);
 				} else {
 					// route not found
-					Backbone.Router.prototype.execute.apply(this, arguments);
+					this.navigate('', {trigger: true});
 				}
 			}
 		}))();
@@ -72,7 +76,8 @@ module.exports = Backbone.View.extend({
 		Doorbot.User.init();
 	},
 	setTitle: function() {
-		document.title = 'Doorbot - '+(Doorbot.AppConfig.OrgName||'');
+		document.title = 'Doorbot '+(
+			Doorbot.AppConfig.OrgName? ' - '+Doorbot.AppConfig.OrgName : '');
 	},
 	render: function(tmpl){
 		this.$el.html(this.template);
