@@ -1,8 +1,10 @@
 version: '2'
 services:
   server:
-    image: thann/doorbot:arm
-    build: .
+    image: thann/doorbot:arm7
+    build:
+      context: .
+      dockerfile: Dockerfile-arm7
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -14,7 +16,7 @@ services:
     #command: server --watch
 
   door:
-    image: thann/doorbot:arm
+    image: thann/doorbot:arm7
     #restart: unless-stopped
     privileged: true
     command: door -k -s server -t "abc123"
