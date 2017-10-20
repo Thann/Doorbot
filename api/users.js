@@ -134,31 +134,29 @@ async function create(request, response) {
 }
 
 async function read(request, response) {
-	var user = await helpers.check_cookie(request, response);
-	if (request.params.username != user.username) {
-		if (user.admin) {
-			user = await db.get(`
-				SELECT users.*, group_concat(permissions.door_id) as doors FROM users
-				LEFT JOIN permissions on users.id = permissions.user_id
-				WHERE username = ?`,
-				request.params.username);
-		} else {
-			response.writeHead(403);
-			response.write("Only admins can view others.");
-			return response.end();
-		}
+	const user = await helpers.check_cookie(request, response);
+	if (!user.admin && request.params.username != user.username) {
+		response.writeHead(403);
+		response.write("Only admins can view others.");
+		return response.end();
 	}
-	if (!user.id) {
+	const usr = await db.get(`
+		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
+		LEFT JOIN permissions on users.id = permissions.user_id
+		WHERE username = ?`,
+		request.params.username);
+	if (!usr.id) {
 		response.writeHead(404);
 		return response.end();
 	}
 	response.writeHead(200);
 	response.write(JSON.stringify({
-		id: user.id,
-		doors: user.doors,
-		admin: !!user.admin,
-		username: user.username,
-		requires_reset: !user.pw_salt,
+		id: usr.id,
+		doors: usr.doors,
+		admin: !!usr.admin,
+		username: usr.username,
+		password: user.admin && usr.pw_salt? null : usr.password_hash,
+		requires_reset: !usr.pw_salt,
 	}));
 	response.end();
 }
@@ -196,6 +194,14 @@ async function update(request, response) {
 				.digest('hex').substring(1, 15);
 		}
 	} else {
+		if (user.pw_salt && (!request.current_password ||
+							crypto.createHash("sha256", user.pw_salt)
+							.update(request.body.current_password).digest('hex')
+								!== user.password_hash)) {
+			response.writeHead(400);
+			response.write("incorrect current_password.");
+			return response.end();
+		}
 		var salt = crypto.createHash("sha256")
 			.update(Math.random().toString()).digest('hex');
 		var pw_hash = crypto.createHash("sha256", salt)

@@ -22,10 +22,8 @@ module.exports = Backbone.View.extend({
 		</form>
 		<div rv-value="errors"></div>
 
-		<form rv-show="user.isAuthed" action="auth" class="change">
-			<div rv-show="user.attributes.requires_reset">
-				Your password was set by an admin and requires a reset!
-			</div>
+		<form rv-show="user.attributes.requires_reset" action="auth" class="change">
+			<div> Your password was set by an admin and requires a reset! </div>
 			Reset Password
 			<input placeholder="username" type="hidden", name="username" rv-value="user.attributes.username">
 			<input placeholder="password" type="password", name="password">
@@ -65,7 +63,8 @@ module.exports = Backbone.View.extend({
 			password: this.$('.change input[name="password"]')[0].value,
 		}, {
 			patch: true,
-			success: function() {
+			success: function(m) {
+				m.set({'password': undefined}, {trigger: false});
 				Doorbot.Router.navigate('', {trigger: true});
 			}
 		});

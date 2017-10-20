@@ -4,6 +4,10 @@
   "description": "Simple door opener and user managment system",
   "bin": "server.js",
   "license": "MIT",
+  "scripts": {
+    "test": "mocha",
+    "start": "node server --build"
+  },
   "dependencies": {
     "babel-core": "^6.7.2",
     "babel-loader": "^6.2.4",
@@ -35,5 +39,9 @@
     "style-loader": "^0.13.0",
     "webpack": "^1.12.14",
     "ws": "^3.2.0"
+  },
+  "devDependencies": {
+    "mocha": "^4.0.1",
+    "supertest": "^3.0.0"
   }
 }

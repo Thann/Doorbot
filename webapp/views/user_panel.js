@@ -46,7 +46,9 @@ module.exports = Backbone.View.extend({
 			this.user = Doorbot.User;
 		} else {
 			this.user = new UserModel({username: username});
-			this.user.fetch();
+			this.user.fetch({error: function() {
+			Doorbot.Router.navigate('', {trigger: true});
+		}});
 		}
 
 		this.doors = new (Backbone.Collection.extend({
