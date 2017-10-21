@@ -5,7 +5,7 @@ const util = require('util');
 const WebSocket = require('ws');
 const gpio = require('rpi-gpio');
 
-var options = {
+const options = {
 	server: "localhost",
 	port: "3000",
 	door: "1",
@@ -14,7 +14,7 @@ var options = {
 	pingtime: 5000,
 };
 
-var getopts = require("node-getopt").create([
+const getopts = require("node-getopt").create([
 	['x', 'dummy',   'Don\'t use GPIO, print instead'],
 	['g', 'gpio=',   'GPIO pins to open the door'],
 	['d', 'door=',   'Connect to server with door_id'],
@@ -31,7 +31,7 @@ var getopts = require("node-getopt").create([
 	"\n" +
 	"Repository: https://github.com/Thann/Doorbot"
 );
-var opt = getopts.parseSystem();
+const opt = getopts.parseSystem();
 
 if (opt.argv.length > 0) {
 	console.error("ERROR: Unexpected argument(s): " + opt.argv.join(', '));

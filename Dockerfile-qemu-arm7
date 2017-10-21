@@ -1,27 +1,32 @@
-FROM resin/armv7hf-debian
+FROM resin/armv7hf-debian AS base
 EXPOSE 3000
 ENTRYPOINT ["node"]
 CMD ["server"]
 
 RUN [ "cross-build-start" ]
 
-# Add node
-RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-
-# Install dependencies
-RUN apt update && \
-    apt upgrade
-RUN apt install nodejs git python make g++
-
 # Create app directory
 RUN mkdir -p /usr/src/app/dist
 WORKDIR /usr/src/app
 
+# Install updates
+RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+RUN apt update && \
+    apt upgrade && \
+    apt install nodejs
+
+# Install build dependencies
+FROM base AS build
+RUN apt install git python make g++
+
 # Install app dependencies
 COPY package.json /usr/src/app/
 COPY package-lock.json /usr/src/app/
+RUN npm install --only=production && npm cache clean --force && rm -rf /tmp/*
 
-RUN npm install --only=production
+# Make app
+FROM base
+COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
 
 # Bundle app source
 COPY migrations /usr/src/app/migrations
@@ -33,7 +38,7 @@ COPY dist/index.html /usr/src/app/dist
 COPY webpack.config.js /usr/src/app/
 COPY webapp /usr/src/app/webapp
 
-# Build
+# Build webapp
 RUN node_modules/.bin/webpack
 
 RUN [ "cross-build-end" ]
