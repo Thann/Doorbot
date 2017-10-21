@@ -33,7 +33,6 @@ async function index(request, response) {
 			user.id);
 	}
 
-	response.writeHead(200);
 	const door_l = [];
 	for (const door of doors) {
 		door_l.push({
@@ -43,23 +42,17 @@ async function index(request, response) {
 			available: DOOR_SOCKETS[door.id] && DOOR_SOCKETS[door.id].readyState == 1,
 		});
 	}
-	response.write(JSON.stringify(door_l));
-	response.end();
+	response.send(door_l);
 }
 
 async function create(request, response) {
 	if (!request.body.name) {
-		response.writeHead(400);
-		response.write("name is required.");
-		return response.end();
+		return response.status(400).send({name: 'required'});
 	}
 
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		response.end();
-		return;
+		return response.status(403).send({error: 'must be admin'});
 	}
 
 	const token = crypto.createHash("sha256")
@@ -68,18 +61,14 @@ async function create(request, response) {
 		var r = await db.run("INSERT INTO doors (name, token) VALUES (?,?)",
 			request.body.name, token);
 	} catch(e) {
-		response.writeHead(400);
-		response.write("Door name already used");
-		return response.end();
+		return response.status(400).end({name: 'already taken'});
 	}
 
-	response.writeHead(200);
-	response.write(JSON.stringify({
+	response.send({
 		id: r.stmt.lastID,
 		name: request.body.name,
 		token: token,
-	}));
-	response.end();
+	});
 }
 
 async function read(request, response) {
@@ -96,79 +85,57 @@ async function read(request, response) {
 	}
 
 	if (!door) {
-		response.writeHead(404);
-		return response.end();
+		return response.status(404).end();
 	}
 
-	response.writeHead(200);
-	response.write(JSON.stringify({
+	response.send({
 		id: door.id,
 		name: door.name,
 		token: user.admin ? door.token : null,
-	}));
-	response.end();
+	});
 }
 
 async function update(request, response) {
 	if (!request.body.name) {
-		response.writeHead(400);
-		response.write("name is required.");
-		return response.end();
+		return response.status(400).send({name: 'required'});
 	}
 
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 
 	try {
 		await db.run("UPDATE doors SET name = ? WHERE id = ?",
 			request.body.name, request.params.id);
 	} catch(e) {
-		response.writeHead(400);
-		response.write("DB update error.");
-		return response.end();
+		return response.status(400).send({error: 'DB update error'});
 	}
 
-	response.writeHead(200);
-	response.write(JSON.stringify({
+	response.send({
 		id: request.params.id,
 		name: request.body.name,
-	}));
-	response.end();
+	});
 }
 
 async function del_door(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 	const r = await db.run("DELETE FROM doors WHERE id = ?", request.params.id);
-	if (!r.stmt.changes) {
-		response.writeHead(404);
-	} else {
-		response.writeHead(200);
-	}
-	response.end();
+	response.status(r.stmt.changes? 200 : 404).end();
 }
 
 async function logs(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 	try {
 		var page = parseInt(request.params.page||1)-1;
 	} catch(e) {
-		response.writeHead(400);
-		response.write("page must be an int");
-		return response.end();
+		return response.status(400).send({page: 'must be an int'});
 	}
 	const logs = await db.all(`
 		SELECT entry_logs.*, users.username FROM entry_logs
@@ -176,18 +143,15 @@ async function logs(request, response) {
 		WHERE door_id = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
 		request.params.id, 50, page*50);
 
-	response.writeHead(200);
-	response.write(JSON.stringify(logs));
-	response.end();
+	response.send(logs);
 }
 
 async function open(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		if (!user.pw_salt) {
-			response.writeHead(422);
-			response.write("Your password has been set by an admin and requires reset.");
-			return response.end();
+			return response.status(422).send({error:
+				'your password has been set by an admin and requires reset'});
 		}
 
 		const perm = await db.get(`
@@ -196,12 +160,12 @@ async function open(request, response) {
 			request.params.id, user.id);
 
 		if (!perm) {
-			response.writeHead(403);
-			response.write("You dont have permissions to open this door.");
-			return response.end();
+			return response.status(403).send({error:
+				'you dont have permissions to open this door.'});
 		}
 	}
 
+	//TODO: x-forwarded
 	const method = "web:"+request.connection.remoteAddress;
 
 	//TODO: check constraints
@@ -210,16 +174,13 @@ async function open(request, response) {
 		DOOR_SOCKETS[request.params.id].send('open');
 	} catch(e) {
 		console.warn("ERROR: could not open door:", e);
-		response.writeHead(504);
-		response.write("door could not be opened.");
-		return response.end();
+		return response.status(503).send({error: 'door could not be opened'});
 	}
 
 	await db.run("INSERT INTO entry_logs (user_id, door_id, method) VALUES (?,?,?)",
 		user.id, request.params.id, method);
 
-	response.writeHead(200);
-	response.end();
+	response.status(200).end();
 }
 
 async function connect(ws, request, next) {
@@ -239,9 +200,7 @@ async function connect(ws, request, next) {
 async function permit(request, response) {
 	const user = await helpers.check_cookie(request, response)
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 
 	try {
@@ -251,21 +210,16 @@ async function permit(request, response) {
 			SELECT users.id , ? FROM users WHERE username = ?`,
 			request.params.id, request.params.username);
 	} catch(e) {
-		response.writeHead(409);
-		response.write("Door already permits user.");
-		return response.end();
+		return response.status(409).send({error: 'door already permits user'});
 	}
 
-	response.writeHead(200);
-	response.end();
+	response.status(200).end();
 }
 
 async function deny(request, response) {
 	const user = await helpers.check_cookie(request, response)
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 
 	const r = await db.run(`
@@ -274,12 +228,8 @@ async function deny(request, response) {
 		request.params.id, request.params.username);
 
 	if (!r.stmt.changes) {
-		response.writeHead(404);
-		response.write("Door doesn't permit user.");
+		response.status(404).send({error: "door doesn't permit user"});
 	} else {
-		response.writeHead(200);
+		response.status(200).end();
 	}
-
-	response.end();
 }
-

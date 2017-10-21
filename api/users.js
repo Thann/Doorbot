@@ -18,9 +18,8 @@ module.exports = function(app) {
 
 async function auth(request, response) {
 	if (!request.body.username || !request.body.password) {
-		response.writeHead(400);
-		response.write("username and password are required.");
-		return response.end();
+		return response.status(400)
+			.send({username: 'required', password: 'required'});
 	}
 	const user = await db.get("SELECT * FROM users where username = ?",
 		request.body.username);
@@ -38,19 +37,16 @@ async function auth(request, response) {
 				SET session_cookie = ? , session_created = CURRENT_TIMESTAMP
 				WHERE id = ?`,
 				sesh, user.id);
-			response.setHeader('Set-Cookie',
+			response.set('Set-Cookie',
 				'Session='+sesh+'; HttpOnly; Max-Age=2592000');
-			response.writeHead(200);
-			response.write(JSON.stringify({
+			return response.send({
 				id: user.id,
 				username: user.username,
 				requires_reset: !user.pw_salt,
-			}));
-			return response.end();
+			});
 		}
 	}
-	response.writeHead(401);
-	return response.end();
+	response.status(401).end();
 }
 
 async function logout(request, response) {
@@ -58,27 +54,22 @@ async function logout(request, response) {
 	if (user) {
 		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
 			user.id);
-		response.setHeader('Set-Cookie', 'Session=; HttpOnly');
-		response.writeHead(200);
-		return response.end();
+		response.set('Set-Cookie', 'Session=; HttpOnly');
+		return response.send(200);
 	}
-	response.writeHead(401);
-	return response.end();
+	response.status(401).end();
 }
 
 async function index(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 	const users = await db.all(`
 		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
 		LEFT JOIN permissions on users.id = permissions.user_id
 		GROUP BY users.id`);
 
-	response.writeHead(200);
 	const user_l = [];
 	for (const usr of users) {
 		user_l.push({
@@ -90,22 +81,18 @@ async function index(request, response) {
 			requires_reset: !usr.pw_salt,
 		});
 	}
-	response.write(JSON.stringify(user_l));
-	response.end();
+	response.send(user_l);
 }
 
 async function create(request, response) {
 	if (!request.body.username) {
-		response.writeHead(400);
-		response.write("username is required.");
-		return response.end();
+		return response.status(400)
+			.send({username: 'required'});
 	}
 
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 
 	// Give the user a random un-hashed password
@@ -117,28 +104,24 @@ async function create(request, response) {
 			"INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)",
 			request.body.username, pw, !!request.body.admin);
 	} catch(e) {
-		response.writeHead(400);
-		response.write("Username already taken");
-		return response.end();
+		return response.status(400)
+			.send({username: 'already taken'});
 	}
 
-	response.writeHead(200);
-	response.write(JSON.stringify({
+	response.send({
 		id: r.stmt.lastID,
 		admin: !!request.body.admin,
 		username: request.body.username,
 		password: pw,
 		requires_reset: true,
-	}));
-	response.end();
+	});
 }
 
 async function read(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin && request.params.username != user.username) {
-		response.writeHead(403);
-		response.write("Only admins can view others.");
-		return response.end();
+		return response.status(403)
+			.send({error: 'only admins can view others'});
 	}
 	const usr = await db.get(`
 		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
@@ -146,41 +129,34 @@ async function read(request, response) {
 		WHERE username = ?`,
 		request.params.username);
 	if (!usr.id) {
-		response.writeHead(404);
-		return response.end();
+		return response.status(404).end();
 	}
-	response.writeHead(200);
-	response.write(JSON.stringify({
+	response.send({
 		id: usr.id,
 		doors: usr.doors,
 		admin: !!usr.admin,
 		username: usr.username,
 		password: user.admin && usr.pw_salt? null : usr.password_hash,
 		requires_reset: !usr.pw_salt,
-	}));
-	response.end();
+	});
 }
 
 async function update(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin && (
 			!request.body.password || request.body.password.length < 8)) {
-		response.writeHead(400);
-		response.write("password must be at least 8 characters.");
-		return response.end();
+		return response.status(400)
+			.send({password: 'must be at least 8 characters'});
 	}
 
-	console.log("Update_USER", user, !user.admin, request.params.username, user.username)
+	// console.log("Update_USER", user, !user.admin, request.params.username, user.username)
 	if (!user.admin && request.params.username != user.username) {
-		response.writeHead(403);
-		response.write("Can only update your own info.");
-		return response.end();
+		return response.status(403)
+			.send({error: 'can only update your own info'});
 	}
 
 	if (!user.admin && request.body.admin) {
-		response.writeHead(403);
-		response.write("Cant make yourself admin.");
-		return response.end();
+		return response.status(403).send({error: "can't make yourself admin"});
 	}
 	//TODO: update username and stuff. (PUT?)
 
@@ -198,9 +174,8 @@ async function update(request, response) {
 							crypto.createHash("sha256", user.pw_salt)
 							.update(request.body.current_password).digest('hex')
 								!== user.password_hash)) {
-			response.writeHead(400);
-			response.write("incorrect current_password.");
-			return response.end();
+			return response.status(400)
+				.send({current_password: 'incorrect password'});
 		}
 		var salt = crypto.createHash("sha256")
 			.update(Math.random().toString()).digest('hex');
@@ -209,58 +184,42 @@ async function update(request, response) {
 	}
 
 	try {
-		const f = await db.run(`
+		var r = await db.run(`
 			UPDATE users SET pw_salt = ? , password_hash = ?
 			WHERE username = ?`,
 			salt, pw_hash, request.params.username);
-		console.log("UPDATE:", f)
+		// console.log("UPDATE:", r)
 	} catch(e) {
-		response.writeHead(400);
-		response.write("DB update error.");
-		return response.end();
+		return response.status(400).send({error: 'DB update error'});
 	}
 
-	response.writeHead(200);
-	response.write(JSON.stringify({
-		id: user.id,
-		admin: user.admin,
-		username: user.username,
-		requires_reset: false,
-	}));
-	response.end();
+	response.send({
+		id: r.lastID,
+		// admin: user.admin,
+		// username: user.username,
+		// requires_reset: false,
+	});
 }
 
 async function del_user(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 	const r = await db.run("DELETE FROM users WHERE username = ?",
 			request.params.username);
-	if (!r.stmt.changes) {
-		response.writeHead(404);
-	} else {
-		response.writeHead(200);
-	}
-
-	response.end();
+	response.status(r.stmt.changes? 200 : 404).end();
 }
 
 async function logs(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin && request.params.username != user.username) {
-		response.writeHead(403);
-		response.write("Must be admin");
-		return response.end();
+		return response.status(403).send({error: 'must be admin'});
 	}
 	try {
 		var page = parseInt(request.params.page||1)-1;
 	} catch(e) {
-		response.writeHead(400);
-		response.write("page must be an int");
-		return response.end();
+		return response.status(400).send({page: 'must be an int'});
 	}
 	const logs = await db.all(`
 		SELECT entry_logs.*, doors.name as door FROM entry_logs
@@ -269,7 +228,5 @@ async function logs(request, response) {
 		WHERE users.username = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
 		request.params.username, 50, page*50);
 
-	response.writeHead(200);
-	response.write(JSON.stringify(logs));
-	response.end();
+	response.send(logs);
 }

@@ -38,7 +38,7 @@ if (require.main === module) {
 } else {
 	// Override port when required by tests
 	options.port = 6969;
-	process.env.NODE_ENV = 'test'
+	process.env.NODE_ENV = 'test';
 }
 
 // Load middleware
@@ -67,6 +67,7 @@ process.on('unhandledRejection', function(err, promise) {
 module.exports = app.listen(options.port, function() {
 	console.log("listening on", options.port);
 });
+module.exports.ready = require('./lib/db').ready;
 
 
 // --Watch
