@@ -1,1 +1,2 @@
 --exit
+--require test/mocha.env.js

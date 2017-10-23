@@ -11,7 +11,10 @@ const options = {
 	port: 3000,
 };
 
-if (require.main === module) {
+if (require.main !== module) {
+	// Override port when required by tests
+	options.port = 6969;
+} else {
 	var getopts = require("node-getopt").create([
 		['p', 'port=', 'Set listen port'],
 		['',  'watch', 'Recompile webapp on file modification'],
@@ -35,10 +38,6 @@ if (require.main === module) {
 
 	// Merge opts into options
 	Object.assign(options, opt.options);
-} else {
-	// Override port when required by tests
-	options.port = 6969;
-	process.env.NODE_ENV = 'test';
 }
 
 // Load middleware
@@ -67,7 +66,6 @@ process.on('unhandledRejection', function(err, promise) {
 module.exports = app.listen(options.port, function() {
 	console.log("listening on", options.port);
 });
-module.exports.ready = require('./lib/db').ready;
 
 
 // --Watch

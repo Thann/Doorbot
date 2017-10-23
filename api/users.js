@@ -37,6 +37,7 @@ async function auth(request, response) {
 				SET session_cookie = ? , session_created = CURRENT_TIMESTAMP
 				WHERE id = ?`,
 				sesh, user.id);
+
 			response.set('Set-Cookie',
 				'Session='+sesh+'; HttpOnly; Max-Age=2592000');
 			return response.send({
@@ -77,7 +78,7 @@ async function index(request, response) {
 			doors: usr.doors,
 			admin: !!usr.admin,
 			username: usr.username,
-			password: usr.pw_salt? null : usr.password_hash,
+			password: usr.pw_salt? undefined : usr.password_hash,
 			requires_reset: !usr.pw_salt,
 		});
 	}
@@ -136,7 +137,7 @@ async function read(request, response) {
 		doors: usr.doors,
 		admin: !!usr.admin,
 		username: usr.username,
-		password: user.admin && usr.pw_salt? null : usr.password_hash,
+		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
 		requires_reset: !usr.pw_salt,
 	});
 }
@@ -193,11 +194,19 @@ async function update(request, response) {
 		return response.status(400).send({error: 'DB update error'});
 	}
 
+	const usr = await db.get(`
+		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
+		LEFT JOIN permissions on users.id = permissions.user_id
+		WHERE username = ?`,
+		request.params.username);
+
 	response.send({
-		id: r.lastID,
-		// admin: user.admin,
-		// username: user.username,
-		// requires_reset: false,
+		id: usr.id,
+		doors: usr.doors,
+		admin: !!usr.admin,
+		username: usr.username,
+		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
+		requires_reset: !usr.pw_salt,
 	});
 }
 

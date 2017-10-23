@@ -38,7 +38,7 @@ async function index(request, response) {
 		door_l.push({
 			id: door.id,
 			name: door.name,
-			token: user.admin ? door.token : null,
+			token: user.admin ? door.token : undefined,
 			available: DOOR_SOCKETS[door.id] && DOOR_SOCKETS[door.id].readyState == 1,
 		});
 	}
@@ -61,7 +61,7 @@ async function create(request, response) {
 		var r = await db.run("INSERT INTO doors (name, token) VALUES (?,?)",
 			request.body.name, token);
 	} catch(e) {
-		return response.status(400).end({name: 'already taken'});
+		return response.status(400).send({name: 'already taken'});
 	}
 
 	response.send({
@@ -91,7 +91,7 @@ async function read(request, response) {
 	response.send({
 		id: door.id,
 		name: door.name,
-		token: user.admin ? door.token : null,
+		token: user.admin ? door.token : undefined,
 	});
 }
 
@@ -106,15 +106,17 @@ async function update(request, response) {
 	}
 
 	try {
-		await db.run("UPDATE doors SET name = ? WHERE id = ?",
+		var r = await db.run("UPDATE doors SET name = ? WHERE id = ?",
 			request.body.name, request.params.id);
 	} catch(e) {
 		return response.status(400).send({error: 'DB update error'});
 	}
 
+	const door = await db.get(
+		"SELECT * FROM doors WHERE id = ?", request.params.id);
 	response.send({
-		id: request.params.id,
-		name: request.body.name,
+		id: door.id,
+		name: door.name,
 	});
 }
 
