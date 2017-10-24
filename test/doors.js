@@ -128,6 +128,14 @@ describe('Doors API', function() {
 				.expect(404)
 		});
 
+		it('index', async function() {
+			await agent.get('/doors')
+				.expect(200, [{
+					id: 1,
+					name: 'front',
+				}]);
+		});
+
 		it('update', async function() {
 			await agent.patch('/doors/1')
 				.expect(400, {name: 'required'});
@@ -144,6 +152,15 @@ describe('Doors API', function() {
 				.expect(403);
 			await agent.delete('/users/missing')
 				.expect(403);
+		});
+
+		it('permit', async function() {
+			await agent.post('/doors/1/permit/door_dummy')
+				.expect(403)
+			await agent.post('/doors/1/permit/admin')
+				.expect(403)
+			await agent.post('/doors/2/permit/door_dummy')
+				.expect(403)
 		});
 
 		it('open', async function() {

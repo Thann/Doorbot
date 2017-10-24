@@ -48,6 +48,25 @@ describe('Users API', function() {
 
 	});
 
+	it('index', async function() {
+		await agent.get('/users')
+			.expect(200, [{
+				id: 1,
+				doors: null,
+				admin: true,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+			}, {
+				id: 2,
+				doors: null,
+				admin: false,
+				password: /\w+/,
+				username: 'Dummy',
+				requires_reset: true,
+			}]);
+	});
+
 	it('update', async function() {
 		await agent.patch('/users/Dummy')
 			.send({password: 'dummy'})
@@ -145,6 +164,11 @@ describe('Users API', function() {
 			await agent.get('/users/admin')
 				.expect(403)
 			await agent.get('/users/missing')
+				.expect(403)
+		});
+
+		it('index', async function() {
+			await agent.get('/users')
 				.expect(403)
 		});
 
