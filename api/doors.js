@@ -28,7 +28,7 @@ async function index(request, response) {
 	} else {
 		var doors = await db.all(`
 			SELECT doors.* FROM doors
-			INNER JOIN permissions on doors.id = permissions.door_id
+			INNER JOIN permissions ON doors.id = permissions.door_id
 			WHERE permissions.user_id = ?`,
 			user.id);
 	}
@@ -79,7 +79,7 @@ async function read(request, response) {
 	} else {
 		var door = await db.get(`
 			SELECT doors.* FROM doors
-			INNER JOIN permissions on doors.id = permissions.door_id
+			INNER JOIN permissions ON doors.id = permissions.door_id
 			WHERE permissions.user_id = ? AND doors.id = ?`,
 			user.id, request.params.id);
 	}
@@ -141,7 +141,7 @@ async function logs(request, response) {
 	}
 	const logs = await db.all(`
 		SELECT entry_logs.*, users.username FROM entry_logs
-		INNER JOIN users on entry_logs.user_id = users.id
+		INNER JOIN users ON entry_logs.user_id = users.id
 		WHERE door_id = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
 		request.params.id, 50, page*50);
 
@@ -173,7 +173,8 @@ async function open(request, response) {
 	//TODO: check constraints
 	try {
 		// open the door
-		DOOR_SOCKETS[request.params.id].send('open');
+		if (process.env.NODE_ENV != 'test')
+			DOOR_SOCKETS[request.params.id].send('open');
 	} catch(e) {
 		console.warn("ERROR: could not open door:", e);
 		return response.status(503).send({error: 'door could not be opened'});
@@ -205,6 +206,12 @@ async function permit(request, response) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
+	const door = await db.get("SELECT * FROM doors WHERE id = ?",
+		request.params.id);
+	if (!door) {
+		return response.status(404).send({error: "door doesn't exist"});
+	}
+
 	try {
 		//TOOD: add constraints, created, expiration
 		var r = await db.run(`
@@ -213,6 +220,9 @@ async function permit(request, response) {
 			request.params.id, request.params.username);
 	} catch(e) {
 		return response.status(409).send({error: 'door already permits user'});
+	}
+	if (!r.changes) {
+		return response.status(404).send({error: "user doesn't exist"});
 	}
 
 	response.status(200).end();

@@ -100,11 +100,27 @@ describe('Users API', function() {
 			.expect(200, []);
 		await agent.get('/users/Dummy/logs')
 			.expect(200, []);
-		//TODO: add entries
+		await agent.post('/doors')
+			.send({name: 'main'})
+		await agent.post('/doors/1/open')
+			.expect(200);
+		await agent.get('/users/admin/logs')
+			.expect(200, [{
+				id: 1,
+				door_id: 1,
+				user_id: 1,
+				door: 'main',
+				time: /[\d\-: ]+/,
+				method: 'web:::ffff:127.0.0.1',
+			}]);
+		await agent.get('/users/Dummy/logs')
+			.expect(200, []);
 	});
 
 	describe('as an under-privileged user', function() {
 		it('auth', async function() {
+			await agent.post('/doors/1/permit/Dummy')
+				.expect(200)
 			await agent.post('/auth')
 				.send({username: 'Dummy', password: 'dummy'})
 				.expect(200);
@@ -120,7 +136,7 @@ describe('Users API', function() {
 			await agent.get('/users/Dummy')
 				.expect(200, {
 					id: 2,
-					doors: null,
+					doors: '1',
 					admin: false,
 					username: 'Dummy',
 					password: 'dummy',
@@ -136,6 +152,9 @@ describe('Users API', function() {
 			await agent.patch('/users/Dummy')
 				.send({password: 'dummy'})
 				.expect(400, {password: 'must be at least 8 characters'});
+			await agent.patch('/users/Dummy')
+				.send({password: 'door_dummy'})
+				.expect(200);
 		});
 
 		it('delete', async function() {
@@ -152,7 +171,17 @@ describe('Users API', function() {
 				.expect(403);
 			await agent.get('/users/Dummy/logs')
 				.expect(200, []);
-			//TODO: add entries
+			await agent.post('/doors/1/open')
+				.expect(200);
+			await agent.get('/users/Dummy/logs')
+				.expect(200, [{
+					id: 2,
+					door_id: 1,
+					user_id: 2,
+					door: 'main',
+					time: /[\d\-: ]+/,
+					method: 'web:::ffff:127.0.0.1',
+				}]);
 		});
 	});
 });

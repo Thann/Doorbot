@@ -21,7 +21,7 @@ async function auth(request, response) {
 		return response.status(400)
 			.send({username: 'required', password: 'required'});
 	}
-	const user = await db.get("SELECT * FROM users where username = ?",
+	const user = await db.get("SELECT * FROM users WHERE username = ?",
 		request.body.username);
 	const password = request.body.password;
 	if (user) {
@@ -67,8 +67,8 @@ async function index(request, response) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 	const users = await db.all(`
-		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
-		LEFT JOIN permissions on users.id = permissions.user_id
+		SELECT users.*, GROUP_CONCAT(permissions.door_id) AS doors FROM users
+		LEFT JOIN permissions ON users.id = permissions.user_id
 		GROUP BY users.id`);
 
 	const user_l = [];
@@ -125,8 +125,8 @@ async function read(request, response) {
 			.send({error: 'only admins can view others'});
 	}
 	const usr = await db.get(`
-		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
-		LEFT JOIN permissions on users.id = permissions.user_id
+		SELECT users.*, GROUP_CONCAT(permissions.door_id) AS doors FROM users
+		LEFT JOIN permissions ON users.id = permissions.user_id
 		WHERE username = ?`,
 		request.params.username);
 	if (!usr.id) {
@@ -195,8 +195,8 @@ async function update(request, response) {
 	}
 
 	const usr = await db.get(`
-		SELECT users.*, group_concat(permissions.door_id) as doors FROM users
-		LEFT JOIN permissions on users.id = permissions.user_id
+		SELECT users.*, GROUP_CONCAT(permissions.door_id) AS doors FROM users
+		LEFT JOIN permissions ON users.id = permissions.user_id
 		WHERE username = ?`,
 		request.params.username);
 
@@ -231,9 +231,9 @@ async function logs(request, response) {
 		return response.status(400).send({page: 'must be an int'});
 	}
 	const logs = await db.all(`
-		SELECT entry_logs.*, doors.name as door FROM entry_logs
-		INNER JOIN users on entry_logs.user_id = users.id
-		INNER JOIN doors on entry_logs.door_id = doors.id
+		SELECT entry_logs.*, doors.name AS door FROM entry_logs
+		INNER JOIN users ON entry_logs.user_id = users.id
+		INNER JOIN doors ON entry_logs.door_id = doors.id
 		WHERE users.username = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
 		request.params.username, 50, page*50);
 

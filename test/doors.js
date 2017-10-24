@@ -64,18 +64,33 @@ describe('Doors API', function() {
 			.expect(404);
 	});
 
+	it('permit', async function() {
+		await agent.post('/doors/1/permit/missing')
+			.expect(404, { error: "user doesn't exist" });
+		await agent.post('/doors/5/permit/admin')
+			.expect(404, { error: "door doesn't exist" });
+		await agent.post('/doors/1/permit/admin')
+			.expect(200);
+		await agent.post('/doors/1/permit/admin')
+			.expect(409);
+	});
+
 	it('open', async function() {
 		await agent.post('/doors/1/open')
-			.expect(503);
-		//TODO: mock connection...
-		// await agent.ws()
+			.expect(200);
 	});
 
 	it('logs', async function() {
-		//TODO: add entries
 		await agent.get('/doors/1/logs')
-			.expect(200, []);
-		await agent.get('/doors/1/logs')
+			.expect(200, [{
+				id: 1,
+				door_id: 1,
+				user_id: 1,
+				username: 'admin',
+				method: 'web:::ffff:127.0.0.1',
+				time: /[\d\-: ]+/,
+			}]);
+		await agent.get('/doors/2/logs')
 			.expect(200, []);
 	});
 
@@ -125,13 +140,6 @@ describe('Doors API', function() {
 		});
 
 		it('delete', async function() {
-			// await agent.post('/doors')
-			// 	.send({name: 'delete_me'})
-			// 	.expect(200, {
-			// 		id: 2,
-			// 		name: 'delete_me',
-			// 		token: /\w+/,
-			// 	});
 			await agent.delete('/doors/1')
 				.expect(403);
 			await agent.delete('/users/missing')
@@ -141,8 +149,16 @@ describe('Doors API', function() {
 		it('open', async function() {
 			await agent.post('/doors/1/open')
 				.expect(422);
-			//TODO: mock connection...
-			// await agent.ws()
+			await agent.patch('/users/door_dummy')
+				.send({password: 'door_dummy'})
+				.expect(200);
+			await agent.post('/auth')
+				.send({username: 'door_dummy', password: 'door_dummy'})
+				.expect(200);
+			await agent.post('/doors/1/open')
+				.expect(200);
+			await agent.post('/doors/2/open')
+				.expect(403);
 		});
 
 		it('logs', async function() {
