@@ -6,7 +6,7 @@
 	display: flex;
 	flex-flow: row;
 	z-index: 1; /* Allows UserMenu to go overtop of the main-bar */
-	background-color: green;
+	background-color: rgba(0, 0, 0, 0.15);
 	padding: 5px 0 5px 10px;
 
 	* {
@@ -29,9 +29,5 @@
 		span {
 			margin-top: 8px;
 		}
-	}
-
-	a {
-		color: #333;
 	}
 }

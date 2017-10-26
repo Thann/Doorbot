@@ -6,6 +6,10 @@ body {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	color: white;
+	font-weight: 500;
+	font-family: Roboto, sans-serif;
+	background: linear-gradient(135deg, #6080E7, #91D4ED);
 
 	> .main-bar {
 		flex: 1 1 100%;
@@ -16,19 +20,30 @@ body {
 
 		> .main-panel {
 			flex: 1 1 100%;
-			background-color: lightgrey;
 			display: flex;
 			flex-direction: row;
 			position: relative;
 
 			> * {
 				flex: 1;
+				padding-top: 10px;
 			}
 		}
 	}
 
 	> .footer {
 		background-color: yellow;
+	}
+
+	a {
+		color: white;
+		font-weight: bold;
+	}
+
+	input,
+	.btn {
+		color: #4C78D0;
+		&:hover { color: #2c54a5; }
 	}
 }
 

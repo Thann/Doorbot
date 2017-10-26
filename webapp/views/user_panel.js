@@ -5,6 +5,7 @@ var UserModel = require('models/user.js');
 
 module.exports = Backbone.View.extend({
 	id: 'UserPanel',
+	className: 'container',
 	template: `
 		<div>
 			<span rv-text="user:username"></span>
@@ -26,7 +27,7 @@ module.exports = Backbone.View.extend({
 			</div>
 
 			<br>
-			<button rv-hide="logs.length" class="fetch">Fetch Logs</button>
+			<button rv-hide="logs.length" class="fetch btn btn-default">Fetch Logs</button>
 			<div rv-each-log="logs">
 				<span rv-text="log:door"></span>
 				<span rv-text="log:time"></span>

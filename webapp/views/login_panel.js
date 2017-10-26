@@ -4,32 +4,47 @@ require('styles/login_panel.css');
 
 module.exports = Backbone.View.extend({
 	id: 'LoginPanel',
-	template: `<h2>Welcome To Doorbot <span rv-if="OrgName"> for { OrgName }</span>!</h2>
+	className: 'container',
+	template: `<h2>Welcome to Doorbot <span rv-if="OrgName"> for { OrgName }</span>!</h2>
 		<h4>
-			An <a href="https://github.com/thann/doorbot" target="_blank" rel="nofollow">open source</a>
+			An <a href="https://github.com/Thann/Doorbot" target="_blank" rel="nofollow">open source</a>
 			door-opening platform that respects your privacy and freedom!
 		</h4>
-		It's a simple user-management platform that uses a raspberry pi for opening doors and logging entry.
+		<p>
+			It's a simple user-management platform that uses a raspberry pi for opening doors and logging entry.
 		<br>
-		For help getting started see the
-		<a href="https://github.com/Thann/Doorbot" target="_blank">readme</a>
+			For help getting started see the
+			<a href="https://github.com/Thann/Doorbot/blob/master/README.md" target="_blank">readme</a>.
+		</p>
 
-		<br><br>
-		<form rv-hide="user.isAuthed" action="auth" class="login">
-			<input placeholder="username" type="text", name="username">
-			<input placeholder="password" type="password", name="password">
+		<br>
+		<form rv-hide="user.isAuthed" action="auth" class="login form-inline">
+			<div class="form-group">
+				<input placeholder="username" type="text", name="username" class="form-control">
+			</div> <div class="form-group">
+				<input placeholder="password" type="password", name="password" class="form-control">
+			</div>
 			<input type="submit" value="Login" class="btn btn-default">
-			<div>{ error }</div>
+		</form>
+		<div rv-hide="user.isAuthed" class="form-group has-error">
+			<span class="control-label">{ error }</span>
+		</div>
+
+		<p rv-show="user.attributes.requires_reset" class="bold">
+			Your password was set by an admin and requires a reset!
+		</p>
+		<form rv-show="user.attributes.requires_reset" action="auth" class="change form-inline">
+			<div class="form-group">
+				<input placeholder="username" type="hidden", name="username" rv-value="user.attributes.username">
+			</div> <div class="form-group">
+				<input placeholder="new password" type="password", name="password" class="form-control">
+			</div>
+			<div class="form-group has-error">
+				<span class="control-label">{ error }</span>
+			</div>
+			<input type="submit" value="Reset Password" class="btn btn-default">
 		</form>
 
-		<form rv-show="user.attributes.requires_reset" action="auth" class="change">
-			<div> Your password was set by an admin and requires a reset! </div>
-			Reset Password
-			<input placeholder="username" type="hidden", name="username" rv-value="user.attributes.username">
-			<input placeholder="password" type="password", name="password">
-			<input type="submit" value="Change" class="btn btn-default">
-			<div>{ error }</div>
-		</form>
 		<button rv-show="user.isAuthed" class="btn btn-default logout">logout</button>
 	`,
 	events: {

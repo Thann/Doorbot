@@ -1,14 +1,4 @@
 
 #LoginPanel {
-	padding: 0 25px;
-
-	/* override bootstrap styles */
-	a { color: darkblue; }
-	.btn { color: #333; }
-
-	/* Title links */
-	h4 a {
-		color: inherit;
-		font-weight: bold;
-	}
+	padding-top: 0;
 }
