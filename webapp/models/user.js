@@ -45,7 +45,7 @@ const UserModel = Backbone.Model.extend({
 			},
 			error: function(model, response, options) {
 				self.trigger('login_error');
-				if (error_callback) error_callback();
+				if (error_callback) error_callback(model, response, options);
 			}
 		});
 	},

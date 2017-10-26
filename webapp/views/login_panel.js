@@ -18,16 +18,17 @@ module.exports = Backbone.View.extend({
 		<form rv-hide="user.isAuthed" action="auth" class="login">
 			<input placeholder="username" type="text", name="username">
 			<input placeholder="password" type="password", name="password">
-			<input type="submit" value="Login">
+			<input type="submit" value="Login" class="btn btn-default">
+			<div>{ error }</div>
 		</form>
-		<div rv-value="errors"></div>
 
 		<form rv-show="user.attributes.requires_reset" action="auth" class="change">
 			<div> Your password was set by an admin and requires a reset! </div>
 			Reset Password
 			<input placeholder="username" type="hidden", name="username" rv-value="user.attributes.username">
 			<input placeholder="password" type="password", name="password">
-			<input type="submit" value="Change">
+			<input type="submit" value="Change" class="btn btn-default">
+			<div>{ error }</div>
 		</form>
 		<button rv-show="user.isAuthed" class="btn btn-default logout">logout</button>
 	`,
@@ -37,7 +38,6 @@ module.exports = Backbone.View.extend({
 		'click .logout': 'logout',
 	},
 	render: function(){
-		console.log("RENDER USR", Doorbot.User.isAuthed)
 		this.scope = {user: Doorbot.User};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);
@@ -45,11 +45,12 @@ module.exports = Backbone.View.extend({
 	},
 	login: function(evt) {
 		evt.preventDefault();
+		this.scope.error = null;
 		Doorbot.User.login(
 			this.$('.login input[name="username"]')[0].value,
 			this.$('.login input[name="password"]')[0].value,
 			_.bind(function() { // on error
-				this.scope.error = 'incorrect username or password';
+				this.scope.error = 'incorrect username or password (case sensitive)';
 			}, this)
 		);
 	},
@@ -58,6 +59,7 @@ module.exports = Backbone.View.extend({
 	},
 	changePW: function(evt) {
 		evt.preventDefault();
+		this.scope.error = null;
 		console.log("PP",this.$('.change input[name="password"]')[0].value)
 		Doorbot.User.save({
 			password: this.$('.change input[name="password"]')[0].value,
@@ -66,7 +68,9 @@ module.exports = Backbone.View.extend({
 			success: function(m) {
 				m.set({'password': undefined}, {trigger: false});
 				Doorbot.Router.navigate('', {trigger: true});
-			}
+			}, error: _.bind(function(m, e) {
+				this.scope.error = e.responseJSON.password || e.responseJSON.error;
+			}, this)
 		});
 	},
 });
