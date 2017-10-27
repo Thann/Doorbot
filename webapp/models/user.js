@@ -20,15 +20,20 @@ const UserModel = Backbone.Model.extend({
 			if (username) {
 				// Check if logged in by calling API
 				this.set('username', username, {trigger: false});
-				this.fetch({error: function(model) {
-					model.trigger('relog', false);
-				}});
+				this.fetch();
 			} else {
 				this.trigger('relog', false);
 			}
 		} else {
 			console.error("Sorry! No Web Storage support..");
 		}
+
+		$(document).ajaxError(_.bind(function(e, r) {
+			if (r.status == 401) {
+				this.isAuthed = false;
+				this.trigger('relog', false);
+			}
+		}, this));
 	},
 	login: function(username, password, error_callback) {
 		var self = this;
