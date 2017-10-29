@@ -7,6 +7,12 @@ describe('Users API', function() {
 
 	it('auth', async function() {
 		await agent.post('/auth')
+			.send({username: 'admin', password: 'bad'})
+			.expect(400, {error: 'incorrect username or password'});
+		await agent.post('/auth')
+			.send({username: 'missing', password: 'bad'})
+			.expect(400, {error: 'incorrect username or password'});
+		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
 			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
 			.expect(200);
@@ -136,10 +142,25 @@ describe('Users API', function() {
 			.expect(200, []);
 	});
 
+	it('logout', async function() {
+		await agent.delete('/auth')
+			.expect(200);
+		await agent.get('/users/admin')
+			.expect(401);
+		await agent.delete('/auth')
+			.expect(401);
+	});
+
 	describe('as an under-privileged user', function() {
-		it('auth', async function() {
+		before(async function() {
+			await agent.post('/auth')
+				.send({username: 'admin', password: 'admin'})
+				.expect(200);
 			await agent.post('/doors/1/permit/Dummy')
-				.expect(200)
+				.expect(200);
+		});
+
+		it('auth', async function() {
 			await agent.post('/auth')
 				.send({username: 'Dummy', password: 'dummy'})
 				.expect(200);
@@ -206,6 +227,15 @@ describe('Users API', function() {
 					time: /[\d\-: ]+/,
 					method: 'web:::ffff:127.0.0.1',
 				}]);
+		});
+
+		it('logout', async function() {
+			await agent.delete('/auth')
+				.expect(200);
+			await agent.get('/users/Dummy')
+				.expect(401);
+			await agent.delete('/auth')
+				.expect(401);
 		});
 	});
 });

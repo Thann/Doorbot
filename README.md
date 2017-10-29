@@ -4,7 +4,7 @@ Door-opening server with user management AKA: "freesee"
 Uses a raspberrypi and a solid-state relay to unlock the door.
 A node server running optionally elsewhere manages the users and serves the WebUI.
 
-# Setup
+## Setup
 ### Hardware
 All you need is a RasberryPi and a Relay.
 [Install rasbian](https://www.raspberrypi.org/downloads/raspbian/)

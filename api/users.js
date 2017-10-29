@@ -47,7 +47,7 @@ async function auth(request, response) {
 			});
 		}
 	}
-	response.status(401).end();
+	response.status(400).send({error: 'incorrect username or password'});
 }
 
 async function logout(request, response) {
@@ -56,7 +56,7 @@ async function logout(request, response) {
 		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
 			user.id);
 		response.set('Set-Cookie', 'Session=; HttpOnly');
-		return response.send(200);
+		return response.status(200).end();
 	}
 	response.status(401).end();
 }
