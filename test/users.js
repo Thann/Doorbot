@@ -12,6 +12,11 @@ describe('Users API', function() {
 		await agent.post('/auth')
 			.send({username: 'missing', password: 'bad'})
 			.expect(400, {error: 'incorrect username or password'});
+		await agent.delete('/auth')
+			.expect('set-cookie', "Session=")
+			.expect(401, {error: 'session cookie malformed'});
+		await agent.delete('/auth')
+			.expect(401, {});
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
 			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
