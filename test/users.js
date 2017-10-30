@@ -13,7 +13,7 @@ describe('Users API', function() {
 			.send({username: 'missing', password: 'bad'})
 			.expect(400, {error: 'incorrect username or password'});
 		await agent.delete('/auth')
-			.expect('set-cookie', "Session=")
+			.expect('set-cookie', "Session=; HttpOnly")
 			.expect(401, {error: 'session cookie malformed'});
 		await agent.delete('/auth')
 			.expect(401, {});
@@ -149,6 +149,7 @@ describe('Users API', function() {
 
 	it('logout', async function() {
 		await agent.delete('/auth')
+			.expect('set-cookie', "Session=; HttpOnly")
 			.expect(200);
 		await agent.get('/users/admin')
 			.expect(401);
