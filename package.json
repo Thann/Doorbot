@@ -5,7 +5,7 @@
   "bin": "server.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha",
+    "test": "node_modules/.bin/mocha",
     "start": "node server --build"
   },
   "dependencies": {

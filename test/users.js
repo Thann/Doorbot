@@ -16,6 +16,7 @@ describe('Users API', function() {
 			.expect('set-cookie', "Session=; HttpOnly")
 			.expect(401, {error: 'session cookie malformed'});
 		await agent.delete('/auth')
+			.expect('set-cookie', "Session=; HttpOnly")
 			.expect(401, {});
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
