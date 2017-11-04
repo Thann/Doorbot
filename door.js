@@ -15,14 +15,15 @@ const options = {
 };
 
 const getopts = require("node-getopt").create([
-	['x', 'dummy',   'Don\'t use GPIO, print instead'],
-	['g', 'gpio=',   'GPIO pins to open the door'],
-	['d', 'door=',   'Connect to server with door_id'],
-	['t', 'token=',  'Connect to server with token (required)'],
-	['s', 'server=', 'Connect to server at address'],
-	['p', 'port=',   'Connect to server on port'],
-	['k', 'insecure','Don\'t validate SSL'],
-	['h', 'help',    '']
+	['x', 'dummy',   "Don't use GPIO, print instead"],
+	['g', 'gpio=',   "GPIO pins to open the door"],
+	['d', 'door=',   "Connect to server with door_id"],
+	['t', 'token=',  "Connect to server with token (required)"],
+	['s', 'server=', "Connect to server at address"],
+	['p', 'port=',   "Connect to server on port"],
+	['k', 'insecure',"Don't validate SSL"],
+	['',  'keypad',  "Enable keypad"],
+	['h', 'help',    ""]
 ]).bindHelp().setHelp(
 	"Doorbot: connects to a server and registers a door to open.\n" +
 	"Usage: node door [OPTION]\n" +
@@ -94,9 +95,9 @@ function connect() {
 		if (code == 1007) safeExit();
 	});
 
-	ws.on('message', function(data) {
-		console.log("WS:", data);
-		open();
+	ws.on('message', function(msg) {
+		// console.log("WS:", msg);
+		if (msg == 'open') open();
 	});
 }
 

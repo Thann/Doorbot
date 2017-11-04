@@ -2,7 +2,7 @@
 
 const db = require('../lib/db');
 const crypto = require('crypto');
-const error = require('../lib/errors');
+const errors = require('../lib/errors');
 const helpers = require('../lib/helpers');
 const expressWs = require('express-ws');
 const DOOR_SOCKETS = {};
@@ -169,21 +169,27 @@ async function open(request, response) {
 
 	//TODO: x-forwarded
 	const method = "web:"+request.connection.remoteAddress;
+	await _open_door(user.id, request.params.id, method, response);
 
+	response.status(200).end();
+}
+
+async function _open_door(user_id, door_id, method, response) {
 	//TODO: check constraints
-	try {
-		// open the door
+	try {  // open the door
 		if (process.env.NODE_ENV != 'test')
-			DOOR_SOCKETS[request.params.id].send('open');
+			DOOR_SOCKETS[door_id].send('open');
 	} catch(e) {
 		console.warn("ERROR: could not open door:", e);
-		return response.status(503).send({error: 'door could not be opened'});
+		if (response)
+			response.status(503).send({error: 'door could not be opened'});
+		throw errors.HandledError();
+		//TODO:
+		// throw errors.UserError({error: 'door could not be opened'}, 503);
 	}
 
 	await db.run("INSERT INTO entry_logs (user_id, door_id, method) VALUES (?,?,?)",
-		user.id, request.params.id, method);
-
-	response.status(200).end();
+		user_id, door_id, method);
 }
 
 async function connect(ws, request, next) {
@@ -196,6 +202,15 @@ async function connect(ws, request, next) {
 	if (!door) {
 		return ws.close(1007, "bad token");
 	}
+
+	ws.on('message', async function(msg) {
+		msg = msg.split(':', 2)
+		if (msg[0] == 'keycode') {
+			const user = await db.get(
+				"SELECT * FROM users WHERE keycode = ?", msg[1]);
+			if (user) _open_door(user.id, request.params.id, 'keycode')
+		}
+	});
 
 	DOOR_SOCKETS[request.params.id] = ws;
 }
