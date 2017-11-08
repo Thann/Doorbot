@@ -45,8 +45,20 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 	openDoor: function(e) {
-		var id = $(e.currentTarget).data('id');
-		var door = this.doors.find({id: $(e.currentTarget).data('id')});
-		door.sync(null, this, {url: door.url()+'/open', method: 'POST'});
+		var target = this.$(e.currentTarget);
+		var door = this.doors.find({id: target.data('id')});
+		door.sync(null, this, {
+			url: door.url()+'/open',
+			method: 'POST',
+			error: _.bind(function(resp, err) {
+				if (resp.status == 200) {
+					// This was actually successfull, but Backbone doesn't like empty responses.
+					target.addClass("opened");
+					setTimeout(function() {
+						target.removeClass("opened");
+					}, 1500);
+				}
+			}, this)
+		});
 	},
 });
