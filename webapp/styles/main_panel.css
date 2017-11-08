@@ -12,9 +12,9 @@
 	.open-door.opened {
 		animation: rainbow 1s normal linear;
 		background: linear-gradient(135deg,
-			#e6e6e6,    #e6e6e6,    #e6e6e6,    #e6e6e6,    #e6e6e6,
+			#e6e6e6, #e6e6e6, #e6e6e6, #e6e6e6, #e6e6e6,
 			#91D4ED, #6080E7, #91D4ED,
-			#e6e6e6,    #e6e6e6,    #e6e6e6,    #e6e6e6,    #e6e6e6,    #e6e6e6,    #e6e6e6
+			#e6e6e6, #e6e6e6, #e6e6e6, #e6e6e6, #e6e6e6, #e6e6e6, #e6e6e6
 		);
 		background-size: 400% 100%;
 	}

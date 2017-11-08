@@ -126,7 +126,7 @@ async function del_door(request, response) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 	const r = await db.run("DELETE FROM doors WHERE id = ?", request.params.id);
-	response.status(r.stmt.changes? 200 : 404).end();
+	response.status(r.stmt.changes? 204 : 404).end();
 }
 
 async function logs(request, response) {
@@ -183,7 +183,7 @@ async function open(request, response) {
 	await db.run("INSERT INTO entry_logs (user_id, door_id, method) VALUES (?,?,?)",
 		user.id, request.params.id, method);
 
-	response.status(200).end();
+	response.status(204).end();
 }
 
 async function connect(ws, request, next) {
@@ -225,7 +225,7 @@ async function permit(request, response) {
 		return response.status(404).send({error: "user doesn't exist"});
 	}
 
-	response.status(200).end();
+	response.status(204).end();
 }
 
 async function deny(request, response) {
@@ -242,6 +242,6 @@ async function deny(request, response) {
 	if (!r.stmt.changes) {
 		response.status(404).send({error: "door doesn't permit user"});
 	} else {
-		response.status(200).end();
+		response.status(204).end();
 	}
 }

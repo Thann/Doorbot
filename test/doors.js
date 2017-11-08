@@ -59,7 +59,7 @@ describe('Doors API', function() {
 				token: /\w+/,
 			});
 		await agent.delete('/doors/2')
-			.expect(200);
+			.expect(204, '');
 		await agent.delete('/users/missing')
 			.expect(404);
 	});
@@ -70,14 +70,25 @@ describe('Doors API', function() {
 		await agent.post('/doors/5/permit/admin')
 			.expect(404, { error: "door doesn't exist" });
 		await agent.post('/doors/1/permit/admin')
-			.expect(200);
+			.expect(204, '');
 		await agent.post('/doors/1/permit/admin')
 			.expect(409);
 	});
 
+	it('deny', async function() {
+		await agent.delete('/doors/1/permit/missing')
+			.expect(404, { error: "door doesn't permit user" });
+		await agent.delete('/doors/5/permit/admin')
+			.expect(404, { error: "door doesn't permit user" });
+		await agent.delete('/doors/1/permit/admin')
+			.expect(204, '');
+		await agent.delete('/doors/1/permit/admin')
+			.expect(404, { error: "door doesn't permit user" });
+	});
+
 	it('open', async function() {
 		await agent.post('/doors/1/open')
-			.expect(200);
+			.expect(204, '');
 	});
 
 	it('logs', async function() {
@@ -103,10 +114,10 @@ describe('Doors API', function() {
 				.send({password: 'door_dummy'})
 				.expect(200);
 			await agent.post('/doors/1/permit/door_dummy')
-				.expect(200)
+				.expect(204);
 			await agent.post('/doors')
 				.send({name: 'back'})
-				.expect(200)
+				.expect(200);
 			await agent.post('/auth')
 				.send({username: 'door_dummy', password: 'door_dummy'})
 				.expect(200);
@@ -115,7 +126,7 @@ describe('Doors API', function() {
 		it('create', async function() {
 			await agent.post('/doors')
 				.send({name: 'bad'})
-				.expect(403)
+				.expect(403);
 		});
 
 		it('read', async function() {
@@ -125,7 +136,7 @@ describe('Doors API', function() {
 					name: 'front',
 				});
 			await agent.get('/doors/2')
-				.expect(404)
+				.expect(404);
 		});
 
 		it('index', async function() {
@@ -156,11 +167,18 @@ describe('Doors API', function() {
 
 		it('permit', async function() {
 			await agent.post('/doors/1/permit/door_dummy')
-				.expect(403)
+				.expect(403);
 			await agent.post('/doors/1/permit/admin')
-				.expect(403)
+				.expect(403);
 			await agent.post('/doors/2/permit/door_dummy')
-				.expect(403)
+				.expect(403);
+		});
+
+		it('deny', async function() {
+			await agent.delete('/doors/1/permit/door_dummy')
+				.expect(403);
+			await agent.delete('/doors/1/permit/admin')
+				.expect(403);
 		});
 
 		it('open', async function() {
@@ -173,7 +191,7 @@ describe('Doors API', function() {
 				.send({username: 'door_dummy', password: 'door_dummy'})
 				.expect(200);
 			await agent.post('/doors/1/open')
-				.expect(200);
+				.expect(204, '');
 			await agent.post('/doors/2/open')
 				.expect(403);
 		});

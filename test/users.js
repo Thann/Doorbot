@@ -21,7 +21,11 @@ describe('Users API', function() {
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
 			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
-			.expect(200);
+			.expect(200, {
+				id: 1,
+				username: 'admin',
+				requires_reset: true
+			});
 	});
 
 	it('create', async function() {
@@ -56,7 +60,7 @@ describe('Users API', function() {
 				requires_reset: true,
 			});
 		await agent.get('/users/missing')
-			.expect(404)
+			.expect(404);
 
 	});
 
@@ -121,7 +125,7 @@ describe('Users API', function() {
 			.send({username: 'delete_me'})
 			.expect(200);
 		await agent.delete('/users/delete_me')
-			.expect(200);
+			.expect(204, '');
 		await agent.delete('/users/missing')
 			.expect(404);
 	});
@@ -134,7 +138,7 @@ describe('Users API', function() {
 		await agent.post('/doors')
 			.send({name: 'main'})
 		await agent.post('/doors/1/open')
-			.expect(200);
+			.expect(204);
 		await agent.get('/users/admin/logs')
 			.expect(200, [{
 				id: 1,
@@ -151,7 +155,7 @@ describe('Users API', function() {
 	it('logout', async function() {
 		await agent.delete('/auth')
 			.expect('set-cookie', "Session=; HttpOnly")
-			.expect(200);
+			.expect(204, '');
 		await agent.get('/users/admin')
 			.expect(401);
 		await agent.delete('/auth')
@@ -164,7 +168,7 @@ describe('Users API', function() {
 				.send({username: 'admin', password: 'admin'})
 				.expect(200);
 			await agent.post('/doors/1/permit/Dummy')
-				.expect(200);
+				.expect(204);
 		});
 
 		it('auth', async function() {
@@ -190,9 +194,9 @@ describe('Users API', function() {
 					requires_reset: true,
 				});
 			await agent.get('/users/admin')
-				.expect(403)
+				.expect(403);
 			await agent.get('/users/missing')
-				.expect(403)
+				.expect(403);
 		});
 
 		it('index', async function() {
@@ -211,11 +215,11 @@ describe('Users API', function() {
 
 		it('delete', async function() {
 			await agent.delete('/users/Dummy')
-				.expect(403)
+				.expect(403);
 			await agent.delete('/users/admin')
-				.expect(403)
+				.expect(403);
 			await agent.delete('/users/missing')
-				.expect(403)
+				.expect(403);
 		});
 
 		it('logs', async function() {
@@ -224,7 +228,7 @@ describe('Users API', function() {
 			await agent.get('/users/Dummy/logs')
 				.expect(200, []);
 			await agent.post('/doors/1/open')
-				.expect(200);
+				.expect(204);
 			await agent.get('/users/Dummy/logs')
 				.expect(200, [{
 					id: 2,
@@ -238,7 +242,7 @@ describe('Users API', function() {
 
 		it('logout', async function() {
 			await agent.delete('/auth')
-				.expect(200);
+				.expect(204, '');
 			await agent.get('/users/Dummy')
 				.expect(401);
 			await agent.delete('/auth')

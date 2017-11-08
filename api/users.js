@@ -56,7 +56,7 @@ async function logout(request, response) {
 		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
 			user.id);
 		response.set('Set-Cookie', 'Session=; HttpOnly');
-		return response.status(200).end();
+		return response.status(204).end();
 	}
 	response.status(401).end();
 }
@@ -217,7 +217,7 @@ async function del_user(request, response) {
 	}
 	const r = await db.run("DELETE FROM users WHERE username = ?",
 			request.params.username);
-	response.status(r.stmt.changes? 200 : 404).end();
+	response.status(r.stmt.changes? 204 : 404).end();
 }
 
 async function logs(request, response) {

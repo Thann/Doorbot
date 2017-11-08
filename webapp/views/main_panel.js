@@ -50,15 +50,12 @@ module.exports = Backbone.View.extend({
 		door.sync(null, this, {
 			url: door.url()+'/open',
 			method: 'POST',
-			error: _.bind(function(resp, err) {
-				if (resp.status == 200) {
-					// This was actually successfull, but Backbone doesn't like empty responses.
-					target.addClass("opened");
-					setTimeout(function() {
-						target.removeClass("opened");
-					}, 1500);
-				}
-			}, this)
+			success: function() {
+				target.addClass("opened");
+				setTimeout(function() {
+					target.removeClass("opened");
+				}, 1500);
+			}
 		});
 	},
 });
