@@ -167,8 +167,8 @@ async function open(request, response) {
 		}
 	}
 
-	//TODO: x-forwarded
-	const method = "web:"+request.connection.remoteAddress;
+	const method = "web:" + (request.headers['x-forwarded-for'] ||
+							 request.connection.remoteAddress);
 
 	//TODO: check constraints
 	try {

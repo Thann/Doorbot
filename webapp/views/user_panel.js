@@ -27,10 +27,13 @@ module.exports = Backbone.View.extend({
 			</div>
 
 			<br>
-			<button rv-hide="logs.length" class="fetch btn btn-default">Fetch Logs</button>
-			<div rv-each-log="logs">
-				<span rv-text="log:door"></span>
-				<span rv-text="log:time"></span>
+			<button class="fetch btn btn-default">Fetch Logs</button>
+			<div class="logs">
+				<div rv-each-log="logs">
+					<span rv-text="log:door"></span> &nbsp;
+					<span rv-text="log:time"></span> &nbsp;
+					<span rv-text="log:method"></span>
+				</div>
 			</div>
 		</div>
 	`,
