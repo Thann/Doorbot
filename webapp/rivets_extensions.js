@@ -21,6 +21,10 @@ Rivets.formatters.eq = function(value, arg) {
   return value == arg;
 };
 
+Rivets.formatters.ne = function(value, arg) {
+  return value != arg;
+};
+
 Rivets.formatters.and = function(value, arg) {
   return value && arg;
 };

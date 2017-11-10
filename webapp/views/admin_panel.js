@@ -35,6 +35,10 @@ module.exports = Backbone.View.extend({
 				<a rv-href="'#user/' |+ user:username" rv-text="user:username"></a>
 				<span rv-text="user:password"></span>
 				<span rv-text="user.doors"></span>
+				<a rv-show="user:password |and user:id |gt 1"
+					rv-href="mailto |+ user:username |+ ' ' |+ user:password |+ mail2">
+					[Send Email]
+				</a>
 			</div>
 		</div>
 	`,
@@ -82,6 +86,10 @@ module.exports = Backbone.View.extend({
 		this.scope = {
 			doors: this.doors,
 			users: this.users,
+			mailto: "mailto:?subject=Doorbot&body=Hey! you've been setup on the door. Visit " +
+				window.location.toString().replace(window.location.hash, '') +
+				" and sign-in with the username and password:%0D%0A%0D%0A",
+			mail2: "%0D%0A%0D%0ADon't forget to update your password =]"
 		};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);
