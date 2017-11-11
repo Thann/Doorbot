@@ -70,9 +70,27 @@ describe('Doors API', function() {
 		await agent.post('/doors/5/permit/admin')
 			.expect(404, { error: "door doesn't exist" });
 		await agent.post('/doors/1/permit/admin')
-			.expect(204, '');
+			.expect(200, {
+				door_id: 1,
+				username: 'admin',
+			});
+		await agent.delete('/doors/1/permit/admin')
+			.expect(204)
 		await agent.post('/doors/1/permit/admin')
-			.expect(409);
+			.send({// creation: '' //TODO:
+				   // expiration: '' //TODO:
+				   constraints: 'ip.192.168.1.1/30'})
+			.expect(200, {
+				door_id: 1,
+				username: 'admin',
+				// expiration: null,
+				constraints: 'ip.192.168.1.1/30',
+			});
+		await agent.post('/doors/1/permit/admin')
+			.expect(200, {
+				door_id: 1,
+				username: "admin",
+			});
 	});
 
 	it('deny', async function() {
@@ -114,7 +132,7 @@ describe('Doors API', function() {
 				.send({password: 'door_dummy'})
 				.expect(200);
 			await agent.post('/doors/1/permit/door_dummy')
-				.expect(204);
+				.expect(200);
 			await agent.post('/doors')
 				.send({name: 'back'})
 				.expect(200);

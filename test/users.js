@@ -24,6 +24,16 @@ describe('Users API', function() {
 			.expect(200, {
 				id: 1,
 				username: 'admin',
+				last_login: null,
+				requires_reset: true
+			});
+		await agent.post('/auth')
+			.send({username: 'admin', password: 'admin'})
+			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
+			.expect(200, {
+				id: 1,
+				username: 'admin',
+				last_login: /\w+/,
 				requires_reset: true
 			});
 	});
@@ -44,7 +54,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
-				doors: null,
+				doors: [],
 				admin: true,
 				password: 'admin',
 				username: 'admin',
@@ -53,7 +63,7 @@ describe('Users API', function() {
 		await agent.get('/users/Dummy')
 			.expect(200, {
 				id: 2,
-				doors: null,
+				doors: [],
 				admin: false,
 				password: /\w+/,
 				username: 'Dummy',
@@ -61,26 +71,107 @@ describe('Users API', function() {
 			});
 		await agent.get('/users/missing')
 			.expect(404);
-
+		// permissions
+		await agent.post('/doors').send({name: 'main'});
+		await agent.post('/doors').send({name: 'rear'});
+		await agent.post('/doors/1/permit/admin').expect(200);
+		await agent.post('/doors/1/permit/Dummy')
+			.send({constraints: 'ip:192.168.1.1/30'}).expect(200);
+		await agent.post('/doors/2/permit/Dummy').expect(200);
+		await agent.get('/users/admin')
+			.expect(200, {
+				id: 1,
+				doors: [{
+					'id': 1,
+					'creation': /.+/,
+					'expiration': '',
+					'constraints': '',
+				}],
+				admin: true,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+			});
+		await agent.get('/users/Dummy')
+			.expect(200, {
+				id: 2,
+				doors: [{
+					'id': 1,
+					'creation': /.+/,
+					'expiration': '',
+					'constraints': 'ip:192.168.1.1/30',
+				}, {
+					'id': 2,
+					'creation': /.+/,
+					'expiration': '',
+					'constraints': '',
+				}],
+				admin: false,
+				password: /\w+/,
+				username: 'Dummy',
+				requires_reset: true,
+			});
+		await agent.delete('/doors/1/permit/admin').expect(204);
+		await agent.delete('/doors/1/permit/Dummy').expect(204);
+		await agent.delete('/doors/2/permit/Dummy').expect(204);
 	});
 
 	it('index', async function() {
 		await agent.get('/users')
 			.expect(200, [{
 				id: 1,
-				doors: null,
+				doors: [],
 				admin: true,
 				password: 'admin',
 				username: 'admin',
 				requires_reset: true,
 			}, {
 				id: 2,
-				doors: null,
+				doors: [],
 				admin: false,
 				password: /\w+/,
 				username: 'Dummy',
 				requires_reset: true,
 			}]);
+		// permissions
+		await agent.post('/doors/1/permit/admin').expect(200);
+		await agent.post('/doors/1/permit/Dummy')
+			.send({constraints: 'ip:192.168.1.1/30'}).expect(200);
+		await agent.post('/doors/2/permit/Dummy').expect(200);
+		await agent.get('/users')
+			.expect(200, [{
+				id: 1,
+				doors: [{
+					'id': 1,
+					'creation': /\w+/,
+					'expiration': '',
+					'constraints': '',
+				}],
+				admin: true,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+			}, {
+				id: 2,
+				doors: [{
+					'id': 1,
+					'creation': /\w+/,
+					'expiration': '',
+					'constraints': 'ip:192.168.1.1/30',
+				}, {
+					'id': 2,
+					'creation': /\w+/,
+					'expiration': '',
+					'constraints': '',
+				}],
+				admin: false,
+				password: /\w+/,
+				username: 'Dummy',
+				requires_reset: true,
+			}]);
+		await agent.delete('/doors/1/permit/admin').expect(204);
+		await agent.delete('/doors/1/permit/Dummy').expect(204);
+		await agent.delete('/doors/2/permit/Dummy').expect(204);
 	});
 
 	it('update', async function() {
@@ -88,7 +179,7 @@ describe('Users API', function() {
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
-				doors: null,
+				doors: [],
 				admin: false,
 				username: 'Dummy',
 				password: 'dummy',
@@ -98,7 +189,7 @@ describe('Users API', function() {
 			.send({password: 'admin'})
 			.expect(200, {
 				id: 1,
-				doors: null,
+				doors: [],
 				admin: true,
 				username: 'admin',
 				requires_reset: false,
@@ -106,7 +197,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
-				doors: null,
+				doors: [],
 				admin: true,
 				username: 'admin',
 				requires_reset: false,
@@ -118,6 +209,32 @@ describe('Users API', function() {
 		// await agent.patch('/users/admin')
 		// 	.send({password: 'admin', current_password: 'admin'})
 		// 	.expect(200);
+		// permissions
+		await agent.post('/doors/1/permit/Dummy')
+			.send({constraints: 'ip:192.168.1.1/30'}).expect(200);
+		await agent.post('/doors/2/permit/Dummy').expect(200);
+		await agent.patch('/users/Dummy')
+			.send({password: 'dummy'})
+			.expect(200, {
+				id: 2,
+				doors: [{
+					'id': 1,
+					'creation': /\w+/,
+					'expiration': '',
+					'constraints': 'ip:192.168.1.1/30',
+				}, {
+					'id': 2,
+					'creation': /\w+/,
+					'expiration': '',
+					'constraints': '',
+				}],
+				admin: false,
+				username: 'Dummy',
+				password: 'dummy',
+				requires_reset: true,
+			});
+		await agent.delete('/doors/1/permit/Dummy').expect(204);
+		await agent.delete('/doors/2/permit/Dummy').expect(204);
 	});
 
 	it('delete', async function() {
@@ -135,8 +252,6 @@ describe('Users API', function() {
 			.expect(200, []);
 		await agent.get('/users/Dummy/logs')
 			.expect(200, []);
-		await agent.post('/doors')
-			.send({name: 'main'})
 		await agent.post('/doors/1/open')
 			.expect(204);
 		await agent.get('/users/admin/logs')
@@ -168,7 +283,7 @@ describe('Users API', function() {
 				.send({username: 'admin', password: 'admin'})
 				.expect(200);
 			await agent.post('/doors/1/permit/Dummy')
-				.expect(204);
+				.expect(200);
 		});
 
 		it('auth', async function() {
@@ -187,7 +302,13 @@ describe('Users API', function() {
 			await agent.get('/users/Dummy')
 				.expect(200, {
 					id: 2,
-					doors: '1',
+					doors: [{
+						'id': 1,
+						'creation': /\w+/,
+						'expiration': '',
+						'constraints': '',
+					}],
+				admin: false,
 					admin: false,
 					username: 'Dummy',
 					password: 'dummy',

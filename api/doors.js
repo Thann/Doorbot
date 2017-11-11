@@ -212,20 +212,30 @@ async function permit(request, response) {
 		return response.status(404).send({error: "door doesn't exist"});
 	}
 
+	//TODO: validate constraints, creation, expiration
+
 	try {
-		//TOOD: add constraints, created, expiration
 		var r = await db.run(`
-			INSERT INTO permissions (user_id, door_id)
-			SELECT users.id , ? FROM users WHERE username = ?`,
-			request.params.id, request.params.username);
+			INSERT OR REPLACE INTO permissions
+				(user_id, door_id, creation, expiration, constraints)
+			SELECT users.id, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?
+			FROM users WHERE username = ?`,
+			request.params.id, request.body.creation, request.body.expiration,
+			request.body.constraints, request.params.username);
 	} catch(e) {
-		return response.status(409).send({error: 'door already permits user'});
+		//TODO: check error
+		// console.log("ERROR", e)
 	}
 	if (!r.changes) {
 		return response.status(404).send({error: "user doesn't exist"});
 	}
 
-	response.status(204).end();
+	response.status(200).send({
+		door_id: request.params.id,
+		username: request.params.username,
+		expiration: request.body.expiration,
+		constraints: request.body.constraints,
+	});
 }
 
 async function deny(request, response) {

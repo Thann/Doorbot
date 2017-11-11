@@ -1,12 +1,12 @@
 #MainPanel {
-	padding-top: 20px;
+	// padding-top: 0;
 
 	.btn {
 		width: 75%;
 		height: 75px;
 		display: block;
 		max-width: 300px;
-		margin: 25px auto 0 auto;
+		margin: 45px auto 0 auto;
 	}
 
 	.open-door.opened {

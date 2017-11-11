@@ -31,6 +31,9 @@ const UserModel = Backbone.Model.extend({
 		$(document).ajaxError(_.bind(function(e, r) {
 			if (r.status == 401) {
 				this.isAuthed = false;
+				this.clear({silent: true});
+				//TODO: clear doesn't actually change the attributes =/
+				this.attributes = {};
 				this.trigger('relog', false);
 			}
 		}, this));
@@ -56,16 +59,17 @@ const UserModel = Backbone.Model.extend({
 	},
 	logout: function() {
 		console.log("logging out..", this);
-		var self = this;
 		var m = new Backbone.Model()
 		m.sync(null, m, {
 			url: 'auth',
 			method: 'DELETE',
-			error: function() {
-				self.isAuthed = false;
-				self.clear({silent: true});
-				self.trigger('relog', false);
-			}
+			success: _.bind(function() {
+				this.isAuthed = false;
+				this.clear({silent: true});
+				//TODO: clear doesn't actually change the attributes =/
+				this.attributes = {};
+				this.trigger('relog', false);
+			}, this),
 		});
 	}
 });

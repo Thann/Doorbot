@@ -15,10 +15,10 @@ module.exports = Backbone.View.extend({
 		</div>
 
 		<div rv-each-door="doors">
-			<span rv-text="door:name"></span>
+			<span rv-text="door:id"></span>
+			<a rv-href="'#/door/' |+ door:id" rv-text="door:name"></a>
 			<span rv-hide="door:available" rv-text="door:token"></span>
 			<span rv-show="door:available" class="fa fa-check-circle"></span>
-			<button class="btn btn-default edit-door" rv-data-id="door:id">edit</button>
 		</div>
 
 		<br>
@@ -69,14 +69,11 @@ module.exports = Backbone.View.extend({
 		this.users.on('sync', _.bind(function(coll) {
 			// Turn door numbers into names
 			if (coll.each)
-			coll.each(_.bind(function(user) {
-				user.doors = [];
-				const permitted = ','+user.get('doors')+',';
-				this.doors.each(_.bind(function(d) {
-					if (permitted.indexOf(','+d.id+',') >= 0)
-						user.doors.push(d.get('name'));
+				coll.each(_.bind(function(user) {
+					user.doors = _.map(user.get('doors'), _.bind(function(d) {
+						return this.doors.findWhere({id: d.id}).get('name');
+					}, this));
 				}, this));
-			}, this));
 			//TODO: render should not be nessicary
 			this.render();
 		}, this));

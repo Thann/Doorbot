@@ -44,6 +44,7 @@ async function auth(request, response) {
 				id: user.id,
 				username: user.username,
 				requires_reset: !user.pw_salt,
+				last_login: user.session_created,
 			});
 		}
 	}
@@ -66,8 +67,15 @@ async function index(request, response) {
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
+
 	const users = await db.all(`
-		SELECT users.*, GROUP_CONCAT(permissions.door_id) AS doors FROM users
+		SELECT users.*, '['||
+			GROUP_CONCAT( '{'||
+				'"id":'          || permissions.door_id ||','||
+				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
+				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
+				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
+			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		GROUP BY users.id`);
 
@@ -75,7 +83,7 @@ async function index(request, response) {
 	for (const usr of users) {
 		user_l.push({
 			id: usr.id,
-			doors: usr.doors,
+			doors: JSON.parse(usr.doors) || [],
 			admin: !!usr.admin,
 			username: usr.username,
 			password: usr.pw_salt? undefined : usr.password_hash,
@@ -124,17 +132,25 @@ async function read(request, response) {
 		return response.status(403)
 			.send({error: 'only admins can view others'});
 	}
+
 	const usr = await db.get(`
-		SELECT users.*, GROUP_CONCAT(permissions.door_id) AS doors FROM users
+		SELECT users.*, '['||
+			GROUP_CONCAT( '{'||
+				'"id":'          || permissions.door_id ||','||
+				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
+				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
+				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
+			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		WHERE username = ?`,
 		request.params.username);
+
 	if (!usr.id) {
 		return response.status(404).end();
 	}
 	response.send({
 		id: usr.id,
-		doors: usr.doors,
+		doors: JSON.parse(usr.doors) || [],
 		admin: !!usr.admin,
 		username: usr.username,
 		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
@@ -195,14 +211,20 @@ async function update(request, response) {
 	}
 
 	const usr = await db.get(`
-		SELECT users.*, GROUP_CONCAT(permissions.door_id) AS doors FROM users
+		SELECT users.*, '['||
+			GROUP_CONCAT( '{'||
+				'"id":'          || permissions.door_id ||','||
+				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
+				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
+				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
+			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		WHERE username = ?`,
 		request.params.username);
 
 	response.send({
 		id: usr.id,
-		doors: usr.doors,
+		doors: JSON.parse(usr.doors) || [],
 		admin: !!usr.admin,
 		username: usr.username,
 		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
