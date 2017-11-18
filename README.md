@@ -18,9 +18,9 @@ and wont open the door on reboot.
 ### Server
 The server can be run on the PI or anywhere else. Docker images exist for ARM and x86.
 
-The `docker-compose.yml` file has been configured for the ARM7 PI.
-For other architectures, edit the tag on these **two** lines:
-`image: thann/doorbot:arm7` to match yours, or nothing for x86.
+The `docker-compose.yml` file has been configured for x86.
+For other architectures, like on the raspberry pi, uncomment the proper **two** lines like:
+`image: thann/doorbot:arm7`.
 
 Then, from the cloned repo, run:
 
