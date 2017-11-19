@@ -1,4 +1,5 @@
 // Doorbot - loads the libraries and exports the global variable "Doorbot".
+'use strict';
 
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./rivets_extensions');
@@ -7,7 +8,7 @@ require('rivets-backbone-adapter');
 
 // Load all views in an extensible way.
 // "views/sample_view.js" becomes "views.SampleView".
-var views = load_module(require.context('app/views', true, /\.js$/));
+const views = loadModule(require.context('app/views', true, /\.js$/));
 
 // Make PUBLIC modules accessible.
 module.exports = {
@@ -17,15 +18,15 @@ module.exports = {
 
 	// Run this after extensions have been loaded.
 	init: function() {
-		var self = this;
-		$(document).ready(function() {
+		const self = this;
+		Backbone.$(document).ready(function() {
 			self.Layout = new self.Views.Layout();
 		});
-	}
+	},
 };
 
 // Load all files from a "context" into a single object.
-function load_module(context) {
+function loadModule(context) {
 	// Helper to turn "snake_case" filenames into module names.
 	// "./sample_view.js" becomes "SampleView".
 	function modularize(str) {
@@ -38,3 +39,6 @@ function load_module(context) {
 		return (module[modularize(filename)] = context(filename)) && module;
 	}, {});
 }
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

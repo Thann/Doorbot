@@ -1,4 +1,5 @@
 // AdminPanel
+'use strict';
 
 module.exports = Backbone.View.extend({
 	id: 'AdminPanel',
@@ -49,7 +50,7 @@ module.exports = Backbone.View.extend({
 	},
 	initialize: function() {
 		if (!Doorbot.User.get('admin')) {
-			console.log("NOT ADMIN!!")
+			// console.log("NOT ADMIN!!");
 			return Doorbot.Router.navigate('', {trigger: true});
 		}
 
@@ -57,14 +58,16 @@ module.exports = Backbone.View.extend({
 			url: 'doors',
 		}))();
 		this.doors.on('sync', _.bind(function() {
-			if (this.users) { this.users.fetch(); }
+			if (this.users) {
+				this.users.fetch();
+			}
 			//TODO: render should not be nessicary
 			this.render();
 		}, this));
 		this.doors.fetch();
 
 		this.users = new (Backbone.Collection.extend({
-			url: 'users'
+			url: 'users',
 		}))();
 		this.users.on('sync', _.bind(function(coll) {
 			// Turn door numbers into names
@@ -78,40 +81,41 @@ module.exports = Backbone.View.extend({
 			this.render();
 		}, this));
 	},
-	render: function(){
-		console.log("RENDER MAIN:", Doorbot.User.get('admin'))
+	render: function() {
+		// console.log("RENDER MAIN:", Doorbot.User.get('admin'))
 		this.scope = {
 			doors: this.doors,
 			users: this.users,
 			mailto: "mailto:?subject=Doorbot&body=Hey! you've been setup on the door. Visit " +
 				window.location.toString().replace(window.location.hash, '') +
-				" and sign-in with the username and password:%0D%0A%0D%0A",
-			mail2: "   (case-sensitive)%0D%0A%0D%0ADon't forget to update your password =]"
+				' and sign-in with the username and password:%0D%0A%0D%0A',
+			mail2: "   (case-sensitive)%0D%0A%0D%0ADon't forget to update your password =]",
 		};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);
 		return this;
 	},
 	createDoor: function(e) {
-		if (e) e.preventDefault();
-		var self = this;
-		console.log("CREEATING DOOR:", this.scope.creatingDoor);
+		if (e)
+			e.preventDefault();
+		const self = this;
+		console.log('CREEATING DOOR:', this.scope.creatingDoor);
 		if (!this.scope.creatingDoor) {
 			this.scope.creatingDoor = true;
 			self.scope.error = undefined;
 		} else {
 			this.doors.create({
-				name: this.$('.doors form [name="name"]').val()
+				name: this.$('.doors form [name="name"]').val(),
 			}, {wait: true,
 				success: function() {
-					console.log("DOOR CREATE DONE!", self.doors)
+					console.log('DOOR CREATE DONE!', self.doors);
 					self.scope.creatingDoor = false;
 					// self.render()
 				},
 				error: function(m, resp) {
-					console.warn("DOOR CREATE ERR!", resp.responseText)
+					console.warn('DOOR CREATE ERR!', resp.responseText);
 					self.scope.error = resp.responseText;
-				}
+				},
 			});
 		}
 	},
@@ -125,28 +129,32 @@ module.exports = Backbone.View.extend({
 		// 	// door.sync(null, this, {url: door.url()+'/open', method: 'POST'});
 		// }
 	},
-	deleteDoor: function() {
-		this.doors.find({id: $(e.currentTarget).data('id')}).destroy();
+	deleteDoor: function(e) {
+		this.doors.find({id: this.$(e.currentTarget).data('id')}).destroy();
 	},
 	createUser: function(e) {
-		if (e) e.preventDefault();
-		var self = this;
+		if (e)
+			e.preventDefault();
+		const self = this;
 		if (!this.scope.creatingUser) {
 			this.scope.creatingUser= true;
 			self.scope.error = undefined;
 		} else {
 			this.users.create({
-				username: this.$('.users form [name="name"]').val()
+				username: this.$('.users form [name="name"]').val(),
 			}, {wait: true,
 				success: function() {
-					console.log("DOOR CREATE DONE!", self.doors)
+					console.log('DOOR CREATE DONE!', self.doors);
 					self.scope.creatingDoor = false;
 				},
 				error: function(m, resp) {
-					console.warn("USER CREATE ERR!", resp.responseText)
+					console.warn('USER CREATE ERR!', resp.responseText);
 					self.scope.error = resp.responseText;
-				}
- 			});
+				},
+			});
 		}
 	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

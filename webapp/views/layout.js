@@ -1,8 +1,9 @@
 // Layout - The parent view of the whole app, and also the router.
+'use strict';
 
 require('styles/layout.css');
 
-var UserModel = require('models/user.js');
+const UserModel = require('models/user.js');
 
 module.exports = Backbone.View.extend({
 	el: 'body',
@@ -35,18 +36,18 @@ module.exports = Backbone.View.extend({
 		sidebar: function() { return new Doorbot.Views.Sidebar(); },
 	},
 	initialize: function() {
-		var layout = this;
-		var loading = true;
+		const layout = this;
+		this.loading = true;
 		Backbone.Subviews.add( this );
 
 		Doorbot.Router = new (Backbone.Router.extend({
 			routes: {
-				"": "mainTemplate",
-				"login": "loginTemplate",
-				"admin": "adminTemplate",
-				"user/:id": "userTemplate",
-				// "door/:id": "doorTemplate",
-				"*notFound": "",
+				'': 'mainTemplate',
+				'login': 'loginTemplate',
+				'admin': 'adminTemplate',
+				'user/:id': 'userTemplate',
+				// 'door/:id': 'doorTemplate',
+				'*notFound': '',
 			},
 			execute: function(cb, args, name) {
 				this.args = args;
@@ -58,12 +59,12 @@ module.exports = Backbone.View.extend({
 					// route not found
 					this.navigate('', {trigger: true});
 				}
-			}
+			},
 		}))();
 
 		Doorbot.User = new UserModel();
-		Doorbot.User.on('relog', function(logged_in) {
-			if (logged_in) {
+		Doorbot.User.on('relog', function(loggedIn) {
+			if (loggedIn) {
 				layout.render();
 			} else {
 				Doorbot.Router.navigate('login', {trigger: false});
@@ -79,9 +80,10 @@ module.exports = Backbone.View.extend({
 		document.title = 'Doorbot '+(
 			Doorbot.AppConfig.OrgName? ' - '+Doorbot.AppConfig.OrgName : '');
 	},
-	render: function(tmpl){
+	render: function(tmpl) {
 		this.$el.html(this.template);
-		if (tmpl) this._current_template = tmpl;
+		if (tmpl)
+			this._current_template = tmpl;
 		if (!this.loading) {
 			this.$('.main-panel').html(this._current_template);
 		}
@@ -89,3 +91,6 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

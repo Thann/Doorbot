@@ -1,4 +1,5 @@
 // Sidebar
+'use strict';
 
 require('styles/sidebar.css');
 
@@ -12,6 +13,9 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 	toggle: function(bool) {
-		this.$el.toggleClass("open", bool);
-	}
+		this.$el.toggleClass('open', bool);
+	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

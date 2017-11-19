@@ -1,4 +1,5 @@
 // MainPanel
+'use strict';
 
 require('styles/main_panel.css');
 
@@ -30,12 +31,12 @@ module.exports = Backbone.View.extend({
 		}))();
 		this.doors.on('sync', _.bind(function() {
 			//TODO: render should not be nessicary
-			this.hasAvail = !!this.doors.findWhere({available: true}),
+			this.hasAvail = Boolean(this.doors.findWhere({available: true})),
 			this.render();
 		}, this));
 		this.doors.fetch();
 	},
-	render: function(){
+	render: function() {
 		this.scope = {
 			doors: this.doors,
 			hasAvail: this.hasAvail,
@@ -45,17 +46,20 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 	openDoor: function(e) {
-		var target = this.$(e.currentTarget);
-		var door = this.doors.find({id: target.data('id')});
+		const target = this.$(e.currentTarget);
+		const door = this.doors.find({id: target.data('id')});
 		door.sync(null, this, {
 			url: door.url()+'/open',
 			method: 'POST',
 			success: function() {
-				target.addClass("opened");
+				target.addClass('opened');
 				setTimeout(function() {
-					target.removeClass("opened");
+					target.removeClass('opened');
 				}, 1500);
-			}
+			},
 		});
 	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

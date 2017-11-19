@@ -1,4 +1,5 @@
 // LoginPanel
+'use strict';
 
 require('styles/login_panel.css');
 
@@ -52,7 +53,7 @@ module.exports = Backbone.View.extend({
 		'submit form.change': 'changePW',
 		'click .logout': 'logout',
 	},
-	render: function(){
+	render: function() {
 		this.scope = {user: Doorbot.User};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);
@@ -75,7 +76,7 @@ module.exports = Backbone.View.extend({
 	changePW: function(evt) {
 		evt.preventDefault();
 		this.scope.error = null;
-		console.log("PP",this.$('.change input[name="password"]')[0].value)
+		// console.log('PP',this.$('.change input[name="password"]')[0].value);
 		Doorbot.User.save({
 			password: this.$('.change input[name="password"]')[0].value,
 		}, {
@@ -84,8 +85,12 @@ module.exports = Backbone.View.extend({
 				m.set({'password': undefined}, {trigger: false});
 				Doorbot.Router.navigate('', {trigger: true});
 			}, error: _.bind(function(m, e) {
-				this.scope.error = e.responseJSON.password || e.responseJSON.error;
-			}, this)
+				this.scope.error = (e.responseJSON.password ||
+					e.responseJSON.error);
+			}, this),
 		});
 	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

@@ -1,4 +1,5 @@
 // User - stores user information in the browser.
+'use strict';
 
 const UserModel = Backbone.Model.extend({
 	isAuthed: false,
@@ -15,8 +16,8 @@ const UserModel = Backbone.Model.extend({
 			window.localStorage.setItem('Doorbot_LatestUser', m.get('username'));
 		});
 
-		if(typeof(Storage) !== "undefined") {
-			var username = window.localStorage.getItem('Doorbot_LatestUser');
+		if(typeof(Storage) !== 'undefined') {
+			const username = window.localStorage.getItem('Doorbot_LatestUser');
 			if (username) {
 				// Check if logged in by calling API
 				this.set('username', username, {trigger: false});
@@ -25,11 +26,11 @@ const UserModel = Backbone.Model.extend({
 				this.trigger('relog', false);
 			}
 		} else {
-			console.error("Sorry! No Web Storage support..");
+			console.error('Sorry! No Web Storage support..');
 		}
 
-		$(document).ajaxError(_.bind(function(e, r) {
-			if (r.status == 401) {
+		Backbone.$(document).ajaxError(_.bind(function(e, r) {
+			if (r.status === 401) {
 				this.isAuthed = false;
 				this.clear({silent: true});
 				//TODO: clear doesn't actually change the attributes =/
@@ -38,10 +39,10 @@ const UserModel = Backbone.Model.extend({
 			}
 		}, this));
 	},
-	login: function(username, password, error_callback) {
-		var self = this;
+	login: function(username, password, errorCallback) {
+		const self = this;
 		(new (Backbone.Model.extend({
-			url: 'auth'
+			url: 'auth',
 		}))({
 			username: username,
 			password: password,
@@ -53,13 +54,14 @@ const UserModel = Backbone.Model.extend({
 			},
 			error: function(model, response, options) {
 				self.trigger('login_error');
-				if (error_callback) error_callback(model, response, options);
-			}
+				if (errorCallback)
+					errorCallback(model, response, options);
+			},
 		});
 	},
 	logout: function() {
-		console.log("logging out..", this);
-		var m = new Backbone.Model()
+		console.log('logging out..', this);
+		const m = new Backbone.Model();
 		m.sync(null, m, {
 			url: 'auth',
 			method: 'DELETE',
@@ -71,6 +73,9 @@ const UserModel = Backbone.Model.extend({
 				this.trigger('relog', false);
 			}, this),
 		});
-	}
+	},
 });
 module.exports = UserModel;
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

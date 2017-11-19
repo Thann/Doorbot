@@ -1,7 +1,8 @@
 // UserPanel
+'use strict';
 
 // require('styles/user.css');
-var UserModel = require('models/user.js');
+const UserModel = require('models/user.js');
 
 module.exports = Backbone.View.extend({
 	id: 'UserPanel',
@@ -45,14 +46,14 @@ module.exports = Backbone.View.extend({
 	},
 	initialize: function() {
 		// console.log("UUU", Doorbot.Router.args, Doorbot.User.get('username'))
-		var username = Doorbot.Router.args[0];
-		if (username == Doorbot.User.get('username')) {
+		const username = Doorbot.Router.args[0];
+		if (username === Doorbot.User.get('username')) {
 			this.user = Doorbot.User;
 		} else {
 			this.user = new UserModel({username: username});
 			this.user.fetch({error: function() {
-			Doorbot.Router.navigate('', {trigger: true});
-		}});
+				Doorbot.Router.navigate('', {trigger: true});
+			}});
 		}
 
 		this.doors = new (Backbone.Collection.extend({
@@ -69,7 +70,7 @@ module.exports = Backbone.View.extend({
 		this.user.on('sync', _.bind(this.dingleDoors, this));
 		this.doors.on('sync', _.bind(this.dingleDoors, this));
 	},
-	render: function(){
+	render: function() {
 		this.scope = {
 			user: this.user,
 			logs: this.logs,
@@ -81,7 +82,8 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 	dingleDoors: function() {
-		if (!this.user.get('doors')) return this.render();
+		if (!this.user.get('doors'))
+			return this.render();
 		this.doors.each(_.bind(function(d) {
 			if (_.findWhere(this.user.get('doors'), {id: d.id})) {
 				d.set('allowed', true);
@@ -94,10 +96,10 @@ module.exports = Backbone.View.extend({
 	},
 	update: function() {
 		//TODO:
-		console.log("NOT IMPLEMENTED")
+		console.log('NOT IMPLEMENTED');
 	},
 	permit: function(e) {
-		var door = this.doors.find({id: $(e.currentTarget).data('id')});
+		const door = this.doors.find({id: this.$(e.currentTarget).data('id')});
 		door.sync(null, this, {
 			method: 'POST',
 			url: door.url()+'/permit/'+this.user.get('username'),
@@ -106,7 +108,7 @@ module.exports = Backbone.View.extend({
 		this.render();
 	},
 	deny: function(e) {
-		var door = this.doors.find({id: $(e.currentTarget).data('id')});
+		const door = this.doors.find({id: this.$(e.currentTarget).data('id')});
 		door.sync(null, this, {
 			method: 'DELETE',
 			url: door.url()+'/permit/'+this.user.get('username'),
@@ -115,3 +117,6 @@ module.exports = Backbone.View.extend({
 		this.render();
 	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

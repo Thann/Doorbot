@@ -1,3 +1,4 @@
+'use strict';
 
 require('styles/header.css');
 
@@ -23,3 +24,6 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 });
+
+/* eslint-env browser */
+/* global Doorbot, Backbone, Rivets, _ */

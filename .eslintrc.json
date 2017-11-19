@@ -15,7 +15,7 @@
     }],
     "arrow-spacing": "error",
     "block-spacing": ["error", "always"],
-    "brace-style": ["error", "1tbs"],
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
     "camelcase": ["error", {
       "properties": "never"
     }],
@@ -32,7 +32,9 @@
     "max-len": ["error", {
       "code": 80,
       "ignorePattern": "function \\w+\\(",
-      "ignoreUrls": true
+      "ignoreUrls": true,
+      "ignoreStrings": true,
+      "ignoreTemplateLiterals": true
     }],
     "max-statements-per-line": ["error", {
       "max": 1
@@ -59,7 +61,7 @@
     "no-shadow-restricted-names": "error",
     "no-trailing-spaces": "error",
     "no-unused-vars": ["error", {
-      "vars": "all",
+      "vars": "local",
       "args": "none",
       "ignoreRestSiblings": false
     }],

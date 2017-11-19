@@ -1,5 +1,7 @@
 api/
 lib/
 test/
+webapp/
 server.js
 door.js
+webpack.config.js
