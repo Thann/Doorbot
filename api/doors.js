@@ -4,7 +4,7 @@
 const db = require('../lib/db');
 const crypto = require('crypto');
 const errors = require('../lib/errors');
-const helpers = require('../lib/helpers');
+const users = require('./users');
 const expressWs = require('express-ws');
 const DOOR_SOCKETS = {};
 
@@ -23,7 +23,7 @@ module.exports = function(app) {
 };
 
 async function index(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	let doors;
 	if (user.admin) {
 		doors = await db.all('SELECT * FROM doors');
@@ -53,7 +53,7 @@ async function create(request, response) {
 		return response.status(400).send({name: 'required'});
 	}
 
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -76,7 +76,7 @@ async function create(request, response) {
 }
 
 async function read(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	let door;
 	if (user.admin) {
 		door = await db.get(
@@ -105,7 +105,7 @@ async function update(request, response) {
 		return response.status(400).send({name: 'required'});
 	}
 
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -126,7 +126,7 @@ async function update(request, response) {
 }
 
 async function remove(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -135,7 +135,7 @@ async function remove(request, response) {
 }
 
 async function logs(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -159,7 +159,7 @@ async function logs(request, response) {
 }
 
 async function open(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		if (!user.pw_salt) {
 			return response.status(422).send({error:
@@ -227,7 +227,7 @@ async function connect(ws, request, next) {
 }
 
 async function permit(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -267,7 +267,7 @@ async function permit(request, response) {
 }
 
 async function deny(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await users.checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}

@@ -19,7 +19,7 @@ if (require.main !== module) {
 		['p', 'port=', 'Set listen port'],
 		['',  'watch', 'Recompile webapp on file modification'],
 		['',  'build', 'Compile webapp'],
-		['',  'lint',  'Lint on compile'],
+		['',  'lint',  'Lint webapp on compile'],
 		['h', 'help'],
 	]).bindHelp().setHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +

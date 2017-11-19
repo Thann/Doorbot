@@ -3,8 +3,9 @@
 
 const db = require('../lib/db');
 const crypto = require('crypto');
-// const errors = require('../lib/errors');
+const errors = require('../lib/errors');
 const helpers = require('../lib/helpers');
+const site = require('./site');
 
 module.exports = function(app) {
 	app.  post('/auth', auth);
@@ -17,10 +18,44 @@ module.exports = function(app) {
 	app.   get('/users/:username/logs', logs);
 };
 
+// Returns the user that owns the session cookie
+const checkCookie = async function(request, response) {
+	let sesh;
+	try {
+		sesh = request.headers.cookie.split('=').pop();
+		// console.log("GET:", request.path)
+	} catch (e) {
+		// console.warn("ERROR Processing Cookie:", e);
+		response.status(401);
+		response.set('Set-Cookie', 'Session=; HttpOnly');
+		response.send({error: 'session cookie malformed'});
+		throw new errors.HandledError();
+	}
+	const user = await db.get(`
+		SELECT * FROM users WHERE session_cookie = ?
+		AND datetime(session_created, '+1 month') >= CURRENT_TIMESTAMP`,
+		sesh);
+	if (!user || sesh.length < 5) {
+		response.status(401);
+		response.set('Set-Cookie', 'Session=; HttpOnly').end();
+		throw new errors.HandledError();
+	}
+	return user;
+};
+module.exports.checkCookie = checkCookie;
+
+const userAuthRates = new helpers.MemCache();
+
 async function auth(request, response) {
 	if (!request.body.username || !request.body.password) {
 		return response.status(400)
 			.send({username: 'required', password: 'required'});
+	}
+	//TODO: rate-limit by ip address also.
+	if (userAuthRates.get(request.body.username) >=
+		site.privateSettings['auth_attempts_per_hour']) {
+		return response.status(429)
+			.send({error: 'too many auth attempts'});
 	}
 	const user = await db.get('SELECT * FROM users WHERE username = ?',
 		request.body.username);
@@ -30,6 +65,8 @@ async function auth(request, response) {
 		if ((!user.pw_salt && password === user.password_hash) ||
 				(crypto.createHash('sha256', user.pw_salt)
 					.update(password).digest('hex') === user.password_hash)) {
+			userAuthRates.set(user.username);
+
 			const sesh = crypto.createHash('sha256')
 				.update(Math.random().toString()).digest('hex');
 
@@ -48,12 +85,15 @@ async function auth(request, response) {
 				last_login: user.session_created,
 			});
 		}
+
+		const rl = userAuthRates.get(user.username) || 0;
+		userAuthRates.set(user.username, rl + 1, !rl && 60*60*1000);
 	}
 	response.status(400).send({error: 'incorrect username or password'});
 }
 
 async function logout(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (user) {
 		await db.run('UPDATE users SET session_cookie = NULL WHERE id = ?',
 			user.id);
@@ -64,7 +104,7 @@ async function logout(request, response) {
 }
 
 async function index(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -100,7 +140,7 @@ async function create(request, response) {
 			.send({username: 'required'});
 	}
 
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -129,7 +169,7 @@ async function create(request, response) {
 }
 
 async function read(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403)
 			.send({error: 'only admins can view others'});
@@ -161,7 +201,7 @@ async function read(request, response) {
 }
 
 async function update(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (!user.admin && (
 		!request.body.password || request.body.password.length < 8)) {
 		return response.status(400)
@@ -237,7 +277,7 @@ async function update(request, response) {
 }
 
 async function remove(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
@@ -248,7 +288,7 @@ async function remove(request, response) {
 }
 
 async function logs(request, response) {
-	const user = await helpers.check_cookie(request, response);
+	const user = await checkCookie(request, response);
 	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403).send({error: 'must be admin'});
 	}
