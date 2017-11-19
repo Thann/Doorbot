@@ -3,6 +3,7 @@
 
 const db = require('../lib/db');
 const crypto = require('crypto');
+const errors = require('../lib/errors');
 const helpers = require('../lib/helpers');
 const expressWs = require('express-ws');
 const DOOR_SOCKETS = {};
@@ -138,18 +139,21 @@ async function logs(request, response) {
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
-	//TODO: use pk_offset instead?
-	let page;
+
+	let lastID;
+	// console.log("params", request.query);
 	try {
-		page = parseInt(request.params.page||1)-1;
+		lastID = parseInt(request.query.last_id);
 	} catch(e) {
-		return response.status(400).send({page: 'must be an int'});
+		return response.status(400).send({last_id: 'must be an int'});
 	}
+
 	const logs = await db.all(`
 		SELECT entry_logs.*, users.username FROM entry_logs
 		INNER JOIN users ON entry_logs.user_id = users.id
-		WHERE door_id = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
-		request.params.id, 50, page*50);
+		WHERE door_id = ? AND entry_logs.id < COALESCE(?, 9e999)
+		ORDER BY entry_logs.id DESC LIMIT ?`,
+		request.params.id, lastID, 50);
 
 	response.send(logs);
 }
@@ -177,20 +181,25 @@ async function open(request, response) {
 							request.connection.remoteAddress);
 
 	//TODO: check constraints
+	await _openDoor(user.id, request.params.id, method, response);
+
+	response.status(204).end();
+}
+
+async function _openDoor(userId, doorId, method, response) {
 	try {
-		// open the door
 		if (process.env.NODE_ENV !== 'test')
-			DOOR_SOCKETS[request.params.id].send('open');
+			DOOR_SOCKETS[doorId].send('open');
 	} catch(e) {
 		console.warn('ERROR: could not open door:', e);
-		return response.status(503).send({error: 'door could not be opened'});
+		response.status(503).send({error: 'door could not be opened'});
+		throw errors.HandledError();
+		//TODO: error.UserError(...)
 	}
 
 	await db.run(
 		'INSERT INTO entry_logs (user_id, door_id, method) VALUES (?,?,?)',
-		user.id, request.params.id, method);
-
-	response.status(204).end();
+		userId, doorId, method);
 }
 
 async function connect(ws, request, next) {
@@ -203,6 +212,16 @@ async function connect(ws, request, next) {
 	if (!door) {
 		return ws.close(1007, 'bad token');
 	}
+
+	ws.on('message', async function(msg) {
+		msg = msg.split(':', 2);
+		if (msg[0] === 'keycode') {
+			const user = await db.get(
+				'SELECT * FROM users WHERE keycode = ?', msg[1]);
+			if (user)
+				_openDoor(user.id, request.params.id, 'keycode');
+		}
+	});
 
 	DOOR_SOCKETS[request.params.id] = ws;
 }

@@ -267,6 +267,16 @@ describe('Users API', function() {
 				time: /[\d\-: ]+/,
 				method: 'web:::ffff:127.0.0.1',
 			}]);
+		await agent.post('/doors/1/open').expect(204);
+		await agent.get('/users/admin/logs?last_id=2')
+			.expect(200, [{
+				id: 1,
+				door_id: 1,
+				user_id: 1,
+				door: 'main',
+				time: /[\d\-: ]+/,
+				method: 'web:::ffff:127.0.0.1',
+			}]);
 		await agent.get('/users/Dummy/logs')
 			.expect(200, []);
 	});
@@ -355,7 +365,7 @@ describe('Users API', function() {
 				.expect(204);
 			await agent.get('/users/Dummy/logs')
 				.expect(200, [{
-					id: 2,
+					id: 3,
 					door_id: 1,
 					user_id: 2,
 					door: 'main',

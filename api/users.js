@@ -252,19 +252,21 @@ async function logs(request, response) {
 	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403).send({error: 'must be admin'});
 	}
-	//TODO: use pk_offset instead?
-	let page;
+
+	let lastID;
 	try {
-		page = parseInt(request.params.page||1)-1;
+		lastID = parseInt(request.query.last_id);
 	} catch(e) {
-		return response.status(400).send({page: 'must be an int'});
+		return response.status(400).send({last_id: 'must be an int'});
 	}
+
 	const logs = await db.all(`
 		SELECT entry_logs.*, doors.name AS door FROM entry_logs
 		INNER JOIN users ON entry_logs.user_id = users.id
 		INNER JOIN doors ON entry_logs.door_id = doors.id
-		WHERE users.username = ? ORDER BY entry_logs.id DESC LIMIT ? OFFSET ?`,
-		request.params.username, 50, page*50);
+		WHERE users.username = ? AND entry_logs.id < COALESCE(?, 9e999)
+		ORDER BY entry_logs.id DESC LIMIT ?`,
+		request.params.username, lastID, 50);
 
 	response.send(logs);
 }

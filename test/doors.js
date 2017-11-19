@@ -122,6 +122,32 @@ describe('Doors API', function() {
 				method: 'web:::ffff:127.0.0.1',
 				time: /[\d\-: ]+/,
 			}]);
+		await agent.post('/doors/1/open').expect(204);
+		await agent.get('/doors/1/logs?last_id=2')
+			.expect(200, [{
+				id: 1,
+				door_id: 1,
+				user_id: 1,
+				username: 'admin',
+				method: 'web:::ffff:127.0.0.1',
+				time: /[\d\-: ]+/,
+			}]);
+		await agent.get('/doors/1/logs?last_id=x')
+			.expect(200, [{
+				id: 2,
+				door_id: 1,
+				user_id: 1,
+				username: 'admin',
+				method: 'web:::ffff:127.0.0.1',
+				time: /[\d\-: ]+/,
+			}, {
+				id: 1,
+				door_id: 1,
+				user_id: 1,
+				username: 'admin',
+				method: 'web:::ffff:127.0.0.1',
+				time: /[\d\-: ]+/,
+			}]);
 		await agent.get('/doors/2/logs')
 			.expect(200, []);
 	});
