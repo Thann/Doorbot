@@ -1,9 +1,13 @@
+'use strict';
+
 const db = require('../lib/db');
 const server = require('../server');
 const agent = require('supertest').agent(server);
 
 describe('Users API', function() {
-	before(async function() { await db.reset(); });
+	before(async function() {
+		await db.reset();
+	});
 
 	it('auth', async function() {
 		await agent.post('/auth')
@@ -13,10 +17,10 @@ describe('Users API', function() {
 			.send({username: 'missing', password: 'bad'})
 			.expect(400, {error: 'incorrect username or password'});
 		await agent.delete('/auth')
-			.expect('set-cookie', "Session=; HttpOnly")
+			.expect('set-cookie', 'Session=; HttpOnly')
 			.expect(401, {error: 'session cookie malformed'});
 		await agent.delete('/auth')
-			.expect('set-cookie', "Session=; HttpOnly")
+			.expect('set-cookie', 'Session=; HttpOnly')
 			.expect(401, {});
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
@@ -25,7 +29,7 @@ describe('Users API', function() {
 				id: 1,
 				username: 'admin',
 				last_login: null,
-				requires_reset: true
+				requires_reset: true,
 			});
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
@@ -34,7 +38,7 @@ describe('Users API', function() {
 				id: 1,
 				username: 'admin',
 				last_login: /\w+/,
-				requires_reset: true
+				requires_reset: true,
 			});
 	});
 
@@ -269,7 +273,7 @@ describe('Users API', function() {
 
 	it('logout', async function() {
 		await agent.delete('/auth')
-			.expect('set-cookie', "Session=; HttpOnly")
+			.expect('set-cookie', 'Session=; HttpOnly')
 			.expect(204, '');
 		await agent.get('/users/admin')
 			.expect(401);
@@ -308,7 +312,6 @@ describe('Users API', function() {
 						'expiration': '',
 						'constraints': '',
 					}],
-				admin: false,
 					admin: false,
 					username: 'Dummy',
 					password: 'dummy',
@@ -322,7 +325,7 @@ describe('Users API', function() {
 
 		it('index', async function() {
 			await agent.get('/users')
-				.expect(403)
+				.expect(403);
 		});
 
 		it('update', async function() {
@@ -371,3 +374,5 @@ describe('Users API', function() {
 		});
 	});
 });
+
+/* eslint-env node, mocha */

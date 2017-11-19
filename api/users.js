@@ -1,35 +1,36 @@
 // REST API for users.
+'use strict';
 
 const db = require('../lib/db');
 const crypto = require('crypto');
-const error = require('../lib/errors');
+// const errors = require('../lib/errors');
 const helpers = require('../lib/helpers');
 
 module.exports = function(app) {
-	app.  post("/auth", auth);
-	app.delete("/auth", logout);
-	app.   get("/users", index);
-	app.  post("/users", create);
-	app.   get("/users/:username", read);
-	app. patch("/users/:username", update);
-	app.delete("/users/:username", del_user);
-	app.   get("/users/:username/logs", logs);
-}
+	app.  post('/auth', auth);
+	app.delete('/auth', logout);
+	app.   get('/users', index);
+	app.  post('/users', create);
+	app.   get('/users/:username', read);
+	app. patch('/users/:username', update);
+	app.delete('/users/:username', remove);
+	app.   get('/users/:username/logs', logs);
+};
 
 async function auth(request, response) {
 	if (!request.body.username || !request.body.password) {
 		return response.status(400)
 			.send({username: 'required', password: 'required'});
 	}
-	const user = await db.get("SELECT * FROM users WHERE username = ?",
+	const user = await db.get('SELECT * FROM users WHERE username = ?',
 		request.body.username);
 	const password = request.body.password;
 	if (user) {
-		if ((!user.pw_salt && password == user.password_hash) ||
-				(crypto.createHash("sha256", user.pw_salt)
-					.update(password).digest('hex') == user.password_hash)) {
-
-			const sesh = crypto.createHash("sha256")
+		// Empty salt mean unhashed password
+		if ((!user.pw_salt && password === user.password_hash) ||
+				(crypto.createHash('sha256', user.pw_salt)
+					.update(password).digest('hex') === user.password_hash)) {
+			const sesh = crypto.createHash('sha256')
 				.update(Math.random().toString()).digest('hex');
 
 			await db.run(`
@@ -54,7 +55,7 @@ async function auth(request, response) {
 async function logout(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (user) {
-		await db.run("UPDATE users SET session_cookie = NULL WHERE id = ?",
+		await db.run('UPDATE users SET session_cookie = NULL WHERE id = ?',
 			user.id);
 		response.set('Set-Cookie', 'Session=; HttpOnly');
 		return response.status(204).end();
@@ -79,18 +80,18 @@ async function index(request, response) {
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		GROUP BY users.id`);
 
-	const user_l = [];
+	const userList = [];
 	for (const usr of users) {
-		user_l.push({
+		userList.push({
 			id: usr.id,
 			doors: JSON.parse(usr.doors) || [],
-			admin: !!usr.admin,
+			admin: Boolean(usr.admin),
 			username: usr.username,
 			password: usr.pw_salt? undefined : usr.password_hash,
 			requires_reset: !usr.pw_salt,
 		});
 	}
-	response.send(user_l);
+	response.send(userList);
 }
 
 async function create(request, response) {
@@ -105,21 +106,22 @@ async function create(request, response) {
 	}
 
 	// Give the user a random un-hashed password
-	const pw = crypto.createHash("sha256")
+	const pw = crypto.createHash('sha256')
 		.update(Math.random().toString()).digest('hex').substring(1, 15);
 
+	let sqlResp;
 	try {
-		var r = await db.run(
-			"INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)",
-			request.body.username, pw, !!request.body.admin);
+		sqlResp = await db.run(
+			'INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)',
+			request.body.username, pw, Boolean(request.body.admin));
 	} catch(e) {
 		return response.status(400)
 			.send({username: 'already taken'});
 	}
 
 	response.send({
-		id: r.stmt.lastID,
-		admin: !!request.body.admin,
+		id: sqlResp.stmt.lastID,
+		admin: Boolean(request.body.admin),
 		username: request.body.username,
 		password: pw,
 		requires_reset: true,
@@ -128,7 +130,7 @@ async function create(request, response) {
 
 async function read(request, response) {
 	const user = await helpers.check_cookie(request, response);
-	if (!user.admin && request.params.username != user.username) {
+	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403)
 			.send({error: 'only admins can view others'});
 	}
@@ -151,7 +153,7 @@ async function read(request, response) {
 	response.send({
 		id: usr.id,
 		doors: JSON.parse(usr.doors) || [],
-		admin: !!usr.admin,
+		admin: Boolean(usr.admin),
 		username: usr.username,
 		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
 		requires_reset: !usr.pw_salt,
@@ -161,13 +163,13 @@ async function read(request, response) {
 async function update(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin && (
-			!request.body.password || request.body.password.length < 8)) {
+		!request.body.password || request.body.password.length < 8)) {
 		return response.status(400)
 			.send({password: 'must be at least 8 characters'});
 	}
 
-	// console.log("Update_USER", user, !user.admin, request.params.username, user.username)
-	if (!user.admin && request.params.username != user.username) {
+	// console.log("Update_USER", user, request.params.username, user.username)
+	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403)
 			.send({error: 'can only update your own info'});
 	}
@@ -177,34 +179,36 @@ async function update(request, response) {
 	}
 	//TODO: update username and stuff. (PUT?)
 
-	if (request.params.username != user.username) {
-		var salt = null;
+	let salt, pwHash = null;
+	if (request.params.username !== user.username) {
+		// var salt = null;
 		if (request.body.password) {
-			var pw_hash = request.body.password;
+			pwHash = request.body.password;
 		} else {
-			var pw_hash = crypto.createHash("sha256")
+			pwHash = crypto.createHash('sha256')
 				.update(Math.random().toString())
 				.digest('hex').substring(1, 15);
 		}
 	} else {
 		if (user.pw_salt && (!request.current_password ||
-							crypto.createHash("sha256", user.pw_salt)
-							.update(request.body.current_password).digest('hex')
-								!== user.password_hash)) {
+							crypto.createHash('sha256', user.pw_salt)
+								.update(request.body.current_password)
+								.digest('hex') !== user.password_hash)) {
 			return response.status(400)
 				.send({current_password: 'incorrect password'});
 		}
-		var salt = crypto.createHash("sha256")
+		salt = crypto.createHash('sha256')
 			.update(Math.random().toString()).digest('hex');
-		var pw_hash = crypto.createHash("sha256", salt)
+		pwHash = crypto.createHash('sha256', salt)
 			.update(request.body.password).digest('hex');
 	}
 
 	try {
-		var r = await db.run(`
+		// const r = await db.run(`
+		await db.run(`
 			UPDATE users SET pw_salt = ? , password_hash = ?
 			WHERE username = ?`,
-			salt, pw_hash, request.params.username);
+			salt, pwHash, request.params.username);
 		// console.log("UPDATE:", r)
 	} catch(e) {
 		return response.status(400).send({error: 'DB update error'});
@@ -225,30 +229,33 @@ async function update(request, response) {
 	response.send({
 		id: usr.id,
 		doors: JSON.parse(usr.doors) || [],
-		admin: !!usr.admin,
+		admin: Boolean(usr.admin),
 		username: usr.username,
 		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
 		requires_reset: !usr.pw_salt,
 	});
 }
 
-async function del_user(request, response) {
+async function remove(request, response) {
 	const user = await helpers.check_cookie(request, response);
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
-	const r = await db.run("DELETE FROM users WHERE username = ?",
-			request.params.username);
+	const r = await db.run(
+		'DELETE FROM users WHERE username = ?',
+		request.params.username);
 	response.status(r.stmt.changes? 204 : 404).end();
 }
 
 async function logs(request, response) {
 	const user = await helpers.check_cookie(request, response);
-	if (!user.admin && request.params.username != user.username) {
+	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403).send({error: 'must be admin'});
 	}
+	//TODO: use pk_offset instead?
+	let page;
 	try {
-		var page = parseInt(request.params.page||1)-1;
+		page = parseInt(request.params.page||1)-1;
 	} catch(e) {
 		return response.status(400).send({page: 'must be an int'});
 	}

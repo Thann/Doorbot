@@ -1,0 +1,5 @@
+api/
+lib/
+test/
+server.js
+door.js

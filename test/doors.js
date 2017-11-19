@@ -1,3 +1,5 @@
+'use strict';
+
 const db = require('../lib/db');
 const server = require('../server');
 const agent = require('supertest').agent(server);
@@ -16,7 +18,7 @@ describe('Doors API', function() {
 			.expect(200, {
 				id: 1,
 				name: 'main',
-				token: /\w+/
+				token: /\w+/,
 			});
 	});
 
@@ -25,7 +27,7 @@ describe('Doors API', function() {
 			.expect(200, {
 				id: 1,
 				name: 'main',
-				token: /\w+/
+				token: /\w+/,
 			});
 	});
 
@@ -34,7 +36,7 @@ describe('Doors API', function() {
 			.expect(200, [{
 				id: 1,
 				name: 'main',
-				token: /\w+/
+				token: /\w+/,
 			}]);
 	});
 
@@ -75,21 +77,22 @@ describe('Doors API', function() {
 				username: 'admin',
 			});
 		await agent.delete('/doors/1/permit/admin')
-			.expect(204)
+			.expect(204);
 		await agent.post('/doors/1/permit/admin')
-			.send({// creation: '' //TODO:
-				   // expiration: '' //TODO:
-				   constraints: 'ip.192.168.1.1/30'})
+			.send({
+				// creation: '', //TODO:
+				// expiration: '', //TODO:
+				constraints: 'ip:192.168.1.1/30' })
 			.expect(200, {
 				door_id: 1,
 				username: 'admin',
-				// expiration: null,
-				constraints: 'ip.192.168.1.1/30',
+				// expiration: '',
+				constraints: 'ip:192.168.1.1/30',
 			});
 		await agent.post('/doors/1/permit/admin')
 			.expect(200, {
 				door_id: 1,
-				username: "admin",
+				username: 'admin',
 			});
 	});
 
@@ -220,3 +223,5 @@ describe('Doors API', function() {
 		});
 	});
 });
+
+/* eslint-env node, mocha */

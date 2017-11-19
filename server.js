@@ -15,23 +15,23 @@ if (require.main !== module) {
 	// Override port when required by tests
 	options.port = 6969;
 } else {
-	var getopts = require("node-getopt").create([
+	const getopts = require('node-getopt').create([
 		['p', 'port=', 'Set listen port'],
 		['',  'watch', 'Recompile webapp on file modification'],
 		['',  'build', 'Compile webapp'],
-		['h', 'help']
+		['h', 'help'],
 	]).bindHelp().setHelp(
-		"Doorbot: server w/ webui to manage users and doors.\n" +
-		"Usage: node server [OPTION]\n" +
-		"\n" +
-		"[[OPTIONS]]\n" +
-		"\n" +
-		"Repository: https://github.com/Thann/Doorbot"
+		'Doorbot: server w/ webui to manage users and doors.\n' +
+		'Usage: node server [OPTION]\n' +
+		'\n' +
+		'[[OPTIONS]]\n' +
+		'\n' +
+		'Repository: https://github.com/Thann/Doorbot'
 	);
 
 	const opt = getopts.parseSystem();
 	if (opt.argv.length > 0) {
-		console.error("ERROR: Unexpected argument(s): " + opt.argv.join(', '));
+		console.error('ERROR: Unexpected argument(s): ' + opt.argv.join(', '));
 		console.error(getopts.getHelp());
 		process.exit(1);
 	}
@@ -54,19 +54,18 @@ fs.readdirSync(controllers).forEach(function(file) {
 
 // Handle errors
 app.use(function errorHandler(err, request, response, next) {
-	console.error("ERROR:", err);
+	console.error('ERROR:', err);
 	next(err);
 });
 
 process.on('unhandledRejection', function(err, promise) {
 	if (!(err instanceof errors.HandledError))
-		console.error("UHR", err, promise);
+		console.error('UHR', err, promise);
 });
 
 module.exports = app.listen(options.port, function() {
-	console.log("listening on", options.port);
+	console.log('listening on', options.port);
 });
-
 
 // --Watch
 if (options.watch || options.build) {
@@ -81,4 +80,3 @@ if (options.watch || options.build) {
 		console.log(data.toString());
 	});
 }
-
