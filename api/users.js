@@ -113,11 +113,13 @@ async function index(request, response) {
 		SELECT users.*, '['||
 			GROUP_CONCAT( '{'||
 				'"id":'          || permissions.door_id ||','||
+				'"name":"'       || IFNULL(doors.name, '') ||'",'||
 				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
 				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
 				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
 			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
+		LEFT JOIN doors ON permissions.door_id = doors.id
 		GROUP BY users.id`);
 
 	const userList = [];
@@ -179,11 +181,13 @@ async function read(request, response) {
 		SELECT users.*, '['||
 			GROUP_CONCAT( '{'||
 				'"id":'          || permissions.door_id ||','||
+				'"name":"'       || IFNULL(doors.name, '') ||'",'||
 				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
 				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
 				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
 			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
+		LEFT JOIN doors ON permissions.door_id = doors.id
 		WHERE username = ?`,
 		request.params.username);
 
@@ -258,11 +262,13 @@ async function update(request, response) {
 		SELECT users.*, '['||
 			GROUP_CONCAT( '{'||
 				'"id":'          || permissions.door_id ||','||
+				'"name":"'       || IFNULL(doors.name, '') ||'",'||
 				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
 				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
 				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
 			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
+		LEFT JOIN doors ON permissions.door_id = doors.id
 		WHERE username = ?`,
 		request.params.username);
 

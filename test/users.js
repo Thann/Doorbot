@@ -87,6 +87,7 @@ describe('Users API', function() {
 				id: 1,
 				doors: [{
 					'id': 1,
+					'name': 'main',
 					'creation': /.+/,
 					'expiration': '',
 					'constraints': '',
@@ -101,11 +102,13 @@ describe('Users API', function() {
 				id: 2,
 				doors: [{
 					'id': 1,
+					'name': 'main',
 					'creation': /.+/,
 					'expiration': '',
 					'constraints': 'ip:192.168.1.1/30',
 				}, {
 					'id': 2,
+					'name': 'rear',
 					'creation': /.+/,
 					'expiration': '',
 					'constraints': '',
@@ -147,6 +150,7 @@ describe('Users API', function() {
 				id: 1,
 				doors: [{
 					'id': 1,
+					'name': 'main',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': '',
@@ -159,11 +163,13 @@ describe('Users API', function() {
 				id: 2,
 				doors: [{
 					'id': 1,
+					'name': 'main',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': 'ip:192.168.1.1/30',
 				}, {
 					'id': 2,
+					'name': 'rear',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': '',
@@ -223,11 +229,13 @@ describe('Users API', function() {
 				id: 2,
 				doors: [{
 					'id': 1,
+					'name': 'main',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': 'ip:192.168.1.1/30',
 				}, {
 					'id': 2,
+					'name': 'rear',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': '',
@@ -318,6 +326,7 @@ describe('Users API', function() {
 					id: 2,
 					doors: [{
 						'id': 1,
+						'name': 'main',
 						'creation': /\w+/,
 						'expiration': '',
 						'constraints': '',
