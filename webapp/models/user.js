@@ -76,6 +76,3 @@ const UserModel = Backbone.Model.extend({
 	},
 });
 module.exports = UserModel;
-
-/* eslint-env browser */
-/* global Doorbot, Backbone, Rivets, _ */

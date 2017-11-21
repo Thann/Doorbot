@@ -117,6 +117,3 @@ module.exports = Backbone.View.extend({
 		this.render();
 	},
 });
-
-/* eslint-env browser */
-/* global Doorbot, Backbone, Rivets, _ */

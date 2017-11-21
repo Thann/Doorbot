@@ -1,7 +1,14 @@
 {
   "env": {
     "es6": true,
-    "node": true
+    "node": true,
+    "browser": true
+  },
+  "globals": {
+    "Doorbot": true,
+    "Backbone": true,
+    "Rivets": true,
+    "_": true
   },
   "extends": "eslint:recommended",
   "parserOptions": {

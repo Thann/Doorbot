@@ -39,6 +39,3 @@ function loadModule(context) {
 		return (module[modularize(filename)] = context(filename)) && module;
 	}, {});
 }
-
-/* eslint-env browser */
-/* global Doorbot, Backbone, Rivets, _ */

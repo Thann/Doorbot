@@ -67,6 +67,3 @@ Rivets.formatters.htmlEscape = function(value) {
 	}) || '';
 	//TODO: should this be more complete?
 };
-
-/* eslint-env browser */
-/* global Doorbot, Backbone, Rivets, _ */

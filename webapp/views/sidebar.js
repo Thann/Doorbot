@@ -16,6 +16,3 @@ module.exports = Backbone.View.extend({
 		this.$el.toggleClass('open', bool);
 	},
 });
-
-/* eslint-env browser */
-/* global Doorbot, Backbone, Rivets, _ */
