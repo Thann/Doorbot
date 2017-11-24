@@ -33,7 +33,7 @@ describe('Users API', function() {
 			//TODO: Why is cookie malformed the second time?
 			.expect(401, {error: 'session cookie malformed'});
 		await agent.post('/auth')
-			.send({username: 'admin', password: 'admin'})
+			.send({username: 'ADMIN', password: 'admin'})
 			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
 			.expect(200, {
 				id: 1,
@@ -45,25 +45,25 @@ describe('Users API', function() {
 
 	it('create', async function() {
 		await agent.post('/users')
-			.send({username: 'Dummy'})
+			.send({username: 'Dummy', password: 'dumb'})
 			.expect(400, {username: 'already taken'});
 		await agent.post('/users')
 			.send({username: 'me'})
 			.expect(400, {username: 'invalid'});
 		await agent.post('/users')
-			.send({username: 'Testing'})
+			.send({username: 'Testing', admin: 0b101})
 			.expect(200, {
 				id: 3,
-				admin: false,
+				admin: 0b101,
 				password: /\w{14}/,
 				username: 'Testing',
 				requires_reset: true,
 			});
-		await agent.delete('/users/Testing').expect(204);
+		await agent.delete('/users/testing').expect(204);
 		await agent.post('/users')
 			.send({username: 'Testing', password: 'dumb'})
 			.expect(200, {
-				id: 3,
+				id: 4,
 				admin: false,
 				password: 'dumb',
 				username: 'Testing',
@@ -76,12 +76,12 @@ describe('Users API', function() {
 			.expect(200, {
 				id: 1,
 				doors: [],
-				admin: true,
+				admin: 0xffffffff,
 				password: 'admin',
 				username: 'admin',
 				requires_reset: true,
 			});
-		await agent.get('/users/Dummy')
+		await agent.get('/users/dummy')
 			.expect(200, {
 				id: 2,
 				doors: [],
@@ -107,7 +107,7 @@ describe('Users API', function() {
 					'expiration': '',
 					'constraints': '',
 				}],
-				admin: true,
+				admin: 0xffffffff,
 				password: 'admin',
 				username: 'admin',
 				requires_reset: true,
@@ -140,7 +140,7 @@ describe('Users API', function() {
 			.expect(200, [{
 				id: 1,
 				doors: [],
-				admin: true,
+				admin: 0xffffffff,
 				password: 'admin',
 				username: 'admin',
 				requires_reset: true,
@@ -167,7 +167,7 @@ describe('Users API', function() {
 					'expiration': '',
 					'constraints': '',
 				}],
-				admin: true,
+				admin: 0xffffffff,
 				password: 'admin',
 				username: 'admin',
 				requires_reset: true,
@@ -207,12 +207,12 @@ describe('Users API', function() {
 				password: 'dummy',
 				requires_reset: true,
 			});
-		await agent.patch('/users/admin')
+		await agent.patch('/users/Admin')
 			.send({password: 'admin', keycode: 1})
 			.expect(200, {
 				id: 1,
 				doors: [],
-				admin: true,
+				admin: 0xffffffff,
 				username: 'admin',
 				requires_reset: false,
 			});
@@ -220,7 +220,7 @@ describe('Users API', function() {
 			.expect(200, {
 				id: 1,
 				doors: [],
-				admin: true,
+				admin: 0xffffffff,
 				username: 'admin',
 				requires_reset: false,
 			});
@@ -234,7 +234,7 @@ describe('Users API', function() {
 		await agent.post('/doors/1/permit/Dummy')
 			.send({constraints: 'ip:192.168.1.1/30'}).expect(200);
 		await agent.post('/doors/2/permit/Dummy').expect(200);
-		await agent.patch('/users/Dummy')
+		await agent.patch('/users/dummy')
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
@@ -256,6 +256,9 @@ describe('Users API', function() {
 				password: 'dummy',
 				requires_reset: true,
 			});
+		await agent.patch('/users/admin')
+			.send({admin: 0b101})
+			.expect(403, {admin: "can't make yourself admin"});
 	});
 
 	it('delete', async function() {
@@ -279,7 +282,7 @@ describe('Users API', function() {
 			.expect(200);
 		await agent.get('/users/delete_me')
 			.expect(200, {
-				id: 3,
+				id: 4,
 				doors: [],  // ensure no permissions
 				admin: false,
 				username: 'delete_me',
@@ -291,6 +294,8 @@ describe('Users API', function() {
 	});
 
 	it('logs', async function() {
+		await agent.post('/auth')
+			.send({username: 'admin', password: 'admin'});
 		await agent.get('/users/admin/logs')
 			.expect(200, []);
 		await agent.get('/users/Dummy/logs')
@@ -321,6 +326,8 @@ describe('Users API', function() {
 	});
 
 	it('logout', async function() {
+		await agent.post('/auth')
+			.send({username: 'admin', password: 'admin'});
 		await agent.delete('/auth')
 			.expect('set-cookie', /^Session=; Path=\/; Expires=/)
 			.expect(204, '');
@@ -330,6 +337,7 @@ describe('Users API', function() {
 			.expect(401);
 	});
 
+	// ===================================
 	describe('as an under-privileged user', function() {
 		beforeEach(async function() {
 			await agent.post('/auth')
@@ -358,7 +366,7 @@ describe('Users API', function() {
 				.expect(403, {error: 'must have invite'});
 			await agent.post('/users')
 				.send({username: 'noob', invite: 'invalid'})
-				.expect(400, {error: 'invalid or expired invite'});
+				.expect(400, {invite: 'invalid or expired'});
 			//TODO: with valid token
 		});
 
@@ -395,7 +403,7 @@ describe('Users API', function() {
 			await agent.patch('/users/Dummy')
 				.send({password: 'dummy'})
 				.expect(400, {password: 'must be at least 8 characters'});
-			await agent.patch('/users/Dummy')
+			await agent.patch('/users/dummy')
 				.send({password: 'door_dummy'})
 				.expect(200, {
 					id: 2,
@@ -424,18 +432,46 @@ describe('Users API', function() {
 					username: 'Dummy',
 					requires_reset: false,
 				});
-			await agent.patch('/users/Dummy')
+			await agent.patch('/users/dummy')
 				.send({password: 'door_dummy2'})
 				.expect(400, {current_password: 'incorrect password'});
-			await agent.patch('/users/Dummy')
+			await agent.patch('/users/dummy')
 				.send({current_password: 'door_dummy', password: 'door_dummy2'})
 				.expect(200);
 			// admin permissions
-			await agent.patch('/users/Dummy')
+			await agent.patch('/users/dummy')
 				.send({admin: 1})
-				.expect(403, {error: "can't make yourself admin"});
+				.expect(403, {admin: "can't make yourself admin"});
 			await agent.post('/auth')
 				.send({username: 'admin', password: 'admin'}).expect(200);
+			await agent.post('/users')
+				.send({
+					username: 'helper',
+					admin: 0x70000005,
+					password: 'helper'})
+				.expect(200);
+			await agent.post('/auth')
+				.send({username: 'helper', password: 'helper'})
+				.expect(200);
+			await agent.patch('/users/dummy')
+				.send({admin: 0x70000003})
+				.expect(403, {
+					// admin: "can't give permissions you don't have"});
+					admin: "can't change permissions you don't have"});
+			await agent.patch('/users/dummy')
+				.send({admin: 0x70000001})
+				.expect(200);
+			await agent.post('/auth')
+				.send({username: 'Dummy', password: 'door_dummy2'})
+				.expect(200);
+			await agent.patch('/users/helper')
+				.send({admin: 1})
+				.expect(403, {
+					// admin: "can't remove permissions you don't have"});
+					admin: "can't change permissions you don't have"});
+			await agent.patch('/users/helper')
+				.send({admin: 0x70000005})
+				.expect(200);
 		});
 
 		it('delete', async function() {
@@ -457,7 +493,7 @@ describe('Users API', function() {
 				.expect(200, []);
 			await agent.post('/doors/1/open')
 				.expect(204);
-			await agent.get('/users/Dummy/logs')
+			await agent.get('/users/dummy/logs')
 				.expect(200, [{
 					id: 1,
 					door_id: 1,
@@ -472,7 +508,7 @@ describe('Users API', function() {
 			await agent.delete('/auth')
 				.expect('set-cookie', /^Session=; Path=\/; Expires=/)
 				.expect(204, '');
-			await agent.get('/users/Dummy')
+			await agent.get('/users/dummy')
 				.expect(401);
 			await agent.delete('/auth')
 				.expect(401);

@@ -58,6 +58,7 @@ process.on('unhandledRejection', function(err, promise) {
 let lock = false;
 if (!options.dummy)
 	gpio.setup(parseInt(options.gpio));
+
 function open() {
 	if (options.dummy)
 		return console.log('Dummy Open');
@@ -154,6 +155,7 @@ if (options.keypad !== undefined && !options.dummy) {
 }
 
 function safeExit() {
+	console.log('shutting down..');
 	if (!options.dummy) {
 		gpio.write(options.gpio, false, function() {
 			process.exit(0);

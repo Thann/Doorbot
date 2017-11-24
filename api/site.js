@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const users = require('./users');
 const crypto = require('crypto');
+const Perms = require('../lib/permissions');
 const MemCache = require('../lib/memcache');
 
 const settingsFile = (process.env.NODE_ENV === 'test' ? null :
@@ -40,7 +41,7 @@ module.exports.privateSettings = privateSettings;
 
 async function indexInvites(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -57,7 +58,7 @@ async function indexInvites(request, response) {
 
 async function createInvite(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -77,7 +78,7 @@ async function createInvite(request, response) {
 
 async function deleteInvite(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -91,7 +92,7 @@ async function readSettings(request, response) {
 
 async function updateSettings(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -101,7 +102,7 @@ async function updateSettings(request, response) {
 
 async function readPrivateSettings(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -110,7 +111,7 @@ async function readPrivateSettings(request, response) {
 
 async function updatePrivateSettings(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 

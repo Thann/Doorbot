@@ -5,6 +5,7 @@ const db = require('../lib/db');
 const crypto = require('crypto');
 const cookie = require('cookie');
 const errors = require('../lib/errors');
+const Perms = require('../lib/permissions');
 const MemCache = require('../lib/memcache');
 
 module.exports = function(app) {
@@ -39,6 +40,7 @@ const checkCookie = async function(request, response) {
 		response.status(401).end();
 		throw new errors.HandledError();
 	}
+	user.has = new Perms(user.admin).has;
 	return user;
 };
 module.exports.checkCookie = checkCookie;
@@ -59,7 +61,8 @@ async function auth(request, response) {
 		return response.status(429)
 			.send({error: 'too many auth attempts'});
 	}
-	const user = await db.get('SELECT * FROM users WHERE username = ?',
+	const user = await db.get(`
+		SELECT * FROM users WHERE username = ? AND deleted_at IS NULL`,
 		request.body.username);
 	const password = request.body.password;
 	if (user) {
@@ -75,7 +78,7 @@ async function auth(request, response) {
 			await db.run(`
 				UPDATE users
 				SET session_cookie = ? , session_created = CURRENT_TIMESTAMP
-				WHERE id = ?`,
+				WHERE id = ? AND deleted_at IS NULL`,
 				sesh, user.id);
 
 			response.set('Set-Cookie',
@@ -107,7 +110,8 @@ async function logout(request, response) {
 
 async function index(request, response) {
 	const user = await checkCookie(request, response);
-	if (!user.admin) {
+	// TODO: formalize permissions (read only?)
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -122,14 +126,14 @@ async function index(request, response) {
 			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		LEFT JOIN doors ON permissions.door_id = doors.id
-		GROUP BY users.id`);
+		WHERE deleted_at IS NULL GROUP BY users.id`);
 
 	const userList = [];
 	for (const usr of users) {
 		userList.push({
 			id: usr.id,
 			doors: JSON.parse(usr.doors) || [],
-			admin: Boolean(usr.admin),
+			admin: usr.admin || 0,
 			username: usr.username,
 			password: usr.pw_salt? undefined : usr.password_hash,
 			requires_reset: !usr.pw_salt,
@@ -147,14 +151,16 @@ async function create(request, response) {
 
 	let invite, salt, pw, admin;
 	const user = await checkCookie(request, response);
+	let creator = user.id;
 
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		if (!request.body.invite)
 			return response.status(403).send({error: 'must have invite'});
 		invite = site.pendingInvites.get(request.body.invite);
 		if (!invite)
 			return response.status(400)
-				.send({error: 'invalid or expired invite'});
+				.send({invite: 'invalid or expired'});
+		creator = invite.admin_id;
 		if (request.body.password) {
 			if (request.body.password.length < 8)
 				return response.status(400)
@@ -166,13 +172,15 @@ async function create(request, response) {
 		}
 	} else {
 		pw = request.body.password;
-		admin = Boolean(request.body.admin);
-		//TODO: use bitfield
-		// try {
-		// 	admin = parseInt(request.body.admin);
-		// } catch(e) {
-		// 	return response.status(400).send({admin: 'must be int'});
-		// }
+		if (request.body.admin & (~user.admin) !== 0) {
+			return response.status(403)
+				.send({admin: "can't give admin permissions you don't have"});
+		}
+		try {
+			admin = parseInt(request.body.admin);
+		} catch(e) {
+			return response.status(400).send({admin: 'must be int'});
+		}
 	}
 
 	// Default password to random hash.
@@ -182,20 +190,23 @@ async function create(request, response) {
 	let sqlResp;
 	try {
 		sqlResp = await db.run(`
-			INSERT INTO users (username, pw_salt, password_hash, admin)
-			VALUES (?,?,?,?)`,
-			username, salt, pw, admin);
+			INSERT INTO users (username, pw_salt, password_hash, created_by, admin)
+			VALUES (?,?,?,?,?)`,
+			username, salt, pw, creator, admin);
 	} catch(e) {
 		// console.warn('USER UPDATE ERROR:', e);
 		return response.status(400)
 			.send({username: 'already taken'});
 	}
 
+	if (invite) {
+		site.pendingInvites.del(request.body.invite);
+	}
 	//TODO: create invite permissions.
 
 	response.send({
 		id: sqlResp.stmt.lastID,
-		admin: Boolean(request.body.admin),
+		admin: parseInt(admin) || 0,
 		username: request.body.username,
 		password: pw,
 		requires_reset: true,
@@ -206,7 +217,8 @@ async function read(request, response) {
 	const user = await checkCookie(request, response);
 	if (request.params.username === 'me')
 		request.params.username = user.username;
-	if (!user.admin && request.params.username !== user.username) {
+	if (!user.has(Perms.ADMIN) &&
+		request.params.username !== user.username) {
 		return response.status(403)
 			.send({error: 'only admins can view others'});
 	}
@@ -222,7 +234,7 @@ async function read(request, response) {
 			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		LEFT JOIN doors ON permissions.door_id = doors.id
-		WHERE username = ?`,
+		WHERE username = ? AND deleted_at IS NULL`,
 		request.params.username);
 
 	if (!usr.id) {
@@ -231,24 +243,27 @@ async function read(request, response) {
 	response.send({
 		id: usr.id,
 		doors: JSON.parse(usr.doors) || [],
-		admin: Boolean(usr.admin),
+		admin: usr.admin || 0,
 		username: usr.username,
-		password: user.admin && !usr.pw_salt && usr.password_hash || undefined,
+		// TODO: formalize permission
+		password: (user.has(Perms.ADMIN) &&
+			!usr.pw_salt && usr.password_hash) || undefined,
 		requires_reset: !usr.pw_salt,
 	});
 }
 
 async function update(request, response) {
 	const user = await checkCookie(request, response);
-	if (!user.admin && (
+	if (!user.has(Perms.SUPERUSER) && (
 		request.body.password && request.body.password.length < 8)) {
 		return response.status(400)
 			.send({password: 'must be at least 8 characters'});
 	}
 
 	// console.log("Update_USER", user, request.params.username, user.username)
-	const sameUser = (request.params.username === user.username);
-	if (!sameUser && !user.admin) {
+	const sameUser = (user.username.toLowerCase() ===
+		request.params.username.toLowerCase());
+	if (!sameUser && !user.has(Perms.ADMIN)) {
 		return response.status(403)
 			.send({error: 'can only update your own info'});
 	}
@@ -256,9 +271,19 @@ async function update(request, response) {
 		return response.status(403)
 			.send({keycode: 'can only update your own keycode'});
 	}
-
-	if (!user.admin && request.body.admin) {
-		return response.status(403).send({error: "can't make yourself admin"});
+	if (request.body.admin !== undefined) {
+		if (sameUser) {
+			return response.status(403)
+				.send({admin: "can't make yourself admin"});
+		}
+		const currentAdmin = (await db.get(`
+			SELECT admin FROM users
+			WHERE username = ? AND deleted_at IS NULL`,
+			request.params.username)).admin || 0;
+		if (!user.has(currentAdmin ^ request.body.admin)) {
+			return response.status(403)
+				.send({admin: "can't change permissions you don't have"});
+		}
 	}
 
 	const values = {};
@@ -291,10 +316,11 @@ async function update(request, response) {
 	}
 
 	try {
-		await db.update('users', values, 'username = ?',
+		await db.update('users', values,
+			'username = ? AND deleted_at IS NULL',
 			request.params.username);
 	} catch(e) {
-		console.warn('USER UPDATE ERROR:', e);
+		console.log('USER UPDATE ERROR:', e);
 		return response.status(400).send({error: 'DB update error'});
 	}
 
@@ -309,13 +335,13 @@ async function update(request, response) {
 			'}' ) ||']' AS doors FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
 		LEFT JOIN doors ON permissions.door_id = doors.id
-		WHERE username = ?`,
+		WHERE username = ? AND deleted_at IS NULL`,
 		request.params.username);
 
 	response.send({
 		id: usr.id,
 		doors: JSON.parse(usr.doors) || [],
-		admin: Boolean(usr.admin),
+		admin: usr.admin || 0,
 		username: usr.username,
 		password: user.admin && !usr.pw_salt && usr.password_hash || undefined,
 		requires_reset: !usr.pw_salt,
@@ -324,21 +350,13 @@ async function update(request, response) {
 
 async function remove(request, response) {
 	const user = await checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
-	//TODO: use ON DELETE CASCADE instead?
-	await db.run(`
-		DELETE FROM permissions WHERE user_id = (
-			SELECT id FROM users WHERE username = ?)`,
-		request.params.username);
-	await db.run(`
-		DELETE FROM entry_logs WHERE user_id = (
-			SELECT id FROM users WHERE username = ?)`,
-		request.params.username);
-	const r = await db.run(
-		'DELETE FROM users WHERE username = ?',
+	const r = await db.run(`
+		UPDATE users SET deleted_at = CURRENT_TIMESTAMP, session_cookie = NULL
+		WHERE username = ? AND deleted_at IS NULL`,
 		request.params.username);
 
 	response.status(r.stmt.changes? 204 : 404).end();
@@ -346,7 +364,9 @@ async function remove(request, response) {
 
 async function logs(request, response) {
 	const user = await checkCookie(request, response);
-	if (!user.admin && request.params.username !== user.username) {
+	const sameUser = (user.username.toLowerCase() ===
+		request.params.username.toLowerCase());
+	if (!sameUser && !user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -361,7 +381,8 @@ async function logs(request, response) {
 		SELECT entry_logs.*, doors.name AS door FROM entry_logs
 		INNER JOIN users ON entry_logs.user_id = users.id
 		INNER JOIN doors ON entry_logs.door_id = doors.id
-		WHERE users.username = ? AND entry_logs.id < COALESCE(?, 9e999)
+		WHERE users.username = ? AND deleted_at IS NULL
+			AND entry_logs.id < COALESCE(?, 9e999)
 		ORDER BY entry_logs.id DESC LIMIT ?`,
 		request.params.username, lastID, 50);
 

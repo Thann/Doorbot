@@ -3,8 +3,9 @@
 
 const db = require('../lib/db');
 const crypto = require('crypto');
-const errors = require('../lib/errors');
 const users = require('./users');
+const errors = require('../lib/errors');
+const Perms = require('../lib/permissions');
 const DOOR_SOCKETS = {};
 
 module.exports = function(app) {
@@ -23,7 +24,8 @@ module.exports = function(app) {
 async function index(request, response) {
 	const user = await users.checkCookie(request, response);
 	let doors;
-	if (user.admin) {
+	// TODO: formalize permissions
+	if (user.has(Perms.ADMIN)) {
 		doors = await db.all('SELECT * FROM doors');
 	} else {
 		doors = await db.all(`
@@ -38,7 +40,7 @@ async function index(request, response) {
 		doorList.push({
 			id: door.id,
 			name: door.name,
-			token: user.admin ? door.token : undefined,
+			token: user.has(Perms.ADMIN) ? door.token : undefined,
 			available: DOOR_SOCKETS[door.id] && (
 				DOOR_SOCKETS[door.id].readyState === 1),
 		});
@@ -52,7 +54,7 @@ async function create(request, response) {
 	}
 
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -76,7 +78,7 @@ async function create(request, response) {
 async function read(request, response) {
 	const user = await users.checkCookie(request, response);
 	let door;
-	if (user.admin) {
+	if (user.has(Perms.ADMIN)) {
 		door = await db.get(
 			'SELECT * FROM doors WHERE id = ?', request.params.id);
 	} else {
@@ -94,7 +96,7 @@ async function read(request, response) {
 	response.send({
 		id: door.id,
 		name: door.name,
-		token: user.admin ? door.token : undefined,
+		token: user.has(Perms.ADMIN) ? door.token : undefined,
 	});
 }
 
@@ -104,7 +106,7 @@ async function update(request, response) {
 	}
 
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -120,21 +122,27 @@ async function update(request, response) {
 	response.send({
 		id: door.id,
 		name: door.name,
+		token: user.has(Perms.ADMIN) ? door.token : undefined,
 	});
 }
 
 async function remove(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
+	//TODO: paranoid delete instead?
 	const r = await db.run('DELETE FROM doors WHERE id = ?', request.params.id);
+	if (r.stmt.changes) {
+		await db.run('DELETE FROM permissions WHERE door_id = ?',
+			request.params.id);
+	}
 	response.status(r.stmt.changes? 204 : 404).end();
 }
 
 async function logs(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -147,7 +155,7 @@ async function logs(request, response) {
 	}
 
 	const logs = await db.all(`
-		SELECT entry_logs.*, users.username FROM entry_logs
+		SELECT entry_logs.*, users.username, users.deleted_at FROM entry_logs
 		INNER JOIN users ON entry_logs.user_id = users.id
 		WHERE door_id = ? AND entry_logs.id < COALESCE(?, 9e999)
 		ORDER BY entry_logs.id DESC LIMIT ?`,
@@ -158,7 +166,7 @@ async function logs(request, response) {
 
 async function open(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		if (!user.pw_salt) {
 			return response.status(422).send({error:
 				'your password has been set by an admin and requires reset'});
@@ -218,11 +226,12 @@ async function connect(ws, request, next) {
 				SELECT permissions.*, users.* FROM users
 				LEFT JOIN permissions ON users.id = permissions.user_id
 					AND permissions.door_id = ?
-				WHERE keycode = ?`,
+				WHERE keycode = ? AND deleted_at IS NULL`,
 				door.id, msg[1]);
 
 			//TODO: check constraints
-			if (user && (user.admin || user.door_id))
+			const userPerms = new Perms(user.admin);
+			if (user && (userPerms.has(Perms.ADMIN) || user.door_id))
 				_openDoor(user.id, door.id, 'keycode');
 		}
 	});
@@ -232,7 +241,7 @@ async function connect(ws, request, next) {
 
 async function permit(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -251,7 +260,7 @@ async function permit(request, response) {
 			INSERT OR REPLACE INTO permissions
 				(user_id, door_id, creation, expiration, constraints)
 			SELECT users.id, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?
-			FROM users WHERE username = ?`,
+			FROM users WHERE username = ? AND deleted_at IS NULL`,
 			request.params.id, request.body.creation, request.body.expiration,
 			request.body.constraints, request.params.username);
 	} catch(e) {
@@ -272,13 +281,13 @@ async function permit(request, response) {
 
 async function deny(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
 	const r = await db.run(`
 		DELETE FROM permissions WHERE door_id = ? AND user_id IN
-		( SELECT id FROM users WHERE username = ? )`,
+		( SELECT id FROM users WHERE username = ? AND deleted_at IS NULL )`,
 		request.params.id, request.params.username);
 
 	if (!r.stmt.changes) {
