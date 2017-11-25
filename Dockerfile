@@ -11,14 +11,16 @@ WORKDIR /usr/src/app
 RUN apk update && \
     apk upgrade
 
+COPY package.json \
+     package-lock.json \
+     /usr/src/app/
+
 # Install build dependencies
 FROM base AS build
 RUN apk add git python make g++
 
 # Install app dependencies
-COPY package.json /usr/src/app/
-COPY package-lock.json /usr/src/app/
-RUN npm install --only=production && npm cache clean --force && rm -rf /tmp/*
+RUN npm install
 
 # Make app
 FROM base
@@ -30,9 +32,12 @@ COPY migrations /usr/src/app/migrations
 COPY lib /usr/src/app/lib
 COPY api /usr/src/app/api
 COPY webapp /usr/src/app/webapp
-COPY server.js door.js webpack.config.js .eslintrc.json /usr/src/app/
+COPY server.js \
+     door.js \
+     webpack.config.js \
+     .eslintrc.json \
+     .eslintfiles \
+     /usr/src/app/
 
 # Build webapp
 RUN node_modules/.bin/webpack
-
-

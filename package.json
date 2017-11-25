@@ -11,7 +11,9 @@
   "scripts": {
     "start": "node server --build",
     "test": "node_modules/.bin/mocha",
-    "lint": "node_modules/.bin/eslint $(cat .eslintfiles)"
+    "lint": "node_modules/.bin/eslint $(cat .eslintfiles)",
+    "dktest": "docker-compose exec server npm test",
+    "dklint": "docker-compose exec server npm run lint"
   },
   "dependencies": {
     "babel-core": "^6.7.2",
