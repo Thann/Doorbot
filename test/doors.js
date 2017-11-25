@@ -249,5 +249,3 @@ describe('Doors API', function() {
 		});
 	});
 });
-
-/* eslint-env mocha */

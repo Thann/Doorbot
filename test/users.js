@@ -410,5 +410,3 @@ describe('Users API', function() {
 		});
 	});
 });
-
-/* eslint-env mocha */

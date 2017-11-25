@@ -10,10 +10,12 @@
   "license": "MIT",
   "scripts": {
     "start": "node server --build",
-    "test": "node_modules/.bin/mocha",
-    "lint": "node_modules/.bin/eslint $(cat .eslintfiles)",
-    "dktest": "docker-compose exec server npm test",
-    "dklint": "docker-compose exec server npm run lint"
+    "test": "mocha",
+    "lint": "eslint $(cat .eslintfiles)",
+    "dkstart": "docker-compose up -d",
+    "dkstop": "docker-compose down",
+    "dktest": "docker-compose exec server npm run -s test",
+    "dklint": "docker-compose exec server npm run -s lint"
   },
   "dependencies": {
     "babel-core": "^6.7.2",

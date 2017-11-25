@@ -32,6 +32,7 @@ COPY migrations /usr/src/app/migrations
 COPY lib /usr/src/app/lib
 COPY api /usr/src/app/api
 COPY webapp /usr/src/app/webapp
+COPY test /usr/src/app/test
 COPY server.js \
      door.js \
      webpack.config.js \

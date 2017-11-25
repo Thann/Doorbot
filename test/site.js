@@ -145,5 +145,3 @@ describe('Site API', function() {
 		});
 	});
 });
-
-/* eslint-env mocha */

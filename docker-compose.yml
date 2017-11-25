@@ -17,6 +17,9 @@ services:
     # Handy for dev
     #  - ./api:/usr/src/app/api
     #  - ./webapp:/usr/src/app/webapp
+    #  - ./test:/usr/src/app/test
+    #  - ./lib:/usr/src/app/lib
+    #  - ./db:/usr/src/app/db
     #command: server --watch --lint
 
   door:
