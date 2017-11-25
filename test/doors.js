@@ -250,4 +250,4 @@ describe('Doors API', function() {
 	});
 });
 
-/* eslint-env node, mocha */
+/* eslint-env mocha */

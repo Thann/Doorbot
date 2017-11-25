@@ -48,10 +48,23 @@ describe('Users API', function() {
 			.expect(200, {
 				id: 2,
 				admin: false,
-				password: /\w+/,
+				password: /\w{14}/,
 				username: 'Dummy',
 				requires_reset: true,
 			});
+		await agent.delete('/users/Dummy').expect(204);
+		await agent.post('/users')
+			.send({username: 'Dummy', password: 'dumb'})
+			.expect(200, {
+				id: 2,
+				admin: false,
+				password: 'dumb',
+				username: 'Dummy',
+				requires_reset: true,
+			});
+		await agent.post('/users')
+			.send({username: 'Dummy', password: 'dumb'})
+			.expect(400, {username: 'already taken'});
 	});
 
 	it('read', async function() {
@@ -317,7 +330,11 @@ describe('Users API', function() {
 		it('create', async function() {
 			await agent.post('/users')
 				.send({username: 'noob'})
-				.expect(403);
+				.expect(403, {error: 'must have invite'});
+			await agent.post('/users')
+				.send({username: 'noob', invite: 'invalid'})
+				.expect(400, {error: 'invalid or expired invite'});
+			//TODO: with valid token
 		});
 
 		it('read', async function() {
@@ -394,4 +411,4 @@ describe('Users API', function() {
 	});
 });
 
-/* eslint-env node, mocha */
+/* eslint-env mocha */

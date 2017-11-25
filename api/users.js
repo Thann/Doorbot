@@ -5,7 +5,6 @@ const db = require('../lib/db');
 const crypto = require('crypto');
 const errors = require('../lib/errors');
 const helpers = require('../lib/helpers');
-const site = require('./site');
 
 module.exports = function(app) {
 	app.  post('/auth', auth);
@@ -44,7 +43,10 @@ const checkCookie = async function(request, response) {
 };
 module.exports.checkCookie = checkCookie;
 
+const site = require('./site');  //TODO: remove circular require.
 const userAuthRates = new helpers.MemCache();
+
+// === API ===
 
 async function auth(request, response) {
 	if (!request.body.username || !request.body.password) {
@@ -137,29 +139,59 @@ async function index(request, response) {
 }
 
 async function create(request, response) {
-	if (!request.body.username) {
-		return response.status(400)
-			.send({username: 'required'});
-	}
+	const username = request.body.username;
+	if (!username)
+		return response.status(400).send({username: 'required'});
+	if (!username.match(/^\w+$/))
+		return response.status(400).send({username: 'invalid'});
 
+	let invite, salt, pw, admin;
 	const user = await checkCookie(request, response);
+
 	if (!user.admin) {
-		return response.status(403).send({error: 'must be admin'});
+		if (!request.body.invite)
+			return response.status(403).send({error: 'must have invite'});
+		invite = site.pendingInvites.get(request.body.invite);
+		if (!invite)
+			return response.status(400)
+				.send({error: 'invalid or expired invite'});
+		if (request.body.password) {
+			if (request.body.password.length < 8)
+				return response.status(400)
+					.send({password: 'must be at least 8 characters'});
+			salt = crypto.createHash('sha256')
+				.update(Math.random().toString()).digest('hex');
+			pw = crypto.createHash('sha256', salt)
+				.update(request.body.password).digest('hex');
+		}
+	} else {
+		pw = request.body.password;
+		admin = Boolean(request.body.admin);
+		//TODO: use bitfield
+		// try {
+		// 	admin = parseInt(request.body.admin);
+		// } catch(e) {
+		// 	return response.status(400).send({admin: 'must be int'});
+		// }
 	}
 
-	// Give the user a random un-hashed password
-	const pw = crypto.createHash('sha256')
-		.update(Math.random().toString()).digest('hex').substring(1, 15);
+	// Default password to random hash.
+	pw = pw || (crypto.createHash('sha256')
+		.update(Math.random().toString()).digest('hex').substring(1, 15));
 
 	let sqlResp;
 	try {
-		sqlResp = await db.run(
-			'INSERT INTO users (username, password_hash, admin) VALUES (?,?,?)',
-			request.body.username, pw, Boolean(request.body.admin));
+		sqlResp = await db.run(`
+			INSERT INTO users (username, pw_salt, password_hash, admin)
+			VALUES (?,?,?,?)`,
+			username, salt, pw, admin);
 	} catch(e) {
+		// console.warn('USER UPDATE ERROR:', e);
 		return response.status(400)
 			.send({username: 'already taken'});
 	}
+
+	//TODO: create invite permissions.
 
 	response.send({
 		id: sqlResp.stmt.lastID,
