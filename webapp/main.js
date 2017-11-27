@@ -4,7 +4,7 @@
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./rivets_extensions');
 require('rivets-backbone-adapter');
-// require('imports-loader?jQuery=jquery!bootstrap/dist/js/bootstrap.js');
+require('imports-loader?jQuery=jquery!bootstrap/dist/js/bootstrap.js');
 
 // Load all views in an extensible way.
 // "views/sample_view.js" becomes "views.SampleView".

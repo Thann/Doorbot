@@ -5,10 +5,10 @@ require('styles/main_panel.css');
 
 module.exports = Backbone.View.extend({
 	id: 'MainPanel',
-	className: 'container',
+	className: 'container flex',
 	template: `
 		<div rv-each-door="doors" class="row">
-			<div class="col-md-6">
+			<div class="col-md-12">
 				<button
 					rv-show="door:available"
 					rv-data-id="door:id"

@@ -26,7 +26,6 @@ body {
 
 			> * {
 				flex: 1;
-				padding-top: 10px;
 			}
 		}
 	}
@@ -45,6 +44,51 @@ body {
 		color: #4C78D0;
 		&:hover { color: #2c54a5; }
 	}
+}
+
+/* === Panels === */
+
+.container {
+	max-width: 100%;
+	@media (max-width: 767px) {
+		width: 100%;
+		max-width: 750px;
+	}
+
+	flex: none !important;
+	&.flex { flex: inherit !important; }
+
+	> .panel.panel-default {
+		background-color: rgba(0,0,0,0.01);
+		margin-top: 30px;
+		width: 100%;
+
+		.panel-heading {
+			color: inherit;
+			font-weight: bold;
+			background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0));
+			//TODO: no selecting
+
+			border-bottom: none;  //HACK: hide border when collapsed
+
+			.fa {
+				margin-left: 20px;
+			}
+		}
+		.panel-body {
+			border-top: 1px solid #ddd;  //HACK:
+		}
+		.panel-footer {
+			background: transparent;
+		}
+	}
+}
+
+/* === Buttons === */
+
+//TODO: btn-clear
+.btn.btn-clear {
+	background-color: transparent;
 }
 
 /* === Utilities === */

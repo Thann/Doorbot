@@ -1,2 +1,3 @@
 --exit
+--check-leaks
 --require test/mocha.env.js
