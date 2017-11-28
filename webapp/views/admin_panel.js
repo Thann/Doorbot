@@ -33,7 +33,8 @@ module.exports = Backbone.View.extend({
 					</table>
 				</div>
 				<div class="panel-footer">
-					<input type="submit" value="Update" class="update-settings btn btn-default">
+					<input type="submit" value="Update" class="update btn btn-default">
+					<div class="error" rv-text="settingsError"></div>
 				</div>
 			</div>
 		</div>
@@ -157,6 +158,10 @@ module.exports = Backbone.View.extend({
 			if (this.$('.doors .panel-collapse.in').length) {
 				e.stopPropagation();
 			} else if (this.scope.creatingDoor) {
+				//TODO: delayFocus?
+				setTimeout(_.bind(function() {
+					this.$('.doors input[name]').focus();
+				}, this));
 				return;
 			}
 		}
@@ -205,6 +210,10 @@ module.exports = Backbone.View.extend({
 			if (this.$('.users .panel-collapse.in').length) {
 				e.stopPropagation();
 			} else if (this.scope.creatingUser) {
+				//TODO: delayFocus?
+				setTimeout(_.bind(function() {
+					this.$('.doors input[name]').focus();
+				}, this));
 				return;
 			}
 		}

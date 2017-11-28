@@ -5,7 +5,7 @@ CMD ["server"]
 
 # Install dependencies
 RUN apt update && \
-    apt upgrade
+    apt upgrade -y
 
 # Create app directory
 RUN mkdir -p /usr/src/app/dist

@@ -14,9 +14,9 @@ COPY package.json \
      /usr/src/app/
 
 # Install updates
-RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-RUN apt update && \
-    apt upgrade && \
+RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - && \
+    apt update && \
+    apt upgrade -y && \
     apt install nodejs
 
 # Install build dependencies
