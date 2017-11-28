@@ -8,41 +8,80 @@ module.exports = Backbone.View.extend({
 	id: 'UserPanel',
 	className: 'container',
 	template: `
-		<div>
-			<span rv-text="user:username"></span>
-			<span rv-text="user:password"></span>
-			<button class="btn btn-default update-user">Update</button>
-
-			<br>
-			<div rv-hide="user:admin">
-				Doors:
-				<div rv-each-door="doors">
-					<span rv-text="door:name"></span>
-					<button rv-hide="door:allowed" rv-data-id="door:id" class="btn btn-default permit">
-						Permit
-					</span>
-					<button rv-show="door:allowed" rv-data-id="door:id" class="btn btn-default deny">
-						Deny
-					</span>
+		<div class="user panel panel-default">
+			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
+				<div class="panel-title" rv-text="user:username"></div>
+			</div>
+			<div class="panel-collapse collapse in">
+				<div class="panel-body">
+					<table>
+						<form>
+							<tr rv-show="user:admin">
+								<td>Admin</td>
+							</tr>
+							<tr>
+								<td>Password</td>
+								<td>
+									<input rv-value="user:password">
+									<button class="btn btn-default fa fa-random"></button>
+								</td>
+							</tr>
+						</form>
+					</table>
+				</div>
+				<div class="panel-footer">
+					<input type="submit" value="Update" class="update btn btn-default">
+					<div class="error" rv-text="settingsError"></div>
 				</div>
 			</div>
+		</div>
 
-			<br>
-			<button class="fetch btn btn-default">Fetch Logs</button>
-			<div class="logs">
-				<div rv-each-log="logs">
-					<span rv-text="log:door"></span> &nbsp;
-					<span rv-text="log:time"></span> &nbsp;
-					<span rv-text="log:method"></span>
+		<div class="doors panel panel-default" rv-hide="user:admin">
+			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
+				<div class="panel-title">Doors</div>
+			</div>
+			<div class="panel-collapse collapse in">
+				<div class="panel-body">
+					<div rv-each-door="doors">
+						<a rv-show="door:allowed" rv-data-id="door:id" class="deny">
+							<span rv-text="door:name"></span>
+							<span class="fa fa-check-circle"></span>
+						</a>
+						<a rv-hide="door:allowed" rv-data-id="door:id" class="permit">
+							<span rv-text="door:name"></span>
+							<span class="fa fa-ban"></span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="logs panel panel-default">
+			<div class="panel-heading fetch" data-toggle="collapse" data-target=".logs .panel-collapse">
+				<div class="panel-title">Logs</div>
+			</div>
+			<div class="panel-collapse collapse" rv-class-in="logs.length">
+				<div class="panel-body">
+					<div rv-each-log="logs">
+						<span rv-text="log:door"></span> &nbsp;
+						<span rv-text="log:time"></span> &nbsp;
+						<span rv-text="log:method"></span>
+					</div>
+				</div>
+				<div class="panel-footer">
+					<input type="submit" value="More" class="more btn btn-default"
+						rv-enabled="logs.hasMore">
+					<div class="error" rv-text="logsError"></div>
 				</div>
 			</div>
 		</div>
 	`,
 	events: {
-		'click .fetch': 'fetch',
 		'click .update': 'update',
 		'click .permit': 'permit',
 		'click .deny': 'deny',
+		'click .fetch': 'fetch',
+		'click .logs .more': 'moreLogs',
 	},
 	initialize: function() {
 		// console.log("UUU", Doorbot.Router.args, Doorbot.User.get('username'))
@@ -62,7 +101,9 @@ module.exports = Backbone.View.extend({
 		this.doors.fetch();
 
 		this.logs = new (Backbone.Collection.extend({
-			url: 'users/'+username+'/logs',
+			url: function() {
+				return 'users/'+username+'/logs?last_id='+this.last_id;
+			},
 		}))();
 
 		//TODO: render should not be nessicary
@@ -92,7 +133,19 @@ module.exports = Backbone.View.extend({
 		this.render();
 	},
 	fetch: function() {
-		this.logs.fetch();
+		if (!this.logs.length) {
+			this.logs.fetch();
+			this.logs.hasMore = true;
+		}
+	},
+	moreLogs: function() {
+		this.logs.last_id = this.logs.models[this.logs.models.length-1].id;
+		this.logs.fetch({ add: true, remove: false,
+			success: _.bind(function(coll, newLogs) {
+				if (newLogs.length < 50)
+					this.logs.hasMore = false;
+			}, this),
+		});
 	},
 	update: function() {
 		//TODO:
