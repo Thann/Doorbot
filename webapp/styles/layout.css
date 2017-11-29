@@ -40,7 +40,7 @@ body {
 	}
 
 	input,
-	.btn {
+	.btn-default {
 		color: #4C78D0;
 		&:hover { color: #2c54a5; }
 	}

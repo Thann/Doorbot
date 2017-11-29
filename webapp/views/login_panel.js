@@ -46,7 +46,11 @@ module.exports = Backbone.View.extend({
 			<input type="submit" value="Reset Password" class="btn btn-default">
 		</form>
 
-		<button rv-show="user.isAuthed" class="btn btn-default logout">logout</button>
+		<a rv-show="user.isAuthed" class="btn btn-default logout">Logout</a>
+		<a rv-show="user.isAuthed" class="btn btn-default"
+			rv-href="'#user/'|+ user.attributes.username">
+			User Settings
+		</a>
 	`,
 	events: {
 		'submit form.login': 'login',

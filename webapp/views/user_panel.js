@@ -23,7 +23,9 @@ module.exports = Backbone.View.extend({
 								<td>Password</td>
 								<td>
 									<input rv-value="user:password">
-									<button class="btn btn-default fa fa-random"></button>
+									<button rv-show="self:admin" class="btn btn-default fa fa-random"></button>
+									<span rv-show="user:requires_reset" class="fa fa-warning text-danger">
+										requires reset</span>
 								</td>
 							</tr>
 						</form>
@@ -31,13 +33,18 @@ module.exports = Backbone.View.extend({
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-default">
-					<div class="error" rv-text="settingsError"></div>
+					<span class="error" rv-text="updateError"></span>
+					<a rv-show="me" class="btn btn-default pull-right">logout</a>
+					<span rv-show="self:admin">
+						<a rv-hide="me" class="btn btn-danger delete pull-right">
+						Delete</a>
+					</span>
 				</div>
 			</div>
 		</div>
 
 		<div class="doors panel panel-default" rv-hide="user:admin">
-			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
+			<div class="panel-heading" data-toggle="collapse" data-target=".doors .panel-collapse">
 				<div class="panel-title">Doors</div>
 			</div>
 			<div class="panel-collapse collapse in">
@@ -60,7 +67,7 @@ module.exports = Backbone.View.extend({
 			<div class="panel-heading fetch" data-toggle="collapse" data-target=".logs .panel-collapse">
 				<div class="panel-title">Logs</div>
 			</div>
-			<div class="panel-collapse collapse" rv-class-in="logs.length">
+			<div class="panel-collapse collapse" rv-class-in="logs.length |gt 50">
 				<div class="panel-body">
 					<div rv-each-log="logs">
 						<span rv-text="log:door"></span> &nbsp;
@@ -78,9 +85,11 @@ module.exports = Backbone.View.extend({
 	`,
 	events: {
 		'click .update': 'update',
+		'click .logout': 'logout',
+		'click .delete': 'delUser',
 		'click .permit': 'permit',
 		'click .deny': 'deny',
-		'click .fetch': 'fetch',
+		'click .logs .toggle': 'toggleLogs',
 		'click .logs .more': 'moreLogs',
 	},
 	initialize: function() {
@@ -101,10 +110,14 @@ module.exports = Backbone.View.extend({
 		this.doors.fetch();
 
 		this.logs = new (Backbone.Collection.extend({
+			hasMore: true,
 			url: function() {
-				return 'users/'+username+'/logs?last_id='+this.last_id;
+				const lastID = this.models.length &&
+					this.models[this.models.length-1].id || '';
+				return 'users/'+username+'/logs?last_id='+lastID;
 			},
 		}))();
+		this.moreLogs();
 
 		//TODO: render should not be nessicary
 		this.logs.on('sync', _.bind(this.render, this));
@@ -116,6 +129,8 @@ module.exports = Backbone.View.extend({
 			user: this.user,
 			logs: this.logs,
 			doors: this.doors,
+			self: Doorbot.User,
+			me: this.user.id === Doorbot.User.id,
 		};
 		this.$el.html(this.template);
 		//TODO: rivets throws an error because of user?
@@ -138,14 +153,19 @@ module.exports = Backbone.View.extend({
 			this.logs.hasMore = true;
 		}
 	},
+	toggleLogs: function() {
+		this.logs.open = !this.logs.open;
+	},
 	moreLogs: function() {
-		this.logs.last_id = this.logs.models[this.logs.models.length-1].id;
 		this.logs.fetch({ add: true, remove: false,
 			success: _.bind(function(coll, newLogs) {
 				if (newLogs.length < 50)
 					this.logs.hasMore = false;
 			}, this),
 		});
+	},
+	logout: function() {
+		Doorbot.User.logout();
 	},
 	update: function() {
 		//TODO:
@@ -168,5 +188,12 @@ module.exports = Backbone.View.extend({
 		});
 		door.attributes.allowed = false;
 		this.render();
+	},
+	delUser: function() {
+		if (confirm('Are you sure you want to delete '+
+			this.user.get('username')+'?')) {
+			this.user.destroy();
+			Doorbot.Router.navigate('/admin', {trigger: true});
+		}
 	},
 });

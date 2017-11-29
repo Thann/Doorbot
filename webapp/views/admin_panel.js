@@ -230,9 +230,11 @@ module.exports = Backbone.View.extend({
 			this.users.create({
 				username: this.$('.users form [name="name"]').val(),
 			}, {wait: true,
-				success: _.bind(function() {
-					console.log('USER CREATE DONE!', this.doors);
+				success: _.bind(function(m) {
+					console.log('USER CREATE DONE!', arguments);
 					this.scope.creatingUser = false;
+					Doorbot.Router.navigate('/user/'+m.get('username'),
+						{trigger: true});
 				}, this),
 				error: _.bind(function(m, resp) {
 					console.warn('USER CREATE ERR!', resp.responseText);

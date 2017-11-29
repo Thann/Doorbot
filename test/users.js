@@ -266,10 +266,24 @@ describe('Users API', function() {
 		await agent.post('/users')
 			.send({username: 'delete_me'})
 			.expect(200);
+		await agent.post('/doors/1/permit/delete_me')
+			.expect(200);
 		await agent.delete('/users/delete_me')
 			.expect(204, '');
 		await agent.delete('/users/missing')
 			.expect(404);
+		await agent.post('/users')
+			.send({username: 'delete_me'})
+			.expect(200);
+		await agent.get('/users/delete_me')
+			.expect(200, {
+				id: 3,
+				doors: [],  // ensure no permissions
+				admin: false,
+				username: 'delete_me',
+				password: /\w{14}/,
+				requires_reset: true,
+			});
 	});
 
 	it('logs', async function() {
@@ -350,7 +364,6 @@ describe('Users API', function() {
 					}],
 					admin: false,
 					username: 'Dummy',
-					password: 'dummy',
 					requires_reset: true,
 				});
 			await agent.get('/users/admin')
@@ -370,7 +383,33 @@ describe('Users API', function() {
 				.expect(400, {password: 'must be at least 8 characters'});
 			await agent.patch('/users/Dummy')
 				.send({password: 'door_dummy'})
-				.expect(200);
+				.expect(200, {
+					id: 2,
+					doors: [{
+						'id': 1,
+						'name': 'main',
+						'creation': /\w+/,
+						'expiration': '',
+						'constraints': '',
+					}],
+					admin: false,
+					username: 'Dummy',
+					requires_reset: false,
+				});
+			await agent.get('/users/Dummy')
+				.expect(200, {
+					id: 2,
+					doors: [{
+						'id': 1,
+						'name': 'main',
+						'creation': /\w+/,
+						'expiration': '',
+						'constraints': '',
+					}],
+					admin: false,
+					username: 'Dummy',
+					requires_reset: false,
+				});
 		});
 
 		it('delete', async function() {

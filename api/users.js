@@ -231,7 +231,7 @@ async function read(request, response) {
 		doors: JSON.parse(usr.doors) || [],
 		admin: Boolean(usr.admin),
 		username: usr.username,
-		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
+		password: user.admin && !usr.pw_salt && usr.password_hash || undefined,
 		requires_reset: !usr.pw_salt,
 	});
 }
@@ -309,7 +309,7 @@ async function update(request, response) {
 		doors: JSON.parse(usr.doors) || [],
 		admin: Boolean(usr.admin),
 		username: usr.username,
-		password: user.admin && usr.pw_salt? undefined : usr.password_hash,
+		password: user.admin && !usr.pw_salt && usr.password_hash || undefined,
 		requires_reset: !usr.pw_salt,
 	});
 }
@@ -319,9 +319,16 @@ async function remove(request, response) {
 	if (!user.admin) {
 		return response.status(403).send({error: 'must be admin'});
 	}
+
+	//TODO: use ON DELETE CASCADE instead?
+	await db.run(`
+		DELETE FROM permissions WHERE user_id = (
+			SELECT id FROM users WHERE username = ?)`,
+		request.params.username);
 	const r = await db.run(
 		'DELETE FROM users WHERE username = ?',
 		request.params.username);
+
 	response.status(r.stmt.changes? 204 : 404).end();
 }
 
