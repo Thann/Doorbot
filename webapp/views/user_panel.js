@@ -50,11 +50,11 @@ module.exports = Backbone.View.extend({
 			<div class="panel-collapse collapse in">
 				<div class="panel-body">
 					<div rv-each-door="doors">
-						<a rv-show="door:allowed" rv-data-id="door:id" class="deny">
+						<a rv-show="door:allowed" rv-data-id="door:id" rv-class-deny="self:admin">
 							<span rv-text="door:name"></span>
 							<span class="fa fa-check-circle"></span>
 						</a>
-						<a rv-hide="door:allowed" rv-data-id="door:id" class="permit">
+						<a rv-hide="door:allowed" rv-data-id="door:id" rv-class-permit="self:admin">
 							<span rv-text="door:name"></span>
 							<span class="fa fa-ban"></span>
 						</a>

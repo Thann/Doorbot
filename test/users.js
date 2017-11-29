@@ -264,10 +264,16 @@ describe('Users API', function() {
 
 	it('delete', async function() {
 		await agent.post('/users')
-			.send({username: 'delete_me'})
+			.send({username: 'delete_me', password: 'delete_me'})
 			.expect(200);
-		await agent.post('/doors/1/permit/delete_me')
-			.expect(200);
+		await agent.post('/doors/1/permit/delete_me').expect(200);
+		await agent.post('/auth')
+			.send({username: 'delete_me', password: 'delete_me'}).expect(200);
+		await agent.patch('/users/delete_me')
+			.send({password: 'dummydummy'}).expect(200);
+		await agent.post('/doors/1/open').expect(204);
+		await agent.post('/auth')
+			.send({username: 'admin', password: 'admin'}).expect(200);
 		await agent.delete('/users/delete_me')
 			.expect(204, '');
 		await agent.delete('/users/missing')
@@ -284,6 +290,8 @@ describe('Users API', function() {
 				password: /\w{14}/,
 				requires_reset: true,
 			});
+		await agent.get('/users/delete_me/logs')
+			.expect(200, []);
 	});
 
 	it('logs', async function() {

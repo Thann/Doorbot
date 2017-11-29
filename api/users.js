@@ -325,6 +325,10 @@ async function remove(request, response) {
 		DELETE FROM permissions WHERE user_id = (
 			SELECT id FROM users WHERE username = ?)`,
 		request.params.username);
+	await db.run(`
+		DELETE FROM entry_logs WHERE user_id = (
+			SELECT id FROM users WHERE username = ?)`,
+		request.params.username);
 	const r = await db.run(
 		'DELETE FROM users WHERE username = ?',
 		request.params.username);
