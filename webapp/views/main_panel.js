@@ -2,6 +2,7 @@
 'use strict';
 
 require('styles/main_panel.css');
+const Confetti = require('ConfettiCannon');
 
 module.exports = Backbone.View.extend({
 	id: 'MainPanel',
@@ -35,6 +36,12 @@ module.exports = Backbone.View.extend({
 			this.render();
 		}, this));
 		this.doors.fetch();
+
+		this.confetti = new Confetti(Backbone.$('canvas')[0], true, true);
+		Backbone.$(window).on('resize', _.bind(function() {
+			this.confetti.setCanvasSize();
+		}, this));
+		return this;
 	},
 	render: function() {
 		this.scope = {
@@ -51,12 +58,17 @@ module.exports = Backbone.View.extend({
 		door.sync(null, this, {
 			url: door.url()+'/open',
 			method: 'POST',
-			success: function() {
+			success: _.bind(function() {
 				target.addClass('opened');
 				setTimeout(function() {
 					target.removeClass('opened');
 				}, 1500);
-			},
+
+				this.confetti.addConfettiParticles(
+					50, 223, 2000, e.pageX, e.pageY);
+				this.confetti.addConfettiParticles(
+					50, 322, 2000, e.pageX, e.pageY);
+			}, this),
 		});
 	},
 });

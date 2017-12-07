@@ -14,6 +14,7 @@ module.exports = Backbone.View.extend({
 			<div class="main-panel">...</div>
 		</div>
 		<div class="footer hidden"></div>
+		<canvas style="position: absolute; pointer-events: none;"></canvas>
 	`,
 	loading: true,
 	mainTemplate: '<div data-subview="main"></div>',
