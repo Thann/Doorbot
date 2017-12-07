@@ -65,17 +65,17 @@ process.on('unhandledRejection', function(err, promise) {
 });
 
 module.exports = app.listen(options.port, function() {
-	console.log('listening on', options.port);
+	if (require.main === module)
+		console.log('listening on', options.port);
 });
 
 // --Watch
 if (options.watch || options.build || options.lint) {
-	const watcher = require('child_process').spawn(
-		'node_modules/.bin/webpack', [
-			'--color',
-			options.lint ? '--lint'  : null,
-			options.watch? '--watch' : null,
-		]);
+	const opts = ['--color'];
+	if (options.lint) opts.push('--lint');
+	if (options.watch) opts.push('--watch');
+	const watcher = require('child_process')
+		.spawn('node_modules/.bin/webpack', opts);
 
 	watcher.stdout.on('data', function(data) {
 		console.log(data.toString());

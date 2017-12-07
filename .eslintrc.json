@@ -90,7 +90,6 @@
     }],
     "no-useless-escape": "off",
     "no-var": "error",
-    "nonblock-statement-body-position": ["error", "below"],
     "padded-blocks": ["error", "never"],
     "prefer-arrow-callback": "off",
     "prefer-const": ["error", {
