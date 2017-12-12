@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const child = require('child_process');
 const errors = require('./lib/errors');
 const app = express();
 
@@ -17,13 +18,15 @@ if (require.main !== module) {
 } else {
 	const getopts = require('node-getopt').create([
 		['p', 'port=', 'Set listen port'],
+		['',  'door=', 'Run door(s) (RasPI only)'],
+		['',  'dummy=','Run dummy door(s)'],
 		['',  'watch', 'Recompile webapp on file modification'],
 		['',  'build', 'Compile webapp'],
 		['',  'lint',  'Lint webapp on compile'],
 		['h', 'help'],
 	]).bindHelp().setHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +
-		'Usage: node server [OPTION]\n' +
+		'Usage: node server [OPTIONS]\n' +
 		'\n' +
 		'[[OPTIONS]]\n' +
 		'\n' +
@@ -69,13 +72,23 @@ module.exports = app.listen(options.port, function() {
 		console.log('listening on', options.port);
 });
 
+// --Door
+if (options.door || options.dummy) {
+	const doors = [];
+	for (const door of options.door.split(','))
+		doors.push(child.fork('./door.js'),
+			['--insecure', '--door', door]);
+	for (const door of options.dummy.split(','))
+		doors.push(child.fork('./door.js',
+			['--dummy', '--insecure', '--door', door]));
+}
+
 // --Watch
 if (options.watch || options.build || options.lint) {
 	const opts = ['--color'];
 	if (options.lint) opts.push('--lint');
 	if (options.watch) opts.push('--watch');
-	const watcher = require('child_process')
-		.spawn('node_modules/.bin/webpack', opts);
+	const watcher = child.spawn('node_modules/.bin/webpack', opts);
 
 	watcher.stdout.on('data', function(data) {
 		console.log(data.toString());

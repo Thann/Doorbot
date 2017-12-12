@@ -4,6 +4,7 @@
 const util = require('util');
 const WebSocket = require('ws');
 const gpio = require('rpi-gpio');
+const Wiegand = require('wiegand-node');
 const errors = require('./lib/errors');
 
 const options = {
@@ -16,17 +17,18 @@ const options = {
 };
 
 const getopts = require('node-getopt').create([
-	['x', 'dummy',   'Don\'t use GPIO, print instead'],
+	['x', 'dummy',   "Don't use GPIO, print instead"],
 	['g', 'gpio=',   'GPIO pins to open the door'],
 	['d', 'door=',   'Connect to server with door_id'],
 	['t', 'token=',  'Connect to server with token (required)'],
 	['s', 'server=', 'Connect to server at address'],
 	['p', 'port=',   'Connect to server on port'],
-	['k', 'insecure','Don\'t validate SSL'],
+	['',  'keypad=', 'Enable Wiegand keypad on GPIO pins (default 10,12)'],
+	['k', 'insecure',"Don't validate SSL"],
 	['h', 'help',    ''],
 ]).bindHelp().setHelp(
 	'Doorbot: connects to a server and registers a door to open.\n' +
-	'Usage: node door [OPTION]\n' +
+	'Usage: node door [OPTIONS]\n' +
 	'\n' +
 	'[[OPTIONS]]\n' +
 	'\n' +
@@ -55,14 +57,17 @@ process.on('unhandledRejection', function(err, promise) {
 		console.error('UHR', err, promise);
 });
 
-let lock = false;
 if (!options.dummy)
 	gpio.setup(parseInt(options.gpio));
+
+const keypad = options.keypad? Wiegand(10,12): null;
+
+let lock = false;
 function open() {
 	if (options.dummy)
 		return console.log('Dummy Open');
 	if (lock)
-		return console.warn('ERROR: locked');
+		return console.warn('ERROR: already open');
 	lock = true;
 	gpio.write(options.gpio, true);
 	setTimeout(function() {
@@ -127,6 +132,10 @@ setInterval(function() {
 		connect();
 	} else {
 		ws.ping();
+	}
+	if (keypad && keypad.available()) {
+		const x = keypad.getCode();
+		console.log("KEYCODE!!!", x);
 	}
 }, options.pingtime);
 connect();
