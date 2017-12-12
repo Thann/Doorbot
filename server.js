@@ -10,6 +10,7 @@ const app = express();
 
 const options = {
 	port: 3000,
+	door: null,
 };
 
 if (require.main !== module) {
@@ -17,12 +18,12 @@ if (require.main !== module) {
 	options.port = 6969;
 } else {
 	const getopts = require('node-getopt').create([
-		['p', 'port=', 'Set listen port'],
-		['',  'door=', 'Run door(s) (RasPI only)'],
-		['',  'dummy=','Run dummy door(s)'],
-		['',  'watch', 'Recompile webapp on file modification'],
-		['',  'build', 'Compile webapp'],
-		['',  'lint',  'Lint webapp on compile'],
+		['p', 'port=',   'Set listen port'],
+		['',  'door[=1+]', 'Run door(s) (RasPI only)'],
+		['',  'dummy[=1+]','Run dummy door(s)'],
+		['',  'watch',   'Recompile webapp on file modification'],
+		['',  'build',   'Compile webapp'],
+		['',  'lint',    'Lint webapp on compile'],
 		['h', 'help'],
 	]).bindHelp().setHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +
@@ -73,14 +74,25 @@ module.exports = app.listen(options.port, function() {
 });
 
 // --Door
-if (options.door || options.dummy) {
+console.log("DOORS", options.door)
+if (options.door || options.dummy ) {
 	const doors = [];
-	for (const door of options.door.split(','))
-		doors.push(child.fork('./door.js'),
-			['--insecure', '--door', door]);
-	for (const door of options.dummy.split(','))
-		doors.push(child.fork('./door.js',
-			['--dummy', '--insecure', '--door', door]));
+	const opts = ['--insecure', '--port', options.port];
+	for (const door of options.door.split(',')) {
+		const c = child.fork('./door.js',
+			opts.concat(['--door', door]));
+		doors.push(c);
+		//TODO: keypad
+		console.log("DD", c)
+	}
+	for (const door of options.dummy.split(',')) {
+		const c = child.fork('./door.js',
+			opts.concat(['--dummy', '--door', door]));
+		doors.push(c);
+		// c.stdout.on('data', function() {
+
+		// });
+	}
 }
 
 // --Watch

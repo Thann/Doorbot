@@ -219,6 +219,7 @@ async function connect(ws, request, next) {
 			const user = await db.get(
 				'SELECT * FROM users WHERE keycode = ?', msg[1]);
 			if (user)
+				//TODO: check permissions
 				_openDoor(user.id, request.params.id, 'keycode');
 		}
 	});

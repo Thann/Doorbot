@@ -4,7 +4,6 @@
 const util = require('util');
 const WebSocket = require('ws');
 const gpio = require('rpi-gpio');
-const Wiegand = require('wiegand-node');
 const errors = require('./lib/errors');
 
 const options = {
@@ -23,7 +22,7 @@ const getopts = require('node-getopt').create([
 	['t', 'token=',  'Connect to server with token (required)'],
 	['s', 'server=', 'Connect to server at address'],
 	['p', 'port=',   'Connect to server on port'],
-	['',  'keypad=', 'Enable Wiegand keypad on GPIO pins (default 10,12)'],
+	['',  'keypad[=+]', 'Enable Wiegand keypad on GPIO pins (default 11,12)'],
 	['k', 'insecure',"Don't validate SSL"],
 	['h', 'help',    ''],
 ]).bindHelp().setHelp(
@@ -42,11 +41,6 @@ if (opt.argv.length > 0) {
 	process.exit(1);
 }
 
-if (!opt.options.token) {
-	console.error('ERROR: token is required');
-	console.error(getopts.getHelp());
-	process.exit(1);
-}
 
 // Merge opts into options
 Object.assign(options, opt.options);
@@ -60,7 +54,15 @@ process.on('unhandledRejection', function(err, promise) {
 if (!options.dummy)
 	gpio.setup(parseInt(options.gpio));
 
-const keypad = options.keypad? Wiegand(10,12): null;
+if (options.keypad) {
+	if (!options.keypad.length)
+		options.keypad = [11, 12];
+	gpio.setup(options[0], gpio.DIR_IN, gpio.EDGE_FALLING);
+	gpio.setup(option[1], gpio.DIR_IN, gpio.EDGE_FALLING);
+	gpio.on('change', function(pin, value) {
+		console.log("===", pin==options[1]? 1: 0, value);
+	});
+}
 
 let lock = false;
 function open() {
@@ -132,10 +134,6 @@ setInterval(function() {
 		connect();
 	} else {
 		ws.ping();
-	}
-	if (keypad && keypad.available()) {
-		const x = keypad.getCode();
-		console.log("KEYCODE!!!", x);
 	}
 }, options.pingtime);
 connect();
