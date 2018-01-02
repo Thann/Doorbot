@@ -6,7 +6,7 @@ A node server running optionally elsewhere manages the users and serves the WebU
 
 ## Setup
 ### Hardware
-All you need is a RasberryPi and a Relay.
+All you need is a RasberryPi, a Relay, and a lock ([Amazon](http://a.co/jbvnTH0)).
 [Install rasbian](https://www.raspberrypi.org/downloads/raspbian/)
 then plugin the relay.
 It's recommended to use a signal pin above 8, because they will default to Low,
