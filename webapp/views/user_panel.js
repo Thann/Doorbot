@@ -14,22 +14,22 @@ module.exports = Backbone.View.extend({
 			</div>
 			<div class="panel-collapse collapse in">
 				<div class="panel-body">
-					<table>
-						<form>
+					<form>
+						<table>
 							<tr rv-show="user:admin">
 								<td>Admin</td>
 							</tr>
 							<tr>
 								<td>Password</td>
 								<td>
-									<input rv-value="user:password">
-									<button rv-show="self:admin" class="btn btn-default fa fa-random"></button>
+									<input type="text" name="password" rv-value="user:password">
+									<button rv-show="self:admin" class="btn btn-default fa fa-random password"></button>
 									<span rv-show="user:requires_reset" class="fa fa-warning text-danger">
 										requires reset</span>
 								</td>
 							</tr>
-						</form>
-					</table>
+						</table>
+					</form>
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-default">
@@ -85,6 +85,7 @@ module.exports = Backbone.View.extend({
 	`,
 	events: {
 		'click .update': 'update',
+		'click .fa-random.password': 'scramblePassword',
 		'click .logout': 'logout',
 		'click .delete': 'delUser',
 		'click .permit': 'permit',
@@ -170,6 +171,16 @@ module.exports = Backbone.View.extend({
 	update: function() {
 		//TODO:
 		console.log('NOT IMPLEMENTED');
+	},
+	scramblePassword: function(e) {
+		e.preventDefault();
+		if (confirm("Are you sure you want to scramble the password for: "
+								+this.user.get('username')+"?")) {
+			this.user.save({password: false}, {patch: true, wait: true, success: function() {
+				console.log("YAY!", arguments)
+				//TODO: refresh?
+			}});
+		}
 	},
 	permit: function(e) {
 		const door = this.doors.find({id: this.$(e.currentTarget).data('id')});
