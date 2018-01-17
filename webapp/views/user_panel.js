@@ -174,12 +174,16 @@ module.exports = Backbone.View.extend({
 	},
 	scramblePassword: function(e) {
 		e.preventDefault();
-		if (confirm("Are you sure you want to scramble the password for: "
-								+this.user.get('username')+"?")) {
-			this.user.save({password: false}, {patch: true, wait: true, success: function() {
-				console.log("YAY!", arguments)
-				//TODO: refresh?
-			}});
+		if (confirm('Are you sure you want to scramble the password for: '
+								+this.user.get('username')+'?')) {
+			this.user.save({password: false}, {
+				patch: true,
+				wait: true,
+				success: function() {
+					// console.log("YAY!", arguments)
+					//TODO: refresh?
+				},
+			});
 		}
 	},
 	permit: function(e) {

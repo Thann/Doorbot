@@ -37,10 +37,7 @@ module.exports = Backbone.View.extend({
 		}, this));
 		this.doors.fetch();
 
-		this.confetti = new Confetti(Backbone.$('canvas')[0], true, true);
-		Backbone.$(window).on('resize', _.bind(function() {
-			this.confetti.setCanvasSize();
-		}, this));
+		this.confetti = new Confetti(Backbone.$('canvas')[0], {trigger: false});
 		return this;
 	},
 	render: function() {
@@ -64,10 +61,11 @@ module.exports = Backbone.View.extend({
 					target.removeClass('opened');
 				}, 1500);
 
-				this.confetti.addConfettiParticles(
-					50, 223, 2000, e.pageX, e.pageY);
-				this.confetti.addConfettiParticles(
-					50, 322, 2000, e.pageX, e.pageY);
+				this.confetti.fire({
+					spread: 160,
+					x: e.pageX,
+					y: e.pageY,
+				});
 			}, this),
 		});
 	},
