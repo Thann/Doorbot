@@ -45,7 +45,10 @@ if (require.main !== module) {
 app.use(require('body-parser').json());
 
 // Serve static files
-app.use(express.static('dist'));
+app.use(express.static('dist', {setHeaders: function(res, path) {
+	if (path.endsWith('/bundle.js.gz'))
+		res.setHeader('Content-Encoding', 'gzip');
+}}));
 
 // Load all controllers from the api directory.
 const controllers = path.join(__dirname, 'api');
@@ -72,7 +75,7 @@ module.exports = app.listen(options.port, function() {
 // --Watch
 if (options.watch || options.build || options.lint) {
 	const opts = ['--color'];
-	if (options.lint) opts.push('--lint');
+	if (options.lint) opts.push('--env.lint');
 	if (options.watch) opts.push('--watch');
 	const watcher = require('child_process')
 		.spawn('node_modules/.bin/webpack', opts);
