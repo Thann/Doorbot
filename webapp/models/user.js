@@ -1,5 +1,4 @@
 // User - stores user information in the browser.
-'use strict';
 
 const UserModel = Backbone.Model.extend({
 	isAuthed: false,

@@ -1,5 +1,4 @@
 // LoginPanel
-'use strict';
 
 require('styles/login_panel.css');
 

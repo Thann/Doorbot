@@ -1,5 +1,4 @@
 // Doorbot - loads the libraries and exports the global variable "Doorbot".
-'use strict';
 
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./rivets_extensions');

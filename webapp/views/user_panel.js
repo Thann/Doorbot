@@ -1,5 +1,4 @@
 // UserPanel
-'use strict';
 
 // require('styles/user.css');
 const UserModel = require('models/user.js');
