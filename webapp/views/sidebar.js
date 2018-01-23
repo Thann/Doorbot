@@ -1,5 +1,4 @@
 // Sidebar
-'use strict';
 
 require('styles/sidebar.css');
 

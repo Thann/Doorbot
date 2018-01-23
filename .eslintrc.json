@@ -21,6 +21,9 @@
         "Backbone": true,
         "Rivets": true,
         "_": true
+      },
+      "rules": {
+        "strict": ["error", "never"]
       }
     }, {
       "files": ["test/**/*.js"],
@@ -45,7 +48,7 @@
       "null": "ignore"
     }],
     "func-name-matching": "error",
-    "indent": ["error", "tab"],
+    "indent": ["error", "tab", { "CallExpression": {"arguments": "off"} }],
     "handle-callback-err": "off",
     "linebreak-style": ["error", "unix"],
     "max-len": ["error", {

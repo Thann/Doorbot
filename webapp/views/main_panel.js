@@ -1,5 +1,4 @@
 // MainPanel
-'use strict';
 
 require('styles/main_panel.css');
 

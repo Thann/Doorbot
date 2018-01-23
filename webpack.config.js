@@ -25,16 +25,23 @@ module.exports = {
 	],
 	module: {
 		loaders: [
-			{ test:  /\.json$/, loader: 'hson' },
-			{ test:  /\.s?css$/, loaders: ['style', 'css?sourceMap', 'sass'] },
+			{ test:  /\.json$/, use: 'hson-loader' },
+			{ test:  /\.s?css$/,
+				use: [
+					{ loader: 'style-loader' },
+					{ loader: 'css-loader', options: {sourceMap: true} },
+					{ loader: 'sass-loader' },
+				],
+			},
 			{ // ES6 support.
 				test:  /\.js$/,
-				loader: 'babel',
 				exclude: /node_modules/,
-				query: { presets: ['es2015'] },
+				use: {
+					loader: 'babel-loader',
+					options: { presets: ['es2015'] },
+				},
 			},
 		],
-		preLoaders: [],
 	},
 	devtool: 'source-map',
 };

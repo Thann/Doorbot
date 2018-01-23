@@ -1,5 +1,4 @@
 // Layout - The parent view of the whole app, and also the router.
-'use strict';
 
 require('styles/layout.css');
 
