@@ -24,11 +24,6 @@ module.exports = function(env) {
 				_: 'underscore',
 				Rivets: 'rivets',
 			}),
-			new webpack.optimize.UglifyJsPlugin({
-				minimize: true,
-				sourceMap: true,
-				compress: {warnings: false},
-			}),
 			new CompressionPlugin({
 				test: /\.js$/,
 				algorithm: 'gzip',
@@ -58,13 +53,21 @@ module.exports = function(env) {
 		devtool: 'source-map',
 	};
 
-	if (env && env.lint) {
+	if (env && env.dev) {
 		config.module.loaders.push({
 			test: /\.js$/,
 			use: ['eslint-loader'],
 			exclude: /node_modules/,
 			enforce: 'pre',
 		});
+	} else {
+		config.plugins.push(
+			new webpack.optimize.UglifyJsPlugin({
+				minimize: true,
+				sourceMap: true,
+				compress: {warnings: false},
+			}),
+		);
 	}
 
 	return config;

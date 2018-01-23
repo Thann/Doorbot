@@ -20,7 +20,7 @@ services:
     #  - ./test:/usr/src/app/test
     #  - ./lib:/usr/src/app/lib
     #  - ./db:/usr/src/app/db
-    #command: server --watch --lint
+    #command: server --dev
 
   door:
     image: thann/doorbot  # x86

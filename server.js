@@ -19,7 +19,7 @@ if (require.main !== module) {
 		['p', 'port=', 'Set listen port'],
 		['',  'watch', 'Recompile webapp on file modification'],
 		['',  'build', 'Compile webapp'],
-		['',  'lint',  'Lint webapp on compile'],
+		['',  'dev',   'Watch and lint quickly with bigger bundles'],
 		['h', 'help'],
 	]).bindHelp().setHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +
@@ -73,10 +73,10 @@ module.exports = app.listen(options.port, function() {
 });
 
 // --Watch
-if (options.watch || options.build || options.lint) {
+if (options.watch || options.build || options.dev) {
 	const opts = ['--color'];
-	if (options.lint) opts.push('--env.lint');
-	if (options.watch) opts.push('--watch');
+	if (options.dev) opts.push('--env.dev');
+	if (options.watch || options.dev) opts.push('--watch');
 	const watcher = require('child_process')
 		.spawn('node_modules/.bin/webpack', opts);
 
