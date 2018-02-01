@@ -2,7 +2,7 @@
 
 const UserModel = Backbone.Model.extend({
 	isAuthed: false,
-	urlRoot: 'users/',
+	urlRoot: '/api/v1/users',
 	idAttribute: 'username',
 	init: function() {
 		this.on('sync', function(m) {
@@ -41,7 +41,7 @@ const UserModel = Backbone.Model.extend({
 	login: function(username, password, errorCallback) {
 		const self = this;
 		(new (Backbone.Model.extend({
-			url: 'auth',
+			url: '/api/v1/auth',
 		}))({
 			username: username,
 			password: password,
@@ -62,7 +62,7 @@ const UserModel = Backbone.Model.extend({
 		console.log('logging out..', this);
 		const m = new Backbone.Model();
 		m.sync(null, m, {
-			url: 'auth',
+			url: '/api/v1/auth',
 			method: 'DELETE',
 			success: _.bind(function() {
 				this.isAuthed = false;

@@ -74,7 +74,7 @@ function open() {
 let ws;
 function connect() {
 	ws = new WebSocket(
-		util.format('ws%s://%s:%s/doors/%s/connect',
+		util.format('ws%s://%s:%s/api/v1/doors/%s/connect',
 			options.insecure?'':'s',
 			options.server,
 			options.port,

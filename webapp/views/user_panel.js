@@ -105,7 +105,7 @@ module.exports = Backbone.View.extend({
 		}
 
 		this.doors = new (Backbone.Collection.extend({
-			url: 'doors',
+			url: '/api/v1/doors',
 		}))();
 		this.doors.fetch();
 
@@ -114,7 +114,7 @@ module.exports = Backbone.View.extend({
 			url: function() {
 				const lastID = this.models.length &&
 					this.models[this.models.length-1].id || '';
-				return 'users/'+username+'/logs?last_id='+lastID;
+				return '/api/v1/users/'+username+'/logs?last_id='+lastID;
 			},
 		}))();
 		this.moreLogs();

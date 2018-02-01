@@ -5,11 +5,9 @@ const db = require('../lib/db');
 const crypto = require('crypto');
 const errors = require('../lib/errors');
 const users = require('./users');
-const expressWs = require('express-ws');
 const DOOR_SOCKETS = {};
 
 module.exports = function(app) {
-	expressWs(app);
 	app.   get('/doors', index);
 	app.  post('/doors', create);
 	app.   get('/doors/:id', read);

@@ -26,7 +26,7 @@ module.exports = Backbone.View.extend({
 	initialize: function() {
 		this.hasAvail = true;
 		this.doors = new (Backbone.Collection.extend({
-			url: 'doors',
+			url: '/api/v1/doors',
 		}))();
 		this.doors.on('sync', _.bind(function() {
 			//TODO: render should not be nessicary

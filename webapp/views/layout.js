@@ -72,7 +72,7 @@ module.exports = Backbone.View.extend({
 		});
 
 		Doorbot.Settings = new (Backbone.Model.extend({
-			url: '/site/settings',
+			url: '/api/v1/site/settings',
 		}))();
 		Doorbot.Settings.fetch();
 		// Fetch on user sync?
