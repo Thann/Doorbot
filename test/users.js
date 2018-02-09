@@ -2,7 +2,7 @@
 
 const db = require('../lib/db');
 const server = require('../server');
-const agent = require('supertest').agent(server);
+const agent = require('supertest').agent(server, {prefix: '/api/v1'});
 
 describe('Users API', function() {
 	before(async function() {
