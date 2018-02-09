@@ -37,7 +37,6 @@ COPY server.js \
      door.js \
      webpack.config.js \
      .eslintrc.json \
-     .eslintfiles \
      /usr/src/app/
 
 # Build webapp
