@@ -7,11 +7,11 @@
     "url": "https://github.com/Thann/Doorbot.git"
   },
   "bin": "server.js",
-  "license": "MIT",
+  "license": "AGPL-3.0+",
   "scripts": {
     "start": "node server --build",
     "test": "mocha",
-    "lint": "eslint $(cat .eslintfiles)",
+    "lint": "eslint .",
     "dkstart": "docker-compose up -d",
     "dkstop": "docker-compose down",
     "dktest": "docker-compose exec server npm run -s test",
@@ -52,6 +52,16 @@
   },
   "devDependencies": {
     "mocha": "^5.0.0",
-    "supertest": "github:thann/supertest"
-  }
+    "supertest": "github:thann/supertest#prefix"
+  },
+  "eslintIgnore": [
+    "**/*.js",
+    "!api/",
+    "!lib/",
+    "!test/",
+    "!webapp/",
+    "!server.js",
+    "!door.js",
+    "!webpack.config.js"
+  ]
 }

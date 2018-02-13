@@ -61,6 +61,9 @@
     "max-statements-per-line": ["error", {
       "max": 1
     }],
+    "no-empty": ["error", {
+      "allowEmptyCatch": true
+    }],
     "new-cap": ["error", {
       "newIsCap": true,
       "capIsNew": false

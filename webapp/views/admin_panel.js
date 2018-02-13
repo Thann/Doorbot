@@ -102,7 +102,7 @@ module.exports = Backbone.View.extend({
 		}
 
 		this.doors = new (Backbone.Collection.extend({
-			url: 'doors',
+			url: '/api/v1/doors',
 		}))();
 		this.doors.on('sync', _.bind(function() {
 			if (this.users) {
@@ -114,7 +114,7 @@ module.exports = Backbone.View.extend({
 		this.doors.fetch();
 
 		this.users = new (Backbone.Collection.extend({
-			url: 'users',
+			url: '/api/v1/users',
 		}))();
 		this.users.on('sync', _.bind(function(coll) {
 			// Turn door numbers into names
@@ -129,7 +129,7 @@ module.exports = Backbone.View.extend({
 		}, this));
 
 		this.privateSettings = new (Backbone.Model.extend({
-			url: 'site/private_settings',
+			url: '/api/v1/site/private_settings',
 		}))();
 		this.privateSettings.fetch({success: _.bind(function() {
 			this.render();

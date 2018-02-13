@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const expressWS = require('express-ws');
 const errors = require('./lib/errors');
 const app = express();
 
@@ -43,17 +44,23 @@ if (require.main !== module) {
 
 // Load middleware
 app.use(require('body-parser').json());
+expressWS(app);
 
 // Serve static files
 app.use(express.static('dist', {setHeaders: function(res, path) {
-	if (path.endsWith('/bundle.js.gz'))
+	if (path.endsWith('/bundle.js.gz')) {
 		res.setHeader('Content-Encoding', 'gzip');
+		res.setHeader('Content-Type', 'application/javascript');
+	}
 }}));
 
 // Load all controllers from the api directory.
 const controllers = path.join(__dirname, 'api');
+const apiRouter = express.Router();
+app.use('/api/v1', apiRouter);
 fs.readdirSync(controllers).forEach(function(file) {
-	require(path.join(controllers, file))(app);
+	if (file.endsWith('.js'))
+		require(path.join(controllers, file))(apiRouter);
 });
 
 // Handle errors

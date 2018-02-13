@@ -2,7 +2,7 @@
 
 const UserModel = Backbone.Model.extend({
 	isAuthed: false,
-	urlRoot: 'users/',
+	urlRoot: '/api/v1/users',
 	idAttribute: 'username',
 	init: function() {
 		this.on('sync', function(m) {
@@ -12,20 +12,29 @@ const UserModel = Backbone.Model.extend({
 				this.redir = false;
 				Doorbot.Router.navigate('', {trigger: true});
 			}
-			window.localStorage.setItem('Doorbot_LatestUser', m.get('username'));
+			try {
+				window.localStorage.setItem('Doorbot_LatestUser', m.get('username'));
+			} catch(e) {}
 		});
 
+		let username;
 		if(typeof(Storage) !== 'undefined') {
-			const username = window.localStorage.getItem('Doorbot_LatestUser');
-			if (username) {
-				// Check if logged in by calling API
-				this.set('username', username, {trigger: false});
-				this.fetch();
-			} else {
-				this.trigger('relog', false);
-			}
+			try {
+				username = window.localStorage.getItem('Doorbot_LatestUser');
+			} catch(e) {}
 		} else {
 			console.error('Sorry! No Web Storage support..');
+		}
+
+		if (username) {
+			// Check if logged in by calling API
+			this.set('username', username, {trigger: false});
+			this.fetch({error: function(m, r) {
+				if (r.status === 403)
+					m.trigger('relog', false);
+			}});
+		} else {
+			this.trigger('relog', false);
 		}
 
 		Backbone.$(document).ajaxError(_.bind(function(e, r) {
@@ -41,7 +50,7 @@ const UserModel = Backbone.Model.extend({
 	login: function(username, password, errorCallback) {
 		const self = this;
 		(new (Backbone.Model.extend({
-			url: 'auth',
+			url: '/api/v1/auth',
 		}))({
 			username: username,
 			password: password,
@@ -62,7 +71,7 @@ const UserModel = Backbone.Model.extend({
 		console.log('logging out..', this);
 		const m = new Backbone.Model();
 		m.sync(null, m, {
-			url: 'auth',
+			url: '/api/v1/auth',
 			method: 'DELETE',
 			success: _.bind(function() {
 				this.isAuthed = false;
