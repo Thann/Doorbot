@@ -48,8 +48,10 @@ expressWS(app);
 
 // Serve static files
 app.use(express.static('dist', {setHeaders: function(res, path) {
-	if (path.endsWith('/bundle.js.gz'))
+	if (path.endsWith('/bundle.js.gz')) {
 		res.setHeader('Content-Encoding', 'gzip');
+		res.setHeader('Content-Type', 'application/javascript');
+	}
 }}));
 
 // Load all controllers from the api directory.
