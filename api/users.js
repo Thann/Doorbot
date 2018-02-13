@@ -3,6 +3,7 @@
 
 const db = require('../lib/db');
 const crypto = require('crypto');
+const cookie = require('cookie');
 const errors = require('../lib/errors');
 const helpers = require('../lib/helpers');
 
@@ -21,13 +22,12 @@ module.exports = function(app) {
 const checkCookie = async function(request, response) {
 	let sesh;
 	try {
-		sesh = request.headers.cookie.split('=').pop();
+		sesh = cookie.parse(request.headers.cookie).Session;
 		// console.log("GET:", request.path)
 	} catch (e) {
 		// console.warn("ERROR Processing Cookie:", e);
-		response.status(401);
-		response.set('Set-Cookie', 'Session=; HttpOnly');
-		response.send({error: 'session cookie malformed'});
+		response.clearCookie('Session');
+		response.status(401).send({error: 'session cookie malformed'});
 		throw new errors.HandledError();
 	}
 	const user = await db.get(`
@@ -35,8 +35,8 @@ const checkCookie = async function(request, response) {
 		AND datetime(session_created, '+1 month') >= CURRENT_TIMESTAMP`,
 		sesh);
 	if (!user || sesh.length < 5) {
-		response.status(401);
-		response.set('Set-Cookie', 'Session=; HttpOnly').end();
+		response.clearCookie('Session');
+		response.status(401).end();
 		throw new errors.HandledError();
 	}
 	return user;
@@ -99,7 +99,7 @@ async function logout(request, response) {
 	if (user) {
 		await db.run('UPDATE users SET session_cookie = NULL WHERE id = ?',
 			user.id);
-		response.set('Set-Cookie', 'Session=; HttpOnly');
+		response.clearCookie('Session');
 		return response.status(204).end();
 	}
 	response.status(401).end();
