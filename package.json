@@ -7,7 +7,7 @@
     "url": "https://github.com/Thann/Doorbot.git"
   },
   "bin": "server.js",
-  "license": "MIT",
+  "license": "AGPL-3.0+",
   "scripts": {
     "start": "node server --build",
     "test": "mocha",
