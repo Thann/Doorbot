@@ -68,13 +68,10 @@ async function auth(request, response) {
 	if (user) {
 		// Empty salt mean unhashed password
 		if ((!user.pw_salt && password === user.password_hash) ||
-				(crypto.createHash('sha256', user.pw_salt)
-					.update(password).digest('hex') === user.password_hash)) {
+				(hash(password, user.pw_salt) === user.password_hash)) {
 			userAuthRates.set(user.username);
 
-			const sesh = crypto.createHash('sha256')
-				.update(Math.random().toString()).digest('hex');
-
+			const sesh = hash();
 			await db.run(`
 				UPDATE users
 				SET session_cookie = ? , session_created = CURRENT_TIMESTAMP
@@ -165,10 +162,8 @@ async function create(request, response) {
 			if (request.body.password.length < 8)
 				return response.status(400)
 					.send({password: 'must be at least 8 characters'});
-			salt = crypto.createHash('sha256')
-				.update(Math.random().toString()).digest('hex');
-			pw = crypto.createHash('sha256', salt)
-				.update(request.body.password).digest('hex');
+			salt = hash();
+			pw = hash(request.body.password, salt);
 		}
 	} else {
 		pw = request.body.password;
@@ -184,8 +179,7 @@ async function create(request, response) {
 	}
 
 	// Default password to random hash.
-	pw = pw || (crypto.createHash('sha256')
-		.update(Math.random().toString()).digest('hex').substring(1, 15));
+	pw = pw || hash().substring(1, 15);
 
 	let sqlResp;
 	try {
@@ -297,22 +291,17 @@ async function update(request, response) {
 		if (request.body.password) {
 			values.password_hash = request.body.password;
 		} else {
-			values.password_hash = crypto.createHash('sha256')
-				.update(Math.random().toString())
-				.digest('hex').substring(1, 15);
+			values.password_hash = hash().substring(1, 15);
 		}
 	} else if (request.body.password) {
 		if (user.pw_salt && (!request.body.current_password ||
-							crypto.createHash('sha256', user.pw_salt)
-								.update(request.body.current_password)
-								.digest('hex') !== user.password_hash)) {
+							hash(request.body.current_password, user.pw_salt)
+								!== user.password_hash)) {
 			return response.status(400)
 				.send({current_password: 'incorrect password'});
 		}
-		values.pw_salt = crypto.createHash('sha256')
-			.update(Math.random().toString()).digest('hex');
-		values.password_hash = crypto.createHash('sha256', values.pw_salt)
-			.update(request.body.password).digest('hex');
+		values.pw_salt = hash();
+		values.password_hash = hash(request.body.password, values.pw_salt);
 	}
 
 	try {
@@ -387,4 +376,12 @@ async function logs(request, response) {
 		request.params.username, lastID, 50);
 
 	response.send(logs);
+}
+
+// Hashing helper for passwords
+function hash(input, salt) {
+	//TODO: hardfork to pbkdf2Sync
+	return crypto.createHash('sha256', salt)
+		.update(input || Math.random().toString())
+		.digest('hex');
 }
