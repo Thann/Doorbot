@@ -40,6 +40,7 @@
     "jquery": "^3.3.1",
     "node-getopt": "^0.2.3",
     "node-sass": "^4.7.2",
+    "nodemon": "^1.15.1",
     "querystring": "^0.2.0",
     "rivets": "github:blikblum/rivets#971a83581611d125bb78f10a822d20b67b8d2b88",
     "rivets-backbone-adapter": "^2.2.0",
