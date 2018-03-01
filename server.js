@@ -4,40 +4,43 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const expressWS = require('express-ws');
 const errors = require('./lib/errors');
 
 const options = {
 	port: 3000,
 };
 
-if (require.main !== module) {
-	// Override port when required by tests
-	options.port = 6969;
-} else {
+if (require.main === module) {
+	// If ran directly, parse arguments
 	const getopts = require('node-getopt').create([
 		['p', 'port=', 'Set listen port'],
 		['',  'build', 'Compile webapp'],
-		['',  'dev',   'Compile webapp & restart server on file modification'],
+		['',  'dev',   'Compile webapp & restart server on file modification (bigger bundles)'],
 		['h', 'help'],
-	]).bindHelp().setHelp(
+	]).bindHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +
 		'Usage: node server [OPTION]\n' +
 		'\n' +
 		'[[OPTIONS]]\n' +
 		'\n' +
 		'Repository: https://github.com/Thann/Doorbot'
-	);
+	).error((err) => {
+		console.error(err.message + '\n\n' + getopts.getHelp());
+		process.exit(1);
+	});
 
 	const opt = getopts.parseSystem();
 	if (opt.argv.length > 0) {
 		console.error('ERROR: Unexpected argument(s): ' + opt.argv.join(', '));
-		console.error(getopts.getHelp());
+		console.error('\n' + getopts.getHelp());
 		process.exit(1);
 	}
 
 	// Merge opts into options
 	Object.assign(options, opt.options);
+} else {
+	// Override port when required by tests
+	options.port = 6969;
 }
 
 if (options.dev) {
@@ -55,8 +58,17 @@ if (options.dev) {
 	const app = express();
 
 	// Load middleware
+	require('express-ws')(app);
 	app.use(require('body-parser').json());
-	expressWS(app);
+
+	// Load all controllers from the api directory.
+	const apiRouter = express.Router();
+	const controllers = path.join(__dirname, 'api');
+	app.use('/api/v1', apiRouter);
+	fs.readdirSync(controllers).forEach(function(file) {
+		if (file.endsWith('.js'))
+			require(path.join(controllers, file))(apiRouter);
+	});
 
 	// Serve static files
 	app.use(express.static('dist', {setHeaders: function(res, path) {
@@ -66,14 +78,10 @@ if (options.dev) {
 		}
 	}}));
 
-	// Load all controllers from the api directory.
-	const controllers = path.join(__dirname, 'api');
-	const apiRouter = express.Router();
-	app.use('/api/v1', apiRouter);
-	fs.readdirSync(controllers).forEach(function(file) {
-		if (file.endsWith('.js'))
-			require(path.join(controllers, file))(apiRouter);
-	});
+	// Serve index.html at all other routes
+	// app.get('*', function (req, res) {
+	// 	res.sendFile(path.join(__dirname, '/dist/index.html'));
+	// });
 
 	// Handle errors
 	app.use(function errorHandler(err, request, response, next) {
