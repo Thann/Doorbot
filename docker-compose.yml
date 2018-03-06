@@ -28,7 +28,7 @@ services:
     #image: thann/doorbot:arm8
     privileged: true
     restart: unless-stopped
-    command: door -k -s server -t "abc123"
+    command: door -k --dummy -s server -t "abc123"
 
 
 volumes:

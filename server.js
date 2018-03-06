@@ -4,7 +4,6 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const errors = require('./lib/errors');
 
 const options = {
 	port: 3000,
@@ -38,9 +37,6 @@ if (require.main === module) {
 
 	// Merge opts into options
 	Object.assign(options, opt.options);
-} else {
-	// Override port when required by tests
-	options.port = 6969;
 }
 
 if (options.dev) {
@@ -56,6 +52,7 @@ if (options.dev) {
 } else {
 	// Init server
 	const app = express();
+	module.exports = app;
 
 	// Load middleware
 	require('express-ws')(app);
@@ -89,16 +86,21 @@ if (options.dev) {
 		next(err);
 	});
 
-	process.on('unhandledRejection', function(err, promise) {
-		if (!(err instanceof errors.HandledError))
-			console.error('UHR', err, promise);
-	});
+	// Handle async errors
+	if (process.listenerCount('unhandledRejection') === 0) {
+		process.on('unhandledRejection', function(err, p) {
+			if (!(err instanceof require('./lib/errors').HandledError)) {
+				console.error('UHR', err, p);
+			}
+		});
+	}
 
 	// Start server
-	module.exports = app.listen(options.port, function() {
-		if (require.main === module)
+	if (require.main === module) {
+		app.listen(options.port, function() {
 			console.log('listening on', options.port);
-	});
+		});
+	}
 }
 
 // Webpack watch
@@ -114,5 +116,6 @@ if (options.build || options.dev) {
 
 	watcher.stderr.on('data', function(data) {
 		console.log(data.toString());
+		process.exit(1);
 	});
 }
