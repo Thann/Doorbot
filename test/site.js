@@ -6,7 +6,7 @@ const agent = require('supertest').agent(server, {prefix: '/api/v1'});
 const site = require('../api/site');
 
 describe('Site API', function() {
-	before(async function() {
+	beforeEach(async function() {
 		await db.reset();
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
@@ -108,7 +108,7 @@ describe('Site API', function() {
 	});
 
 	describe('as an under-privileged user', function() {
-		before(async function() {
+		beforeEach(async function() {
 			await agent.post('/users')
 				.send({username: 'dummy', password: 'dummy'})
 				.expect(200);

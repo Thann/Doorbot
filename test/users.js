@@ -5,8 +5,14 @@ const server = require('../server');
 const agent = require('supertest').agent(server, {prefix: '/api/v1'});
 
 describe('Users API', function() {
-	before(async function() {
+	beforeEach(async function() {
 		await db.reset();
+		await agent.post('/auth')
+			.send({username: 'admin', password: 'admin'}).expect(200);
+		await agent.post('/users')
+			.send({username: 'Dummy', password: 'dummy'}).expect(200);
+		await agent.post('/doors').send({name: 'main'}).expect(200);
+		await agent.post('/doors').send({name: 'rear'}).expect(200);
 	});
 
 	it('auth', async function() {
@@ -18,19 +24,14 @@ describe('Users API', function() {
 			.expect(400, {error: 'incorrect username or password'});
 		await agent.delete('/auth')
 			.expect('set-cookie', /^Session=; Path=\/; Expires=/)
-			.expect(401, {error: 'session cookie malformed'});
+			.expect(204);
 		await agent.delete('/auth')
 			.expect('set-cookie', /^Session=; Path=\/; Expires=/)
 			.expect(401, {error: 'session cookie malformed'});
-		await agent.post('/auth')
-			.send({username: 'admin', password: 'admin'})
-			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
-			.expect(200, {
-				id: 1,
-				username: 'admin',
-				last_login: null,
-				requires_reset: true,
-			});
+		await agent.delete('/auth')
+			.expect('set-cookie', /^Session=; Path=\/; Expires=/)
+			//TODO: Why is cookie malformed the second time?
+			.expect(401, {error: 'session cookie malformed'});
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
 			.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
@@ -45,26 +46,26 @@ describe('Users API', function() {
 	it('create', async function() {
 		await agent.post('/users')
 			.send({username: 'Dummy'})
+			.expect(400, {username: 'already taken'});
+		await agent.post('/users')
+			.send({username: 'Testing'})
 			.expect(200, {
-				id: 2,
+				id: 3,
 				admin: false,
 				password: /\w{14}/,
-				username: 'Dummy',
+				username: 'Testing',
 				requires_reset: true,
 			});
-		await agent.delete('/users/Dummy').expect(204);
+		await agent.delete('/users/Testing').expect(204);
 		await agent.post('/users')
-			.send({username: 'Dummy', password: 'dumb'})
+			.send({username: 'Testing', password: 'dumb'})
 			.expect(200, {
-				id: 2,
+				id: 3,
 				admin: false,
 				password: 'dumb',
-				username: 'Dummy',
+				username: 'Testing',
 				requires_reset: true,
 			});
-		await agent.post('/users')
-			.send({username: 'Dummy', password: 'dumb'})
-			.expect(400, {username: 'already taken'});
 	});
 
 	it('read', async function() {
@@ -89,8 +90,6 @@ describe('Users API', function() {
 		await agent.get('/users/missing')
 			.expect(404);
 		// permissions
-		await agent.post('/doors').send({name: 'main'});
-		await agent.post('/doors').send({name: 'rear'});
 		await agent.post('/doors/1/permit/admin').expect(200);
 		await agent.post('/doors/1/permit/Dummy')
 			.send({constraints: 'ip:192.168.1.1/30'}).expect(200);
@@ -131,9 +130,6 @@ describe('Users API', function() {
 				username: 'Dummy',
 				requires_reset: true,
 			});
-		await agent.delete('/doors/1/permit/admin').expect(204);
-		await agent.delete('/doors/1/permit/Dummy').expect(204);
-		await agent.delete('/doors/2/permit/Dummy').expect(204);
 	});
 
 	it('index', async function() {
@@ -192,9 +188,6 @@ describe('Users API', function() {
 				username: 'Dummy',
 				requires_reset: true,
 			}]);
-		await agent.delete('/doors/1/permit/admin').expect(204);
-		await agent.delete('/doors/1/permit/Dummy').expect(204);
-		await agent.delete('/doors/2/permit/Dummy').expect(204);
 	});
 
 	it('update', async function() {
@@ -258,8 +251,6 @@ describe('Users API', function() {
 				password: 'dummy',
 				requires_reset: true,
 			});
-		await agent.delete('/doors/1/permit/Dummy').expect(204);
-		await agent.delete('/doors/2/permit/Dummy').expect(204);
 	});
 
 	it('delete', async function() {
@@ -335,17 +326,24 @@ describe('Users API', function() {
 	});
 
 	describe('as an under-privileged user', function() {
-		before(async function() {
+		beforeEach(async function() {
 			await agent.post('/auth')
 				.send({username: 'admin', password: 'admin'})
 				.expect(200);
 			await agent.post('/doors/1/permit/Dummy')
+				.expect(200);
+			await agent.post('/auth')
+				.send({
+					username: 'Dummy',
+					password: 'dummy',
+					admin: 1})
 				.expect(200);
 		});
 
 		it('auth', async function() {
 			await agent.post('/auth')
 				.send({username: 'Dummy', password: 'dummy'})
+				.expect('set-cookie', /^Session=\w+; HttpOnly; Max-Age=\d+$/)
 				.expect(200);
 		});
 
@@ -430,6 +428,9 @@ describe('Users API', function() {
 		});
 
 		it('logs', async function() {
+			await agent.patch('/users/Dummy')
+				.send({password: 'door_dummy'})
+				.expect(200);
 			await agent.get('/users/admin/logs')
 				.expect(403);
 			await agent.get('/users/Dummy/logs')
@@ -438,7 +439,7 @@ describe('Users API', function() {
 				.expect(204);
 			await agent.get('/users/Dummy/logs')
 				.expect(200, [{
-					id: 3,
+					id: 1,
 					door_id: 1,
 					user_id: 2,
 					door: 'main',
