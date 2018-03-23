@@ -5,19 +5,25 @@ const server = require('../server');
 const agent = require('supertest').agent(server, {prefix: '/api/v1'});
 
 describe('Doors API', function() {
-	before(async function() {
+	beforeEach(async function() {
 		await db.reset();
 		await agent.post('/auth')
 			.send({username: 'admin', password: 'admin'})
+			.expect(200);
+		await agent.post('/doors')
+			.send({name: 'main'})
 			.expect(200);
 	});
 
 	it('create', async function() {
 		await agent.post('/doors')
 			.send({name: 'main'})
+			.expect(400, {name: 'already taken'});
+		await agent.post('/doors')
+			.send({name: 'rear'})
 			.expect(200, {
-				id: 1,
-				name: 'main',
+				id: 2,
+				name: 'rear',
 				token: /\w+/,
 			});
 	});
@@ -101,6 +107,7 @@ describe('Doors API', function() {
 			.expect(404, { error: "door doesn't permit user" });
 		await agent.delete('/doors/5/permit/admin')
 			.expect(404, { error: "door doesn't permit user" });
+		await agent.post('/doors/1/permit/admin').expect(200);
 		await agent.delete('/doors/1/permit/admin')
 			.expect(204, '');
 		await agent.delete('/doors/1/permit/admin')
@@ -113,6 +120,7 @@ describe('Doors API', function() {
 	});
 
 	it('logs', async function() {
+		await agent.post('/doors/1/open').expect(204);
 		await agent.get('/doors/1/logs')
 			.expect(200, [{
 				id: 1,
@@ -153,12 +161,9 @@ describe('Doors API', function() {
 	});
 
 	describe('as an under-privileged user', function() {
-		before('auth', async function() {
+		beforeEach('auth', async function() {
 			await agent.post('/users')
-				.send({username: 'door_dummy'})
-				.expect(200);
-			await agent.patch('/users/door_dummy')
-				.send({password: 'door_dummy'})
+				.send({username: 'door_dummy', password: 'door_dummy'})
 				.expect(200);
 			await agent.post('/doors/1/permit/door_dummy')
 				.expect(200);
@@ -180,7 +185,7 @@ describe('Doors API', function() {
 			await agent.get('/doors/1')
 				.expect(200, {
 					id: 1,
-					name: 'front',
+					name: 'main',
 				});
 			await agent.get('/doors/2')
 				.expect(404);
@@ -190,7 +195,7 @@ describe('Doors API', function() {
 			await agent.get('/doors')
 				.expect(200, [{
 					id: 1,
-					name: 'front',
+					name: 'main',
 				}]);
 		});
 

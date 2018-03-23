@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const users = require('./users');
 const crypto = require('crypto');
-const helpers = require('../lib/helpers');
+const MemCache = require('../lib/memcache');
 
 const settingsFile = (process.env.NODE_ENV === 'test' ? null :
 	path.join(__dirname, '../db/site_settings.json'));
@@ -30,7 +30,7 @@ const privateSettings = {
 	auth_attempts_per_hour: 15,  // per username
 };
 
-const pendingInvites = new helpers.MemCache();
+const pendingInvites = new MemCache();
 
 module.exports.pendingInvites = pendingInvites;
 module.exports.publicSettings = publicSettings;

@@ -5,7 +5,7 @@ const db = require('../lib/db');
 const crypto = require('crypto');
 const cookie = require('cookie');
 const errors = require('../lib/errors');
-const helpers = require('../lib/helpers');
+const MemCache = require('../lib/memcache');
 
 module.exports = function(app) {
 	app.  post('/auth', auth);
@@ -44,7 +44,7 @@ const checkCookie = async function(request, response) {
 module.exports.checkCookie = checkCookie;
 
 const site = require('./site');  //TODO: remove circular require.
-const userAuthRates = new helpers.MemCache();
+const userAuthRates = new MemCache();
 
 // === API ===
 
