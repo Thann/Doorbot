@@ -4,6 +4,7 @@
 const util = require('util');
 const WebSocket = require('ws');
 const gpio = require('rpi-gpio');
+const express = require('express');
 const errors = require('./lib/errors');
 
 const options = {
@@ -130,3 +131,16 @@ setInterval(function() {
 	}
 }, options.pingtime);
 connect();
+
+// Start Healthcheck server
+const hcPort = 3000;
+const router = express.Router();
+require('./api/health')(router);
+require('http')
+	.createServer(express().use('/api/v1', router))
+	.on('error', () => {
+		console.error(`Healthcheck failed to listen on port ${hcPort}`);
+	})
+	.listen(hcPort, () => {
+		console.log(`Healthcheck listening on port ${hcPort}`);
+	});

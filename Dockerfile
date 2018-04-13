@@ -3,13 +3,17 @@ EXPOSE 3000
 ENTRYPOINT ["node"]
 CMD ["server"]
 
+HEALTHCHECK --start-period=5s \
+        CMD curl --fail localhost:3000/api/v1/health || exit 1
+
 # Create app directory
 RUN mkdir -p /usr/src/app/dist
 WORKDIR /usr/src/app
 
 # Install updates
-RUN apk update && \
-    apk upgrade
+RUN apk update  && \
+    apk upgrade && \
+    apk add curl
 
 COPY package.json \
      package-lock.json \

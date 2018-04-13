@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "mocha": "^5.0.4",
-    "supertest": "github:thann/supertest#prefix"
+    "supertest": "github:thann/supertest"
   },
   "eslintIgnore": [
     "**/*.js",
