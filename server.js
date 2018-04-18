@@ -18,10 +18,8 @@ if (require.main === module) {
 		['h', 'help'],
 	]).bindHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +
-		'Usage: node server [OPTION]\n' +
-		'\n' +
-		'[[OPTIONS]]\n' +
-		'\n' +
+		'Usage: node server [OPTION]\n\n' +
+		'[[OPTIONS]]\n\n' +
 		'Repository: https://github.com/Thann/Doorbot'
 	).error((err) => {
 		console.error(err.message + '\n\n' + getopts.getHelp());
