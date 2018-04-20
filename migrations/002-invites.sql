@@ -11,9 +11,9 @@ CREATE TABLE users (
     session_cookie VARCHAR(255) UNIQUE,
     session_created DATETIME,
     email VARCHAR(255) UNIQUE COLLATE NOCASE,
-    oauth_id VARCHAR(255),
-    oauth_token VARCHAR(255),
-    oauth_domain VARCHAR(255),
+    -- oauth_id VARCHAR(255),
+    -- oauth_token VARCHAR(255),
+    -- oauth_domain VARCHAR(255),
     created_by INTEGER REFERENCES id,
     deleted_at DATETIME
 );
@@ -23,12 +23,16 @@ CREATE UNIQUE INDEX idx_usernames on users (username)
 INSERT INTO users
 SELECT
 	id, username, pw_salt, password_hash, admin, keycode,
-	session_cookie, session_created, NULL, NULL, NULL, NULL, 1, NULL
+	session_cookie, session_created, NULL,
+	-- NULL, NULL, NULL,
+	1, NULL
 FROM temp_users;
 
 DROP TABLE temp_users;
 UPDATE users SET admin = 0x7fffffff WHERE admin > 0;
 UPDATE users SET admin = 0xffffffff WHERE id = 1 AND admin > 0;
+
+CREATE UNIQUE INDEX idx_tokens on doors (token);
 
 
 -- DOWN
@@ -53,3 +57,4 @@ FROM temp_users WHERE deleted_at IS NULL;
 
 DROP TABLE temp_users;
 
+DROP INDEX idx_tokens;

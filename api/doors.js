@@ -11,12 +11,12 @@ const DOOR_SOCKETS = {};
 module.exports = function(app) {
 	app.   get('/doors', index);
 	app.  post('/doors', create);
+	app.    ws('/doors', connect);
 	app.   get('/doors/:id', read);
 	app. patch('/doors/:id', update);
 	app.delete('/doors/:id', remove);
 	app.   get('/doors/:id/logs', logs);
 	app.  post('/doors/:id/open', open);
-	app.    ws('/doors/:id/connect', connect);
 	app.  post('/doors/:id/permit/:username', permit);
 	app.delete('/doors/:id/permit/:username', deny);
 };
@@ -212,8 +212,8 @@ async function connect(ws, request, next) {
 	if (!request.headers.authorization) {
 		return ws.close(1007, 'no token');
 	}
-	const door = await db.get('SELECT * FROM doors WHERE id = ? AND token = ?',
-		request.params.id, request.headers.authorization);
+	const door = await db.get('SELECT * FROM doors WHERE token = ?',
+		request.headers.authorization);
 
 	if (!door) {
 		return ws.close(1007, 'bad token');
