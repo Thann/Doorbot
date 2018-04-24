@@ -15,7 +15,8 @@
     "dkstart": "docker-compose up -d",
     "dkstop": "docker-compose down",
     "dktest": "docker-compose exec server npm run -s test",
-    "dklint": "docker-compose exec server npm run -s lint"
+    "dklint": "docker-compose exec server npm run -s lint",
+    "dknode": "docker-compose exec server node -i -e \"const db = require('./lib/db'); setTimeout(() => {console.log('const db = Database.open()')})\""
   },
   "dependencies": {
     "babel-core": "^6.7.2",

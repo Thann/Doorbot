@@ -80,10 +80,11 @@ function connect() {
 			options.port,
 			options.door
 		), {
-			perMessageDeflate: false,
 			headers: {
 				'Authorization': options.token,
 			},
+			perMessageDeflate: false,
+			handshakeTimeout: options.pingtime,
 		}
 	);
 
@@ -108,24 +109,22 @@ function connect() {
 }
 
 // Wiegand keypad init
-if (options.keypad !== undefined) {
+if (options.keypad !== undefined && !options.dummy) {
 	let waiting, index = 0;
 	const maxCodeLen = 8; // must be even
 	const keypadTimeout = 5; // seconds
 	const keycode = Buffer.alloc(maxCodeLen/2);
-	const pin = (options.keypad || '11,12').split(',')
+	const pin = (options.keypad || '11,12').split(',').map(Number);
 
-	if (!options.dummy) {
-		gpio.setup(pin[0], gpio.DIR_IN, gpio.EDGE_FALLING);
-		gpio.setup(pin[1], gpio.DIR_IN, gpio.EDGE_FALLING);
-	}
+	gpio.setup(pin[0], gpio.DIR_IN, gpio.EDGE_FALLING);
+	gpio.setup(pin[1], gpio.DIR_IN, gpio.EDGE_FALLING);
 
 	// TODO: unlocking the door interferes with this...
 	gpio.on('change', function(num, dir) {
-		const i = parseInt(index/8)
+		const i = parseInt(index/8);
 		clearTimeout(waiting);
-		if (num == pin[1]) {
-			keycode[i] = keycode[i] | (1 << 7-index%8)
+		if (num === pin[1]) {
+			keycode[i] = keycode[i] | (1 << 7-index%8);
 		}
 		if (index >= maxCodeLen*4-1) {  //TODO: pound sign?
 			ws.send('keycode:'+keycode.toString('hex'));
@@ -136,9 +135,16 @@ if (options.keypad !== undefined) {
 				index = 0;
 				keycode.fill(0);
 			}, keypadTimeout*1000);
-			index += 1
+			index += 1;
 		}
 	});
+} else if (options.keypad !== undefined) {
+	setInterval(() => {
+		if (ws.readyState === 1) {
+			console.log('Sending dummy keycode to server...');
+			ws.send('keycode:00000000');
+		}
+	}, 10000);
 }
 
 function safeExit() {
@@ -157,7 +163,7 @@ process.on('SIGTERM', safeExit);
 
 setInterval(function() {
 	if (ws.readyState !== 1) {
-		console.log('Retrying connection');
+		console.log(`Retrying connection (${ws.readyState})`);
 		connect();
 	} else {
 		ws.ping();
