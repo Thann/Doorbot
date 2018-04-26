@@ -14,24 +14,33 @@ module.exports = Backbone.View.extend({
 			<div class="panel-collapse collapse in">
 				<div class="panel-body">
 					<form>
-						<table>
+						<table cellpadding="3">
 							<tr rv-show="user:admin">
 								<td>Admin</td>
-								<!-- <td rv-value="user:admin"></td> -->
 							</tr>
 							<tr>
 								<td>Password</td>
-								<td>
-									<input type="text" name="password" rv-value="user:password">
-									<button rv-show="self:admin" class="btn btn-default fa fa-random password"></button>
+								<td class="form-inline">
+									<input rv-type="pwType" placeholder="hidden"
+										name="password" class="form-control"
+										rv-value="user:password" autocomplete="new-password">
+									<input rv-if="showCurrent" type="password"
+										name="current_password" class="form-control"
+										placeholder="current password" autocomplete="current-password">
+									<button rv-show="self:admin" rv-disabled="me"
+										class="btn btn-default fa fa-random password"></button>
 									<span rv-show="user:requires_reset" class="fa fa-warning text-danger">
 										requires reset</span>
+									<input placeholder="username" type="hidden" name="username"
+										rv-value="user:username" autocomplete="username">
 								</td>
 							</tr>
 							<tr rv-show="me">
 								<td>Keycode</td>
-								<td>
-									<input type="number" name="keycode" rv-value="user:keycode" min="0" max="99999999">
+								<td class="form-inline">
+									<input name="keycode" min="0" max="99999999"
+										placeholder="hidden" class="form-control"
+										rv-value="user:keycode" type="number">
 								</td>
 							</tr>
 						</table>
@@ -40,7 +49,7 @@ module.exports = Backbone.View.extend({
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-default">
 					<span class="error" rv-text="updateError"></span>
-					<a rv-show="me" class="btn btn-default pull-right">logout</a>
+					<a rv-show="me" class="btn btn-default pull-right logout">logout</a>
 					<span rv-show="self:admin">
 						<a rv-hide="me" class="btn btn-danger delete pull-right">
 						Delete</a>
@@ -128,21 +137,30 @@ module.exports = Backbone.View.extend({
 
 		//TODO: render should not be nessicary
 		this.logs.on('sync', _.bind(this.render, this));
-		this.user.on('sync', _.bind(this.dingleDoors, this));
+		this.user.on('sync', _.bind(this.dingleUser, this));
 		this.doors.on('sync', _.bind(this.dingleDoors, this));
 	},
 	render: function() {
+		if (Doorbot.Router.args[0] !== this.user.get('username'))
+			return this.initialize();
+		const me = this.user.id === Doorbot.User.id;
 		this.scope = {
+			me,
 			user: this.user,
 			logs: this.logs,
 			doors: this.doors,
 			self: Doorbot.User,
-			me: this.user.id === Doorbot.User.id,
+			pwType: me ? 'password': 'text',
+			showCurrent: !this.user.get('requires_reset') && me,
 		};
 		this.$el.html(this.template);
 		//TODO: rivets throws an error because of user?
 		Rivets.bind(this.$el, this.scope);
 		return this;
+	},
+	dingleUser: function() {
+		this.old_password = this.user.get('password');
+		this.dingleDoors();
 	},
 	dingleDoors: function() {
 		if (!this.user.get('doors'))
@@ -177,7 +195,7 @@ module.exports = Backbone.View.extend({
 	update: function(e) {
 		e.preventDefault();
 		const data = this.$('form').serializeObject();
-		if (data.password === this.user.get('password'))
+		if (data.password === '' || data.password === this.old_password)
 			data.password = undefined;
 		if (data.keycode === '')
 			data.keycode = undefined;

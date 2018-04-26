@@ -51,7 +51,7 @@ module.exports = Backbone.View.extend({
 
 		<a rv-show="user.isAuthed" class="btn btn-default logout">Logout</a>
 		<a rv-show="user.isAuthed" class="btn btn-default"
-			rv-href="'#user/'|+ user.attributes.username">
+			rv-href="'#user/'|+ user:username">
 			User Settings
 		</a>
 	`,
