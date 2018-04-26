@@ -204,6 +204,8 @@ async function create(request, response) {
 
 async function read(request, response) {
 	const user = await checkCookie(request, response);
+	if (request.params.username === 'me')
+		request.params.username = user.username;
 	if (!user.admin && request.params.username !== user.username) {
 		return response.status(403)
 			.send({error: 'only admins can view others'});

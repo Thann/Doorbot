@@ -9,8 +9,10 @@ module.exports = Backbone.View.extend({
 			<span rv-if="orgName">- { orgName }</span>
 		</a>
 		<span class="pull-right">
-			<a href="#admin" rv-show="user.isAuthed |and user.attributes.admin" class="fa fa-cogs"></a>
-			<a href="#login" rv-show="user.isAuthed">{ user.attributes.username }</a>
+			<a href="#admin" rv-show="user.isAuthed |and user.attributes.admin"
+				class="fa fa-cogs"></a>
+			<a rv-href="'#user/' |+ user.attributes.username"
+				rv-show="user.isAuthed">{ user.attributes.username }</a>
 		</span>
 	`,
 	render: function() {

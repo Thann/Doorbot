@@ -77,6 +77,15 @@ body {
 		}
 		.panel-body {
 			border-top: 1px solid #ddd;  //HACK:
+
+			form:last-child {
+				margin-bottom: 0;
+			}
+			table {
+				th,td {
+					padding: 5px;
+				}
+			}
 		}
 		.panel-footer {
 			background: transparent;
