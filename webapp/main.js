@@ -1,6 +1,7 @@
 // Doorbot - loads the libraries and exports the global variable "Doorbot".
 
 require('backbone-subviews'); // also makes "Backbone" globally available.
+require('./jquery_extensions');
 require('./rivets_extensions');
 require('rivets-backbone-adapter');
 require('imports-loader?jQuery=jquery!bootstrap/dist/js/bootstrap.js');

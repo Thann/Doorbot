@@ -3,6 +3,9 @@ EXPOSE 3000
 ENTRYPOINT ["node"]
 CMD ["server"]
 
+HEALTHCHECK --start-period=5s \
+        CMD curl --fail localhost:3000/api/v1/health || exit 1
+
 # Install dependencies
 RUN apt update && \
     apt upgrade -y

@@ -17,6 +17,7 @@ module.exports = Backbone.View.extend({
 						<table>
 							<tr rv-show="user:admin">
 								<td>Admin</td>
+								<!-- <td rv-value="user:admin"></td> -->
 							</tr>
 							<tr>
 								<td>Password</td>
@@ -25,6 +26,12 @@ module.exports = Backbone.View.extend({
 									<button rv-show="self:admin" class="btn btn-default fa fa-random password"></button>
 									<span rv-show="user:requires_reset" class="fa fa-warning text-danger">
 										requires reset</span>
+								</td>
+							</tr>
+							<tr rv-show="me">
+								<td>Keycode</td>
+								<td>
+									<input type="number" name="keycode" rv-value="user:keycode" min="0" max="99999999">
 								</td>
 							</tr>
 						</table>
@@ -167,9 +174,18 @@ module.exports = Backbone.View.extend({
 	logout: function() {
 		Doorbot.User.logout();
 	},
-	update: function() {
-		//TODO:
-		console.log('NOT IMPLEMENTED');
+	update: function(e) {
+		e.preventDefault();
+		const data = this.$('form').serializeObject();
+		if (data.password === this.user.get('password'))
+			data.password = undefined;
+		if (data.keycode === '')
+			data.keycode = undefined;
+		this.user.save(data, {patch: true, wait: true,
+			success: function() {
+				//console.log("YAY!", arguments)
+			},
+		});
 	},
 	scramblePassword: function(e) {
 		e.preventDefault();
