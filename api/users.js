@@ -239,54 +239,60 @@ async function read(request, response) {
 async function update(request, response) {
 	const user = await checkCookie(request, response);
 	if (!user.admin && (
-		!request.body.password || request.body.password.length < 8)) {
+		request.body.password && request.body.password.length < 8)) {
 		return response.status(400)
 			.send({password: 'must be at least 8 characters'});
 	}
 
 	// console.log("Update_USER", user, request.params.username, user.username)
-	if (!user.admin && request.params.username !== user.username) {
+	const sameUser = (request.params.username === user.username);
+	if (!sameUser && !user.admin) {
 		return response.status(403)
 			.send({error: 'can only update your own info'});
+	}
+	if (!sameUser && request.body.keycode !== undefined) {
+		return response.status(403)
+			.send({keycode: 'can only update your own keycode'});
 	}
 
 	if (!user.admin && request.body.admin) {
 		return response.status(403).send({error: "can't make yourself admin"});
 	}
-	//TODO: update username and stuff. (PUT?)
 
-	let salt, pwHash = null;
-	if (request.params.username !== user.username) {
-		// var salt = null;
+	const values = {};
+	for (const k of ['keycode', 'admin']) {
+		if (request.body[k] !== undefined)
+			values[k] = request.body[k];
+	}
+
+	if (!sameUser && request.body.password !== undefined) {
+		values.pw_salt = null;
 		if (request.body.password) {
-			pwHash = request.body.password;
+			values.password_hash = request.body.password;
 		} else {
-			pwHash = crypto.createHash('sha256')
+			values.password_hash = crypto.createHash('sha256')
 				.update(Math.random().toString())
 				.digest('hex').substring(1, 15);
 		}
-	} else {
-		if (user.pw_salt && (!request.current_password ||
+	} else if (request.body.password) {
+		if (user.pw_salt && (!request.body.current_password ||
 							crypto.createHash('sha256', user.pw_salt)
 								.update(request.body.current_password)
 								.digest('hex') !== user.password_hash)) {
 			return response.status(400)
 				.send({current_password: 'incorrect password'});
 		}
-		salt = crypto.createHash('sha256')
+		values.pw_salt = crypto.createHash('sha256')
 			.update(Math.random().toString()).digest('hex');
-		pwHash = crypto.createHash('sha256', salt)
+		values.password_hash = crypto.createHash('sha256', values.pw_salt)
 			.update(request.body.password).digest('hex');
 	}
 
 	try {
-		// const r = await db.run(`
-		await db.run(`
-			UPDATE users SET pw_salt = ? , password_hash = ?
-			WHERE username = ?`,
-			salt, pwHash, request.params.username);
-		// console.log("UPDATE:", r)
+		await db.update('users', values, 'username = ?',
+			request.params.username);
 	} catch(e) {
+		console.warn('USER UPDATE ERROR:', e);
 		return response.status(400).send({error: 'DB update error'});
 	}
 

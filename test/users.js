@@ -192,6 +192,9 @@ describe('Users API', function() {
 
 	it('update', async function() {
 		await agent.patch('/users/Dummy')
+			.send({keycode: 2})
+			.expect(403, {keycode: 'can only update your own keycode'});
+		await agent.patch('/users/Dummy')
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
@@ -202,7 +205,7 @@ describe('Users API', function() {
 				requires_reset: true,
 			});
 		await agent.patch('/users/admin')
-			.send({password: 'admin'})
+			.send({password: 'admin', keycode: 1})
 			.expect(200, {
 				id: 1,
 				doors: [],
@@ -221,11 +224,10 @@ describe('Users API', function() {
 		await agent.patch('/users/admin')
 			.send({password: 'admin'})
 			.expect(400, {current_password: 'incorrect password'});
-		//TODO: fix
-		// await agent.patch('/users/admin')
-		// 	.send({password: 'admin', current_password: 'admin'})
-		// 	.expect(200);
-		// permissions
+		await agent.patch('/users/admin')
+			.send({password: 'admin', current_password: 'admin'})
+			.expect(200);
+		// should show door permissions
 		await agent.post('/doors/1/permit/Dummy')
 			.send({constraints: 'ip:192.168.1.1/30'}).expect(200);
 		await agent.post('/doors/2/permit/Dummy').expect(200);
@@ -384,6 +386,9 @@ describe('Users API', function() {
 		});
 
 		it('update', async function() {
+			await agent.patch('/users/missing')
+				.send({password: 'door_dummy'})
+				.expect(403, {error: 'can only update your own info'});
 			await agent.patch('/users/Dummy')
 				.send({password: 'dummy'})
 				.expect(400, {password: 'must be at least 8 characters'});
@@ -416,6 +421,18 @@ describe('Users API', function() {
 					username: 'Dummy',
 					requires_reset: false,
 				});
+			await agent.patch('/users/Dummy')
+				.send({password: 'door_dummy2'})
+				.expect(400, {current_password: 'incorrect password'});
+			await agent.patch('/users/Dummy')
+				.send({current_password: 'door_dummy', password: 'door_dummy2'})
+				.expect(200);
+			// admin permissions
+			await agent.patch('/users/Dummy')
+				.send({admin: 1})
+				.expect(403, {error: "can't make yourself admin"});
+			await agent.post('/auth')
+				.send({username: 'admin', password: 'admin'}).expect(200);
 		});
 
 		it('delete', async function() {
