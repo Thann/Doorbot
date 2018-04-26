@@ -159,7 +159,6 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 	dingleUser: function() {
-		this.old_password = this.user.get('password');
 		this.dingleDoors();
 	},
 	dingleDoors: function() {
@@ -195,7 +194,7 @@ module.exports = Backbone.View.extend({
 	update: function(e) {
 		e.preventDefault();
 		const data = this.$('form').serializeObject();
-		if (data.password === '' || data.password === this.old_password)
+		if (data.password === '')
 			data.password = undefined;
 		if (data.keycode === '')
 			data.keycode = undefined;
