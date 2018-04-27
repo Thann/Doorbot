@@ -14,7 +14,7 @@ module.exports = Backbone.View.extend({
 			<div class="panel-collapse collapse in">
 				<div class="panel-body">
 					<form>
-						<table cellpadding="3">
+						<table>
 							<tr rv-show="user:admin">
 								<td>Admin</td>
 							</tr>
@@ -40,7 +40,8 @@ module.exports = Backbone.View.extend({
 								<td class="form-inline">
 									<input name="keycode" min="0" max="99999999"
 										placeholder="hidden" class="form-control"
-										rv-value="user:keycode" type="number">
+										rv-value="user.keycode" type="number">
+									<span>(8 digits, so 1 becomes 00000001)</span>
 								</td>
 							</tr>
 						</table>
@@ -48,7 +49,8 @@ module.exports = Backbone.View.extend({
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-default">
-					<span class="error" rv-text="updateError"></span>
+					<span rv-text="updateSuccess"></span>
+					<span class="text-danger" rv-text="updateError"></span>
 					<a rv-show="me" class="btn btn-default pull-right logout">logout</a>
 					<span rv-show="self:admin">
 						<a rv-hide="me" class="btn btn-danger delete pull-right">
@@ -135,14 +137,6 @@ module.exports = Backbone.View.extend({
 		}))();
 		this.moreLogs();
 
-		//TODO: render should not be nessicary
-		this.logs.on('sync', _.bind(this.render, this));
-		this.user.on('sync', _.bind(this.dingleUser, this));
-		this.doors.on('sync', _.bind(this.dingleDoors, this));
-	},
-	render: function() {
-		if (Doorbot.Router.args[0] !== this.user.get('username'))
-			return this.initialize();
 		const me = this.user.id === Doorbot.User.id;
 		this.scope = {
 			me,
@@ -153,13 +147,19 @@ module.exports = Backbone.View.extend({
 			pwType: me ? 'password': 'text',
 			showCurrent: !this.user.get('requires_reset') && me,
 		};
+
+		//TODO: render should not be nessicary
+		this.logs.on('sync', _.bind(this.render, this));
+		this.user.on('sync', _.bind(this.dingleDoors, this));
+		this.doors.on('sync', _.bind(this.dingleDoors, this));
+	},
+	render: function() {
+		if (Doorbot.Router.args[0] !== this.user.get('username'))
+			return this.initialize();
 		this.$el.html(this.template);
 		//TODO: rivets throws an error because of user?
 		Rivets.bind(this.$el, this.scope);
 		return this;
-	},
-	dingleUser: function() {
-		this.dingleDoors();
 	},
 	dingleDoors: function() {
 		if (!this.user.get('doors'))
@@ -198,20 +198,32 @@ module.exports = Backbone.View.extend({
 			data.password = undefined;
 		if (data.keycode === '')
 			data.keycode = undefined;
+		else
+			this.user.keycode = data.keycode.toString().padStart(8, '0');
+		this.scope.updateError = null;
+		this.scope.updateSuccess = null;
+
 		this.user.save(data, {patch: true, wait: true,
-			success: function() {
+			success: () => {
 				//console.log("YAY!", arguments)
+				this.scope.updateSuccess = 'Saved';
 			},
+			error: (m, e) => {
+				//console.log("ERROR!", e)
+				this.scope.updateError = e.responseText;
+			}
 		});
 	},
 	scramblePassword: function(e) {
 		e.preventDefault();
 		if (confirm('Are you sure you want to scramble the password for: '
 								+this.user.get('username')+'?')) {
+			this.scope.updateError = null;
+			this.scope.updateSuccess = null;
 			this.user.save({password: false}, {patch: true, wait: true,
 				success: function() {
 					//console.log("YAY!", arguments)
-					//TODO: refresh?
+					this.scope.updateSuccess = 'Saved';
 				},
 			});
 		}

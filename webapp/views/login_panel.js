@@ -92,10 +92,10 @@ module.exports = Backbone.View.extend({
 			success: function(m) {
 				m.set({'password': undefined}, {trigger: false});
 				Doorbot.Router.navigate('', {trigger: true});
-			}, error: _.bind(function(m, e) {
+			}, error: (m, e) => {
 				this.scope.error = (e.responseJSON.password ||
 					e.responseJSON.error);
-			}, this),
+			},
 		});
 	},
 });
