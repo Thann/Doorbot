@@ -48,6 +48,9 @@ describe('Users API', function() {
 			.send({username: 'Dummy'})
 			.expect(400, {username: 'already taken'});
 		await agent.post('/users')
+			.send({username: 'me'})
+			.expect(400, {username: 'invalid'});
+		await agent.post('/users')
 			.send({username: 'Testing'})
 			.expect(200, {
 				id: 3,
