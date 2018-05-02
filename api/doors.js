@@ -215,19 +215,19 @@ async function connect(ws, request, next) {
 		msg = msg.split(':', 2);
 		if (msg[0] === 'keycode') {
 			const user = await db.get(`
-				SELECT users.*, permissions.* FROM users
+				SELECT permissions.*, users.* FROM users
 				LEFT JOIN permissions ON users.id = permissions.user_id
 					AND permissions.door_id = ?
 				WHERE keycode = ?`,
-				request.params.id, msg[1]);
+				door.id, msg[1]);
 
 			//TODO: check constraints
 			if (user && (user.admin || user.door_id))
-				_openDoor(user.id, request.params.id, 'keycode');
+				_openDoor(user.id, door.id, 'keycode');
 		}
 	});
 
-	DOOR_SOCKETS[request.params.id] = ws;
+	DOOR_SOCKETS[door.id] = ws;
 }
 
 async function permit(request, response) {

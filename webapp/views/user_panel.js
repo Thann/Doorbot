@@ -211,7 +211,7 @@ module.exports = Backbone.View.extend({
 			error: (m, e) => {
 				//console.log("ERROR!", e)
 				this.scope.updateError = e.responseText;
-			}
+			},
 		});
 	},
 	scramblePassword: function(e) {

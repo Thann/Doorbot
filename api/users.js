@@ -142,7 +142,7 @@ async function create(request, response) {
 	const username = request.body.username;
 	if (!username)
 		return response.status(400).send({username: 'required'});
-	if (!username.match(/^\w+$/))
+	if (!username.match(/^\w+$/) || username === 'me')
 		return response.status(400).send({username: 'invalid'});
 
 	let invite, salt, pw, admin;
