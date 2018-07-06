@@ -73,6 +73,7 @@ function open() {
 
 let ws;
 function connect() {
+	if (ws) ws.terminate();
 	ws = new WebSocket(
 		util.format('ws%s://%s:%s/api/v1/doors/%s/connect',
 			options.insecure?'':'s',
@@ -162,7 +163,7 @@ process.on('SIGINT', safeExit);
 process.on('SIGTERM', safeExit);
 
 setInterval(function() {
-	if (ws.readyState !== 1) {
+	if (ws.readyState !== WebSocket.OPEN) {
 		console.log(`Retrying connection (${ws.readyState})`);
 		connect();
 	} else {
