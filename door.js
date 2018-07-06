@@ -72,6 +72,7 @@ function open() {
 }
 
 let ws;
+let pongTimeout;
 function connect() {
 	if (ws) ws.terminate();
 	ws = new WebSocket(
@@ -106,6 +107,10 @@ function connect() {
 	ws.on('message', function(data) {
 		console.log('WS:', data);
 		open();
+	});
+
+	ws.on('pong', function() {
+		clearTimeout(pongTimeout);
 	});
 }
 
@@ -167,6 +172,10 @@ setInterval(function() {
 		console.log(`Retrying connection (${ws.readyState})`);
 		connect();
 	} else {
+		// listen for pong, close if we dont hear back
+		pongTimeout = setTimeout(function() {
+			ws.close();
+		}, options.pingtime/2);
 		ws.ping();
 	}
 }, options.pingtime);
