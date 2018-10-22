@@ -47,7 +47,7 @@
     "rivets-backbone-adapter": "^2.2.0",
     "rpi-gpio": "^1.0.0",
     "sass-loader": "^7.0.3",
-    "sqlite": "^2.9.1",
+    "sqlite": "^3.0.0",
     "style-loader": "^0.19.1",
     "webpack": "^3.12.0",
     "ws": "^5.2.1"
