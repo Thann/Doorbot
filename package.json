@@ -39,6 +39,7 @@
     "hson-loader": "^2.0.0",
     "imports-loader": "^0.8.0",
     "jquery": "^3.3.1",
+    "luxon": "^1.4.4",
     "node-getopt": "^0.3.2",
     "node-sass": "^4.9.1",
     "nodemon": "^1.17.5",

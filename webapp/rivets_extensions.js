@@ -42,6 +42,14 @@ Rivets.formatters['+'] = function(value, arg) {
 	return value + arg;
 };
 
+const { DateTime } = require('luxon');
+Rivets.formatters.luxon = function(value, arg) {
+	return DateTime
+		.fromSQL(value, {zone: 'UTC'})
+		.setZone('local')
+		.toLocaleString(arg && DateTime[arg] || DateTime.DATETIME_FULL);
+};
+
 // Allows rv-each-* to work on objects..
 // Borrowed from: https://github.com/mikeric/rivets/issues/105
 Rivets.formatters.to_a = function(value) {
