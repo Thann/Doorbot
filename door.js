@@ -72,7 +72,9 @@ function open() {
 }
 
 let ws;
+let pongTimeout;
 function connect() {
+	if (ws) ws.terminate();
 	ws = new WebSocket(
 		util.format('ws%s://%s:%s/api/v1/doors/%s/connect',
 			options.insecure?'':'s',
@@ -105,6 +107,10 @@ function connect() {
 	ws.on('message', function(data) {
 		console.log('WS:', data);
 		open();
+	});
+
+	ws.on('pong', function() {
+		clearTimeout(pongTimeout);
 	});
 }
 
@@ -162,10 +168,14 @@ process.on('SIGINT', safeExit);
 process.on('SIGTERM', safeExit);
 
 setInterval(function() {
-	if (ws.readyState !== 1) {
+	if (ws.readyState !== WebSocket.OPEN) {
 		console.log(`Retrying connection (${ws.readyState})`);
 		connect();
 	} else {
+		// listen for pong, close if we dont hear back
+		pongTimeout = setTimeout(function() {
+			ws.close();
+		}, options.pingtime/2);
 		ws.ping();
 	}
 }, options.pingtime);

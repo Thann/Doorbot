@@ -86,11 +86,14 @@ module.exports = Backbone.View.extend({
 			</div>
 			<div class="panel-collapse collapse" rv-class-in="logs.length |gt 50">
 				<div class="panel-body">
-					<div rv-each-log="logs">
-						<span rv-text="log:door"></span> &nbsp;
-						<span rv-text="log:time"></span> &nbsp;
-						<span rv-text="log:method"></span>
-					</div>
+					<table>
+					<tr rv-each-log="logs">
+						<td rv-text="log:door"></td>
+						<td rv-text="log:time |luxon 'DATE_FULL'"></td>
+						<td rv-text="log:time |luxon 'TIME_WITH_SHORT_OFFSET'"></td>
+						<td rv-text="log:method"></td>
+					</tr>
+					</table>
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="More" class="more btn btn-default"
