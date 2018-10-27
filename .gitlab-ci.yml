@@ -1,0 +1,28 @@
+image: docker:latest
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay
+
+build_x86:
+  stage: build
+  tags:
+    - docker
+  script:
+    - if [ "$CI_COMMIT_REF_NAME" != "master" ]; then BRANCH="/$CI_COMMIT_REF_NAME"; fi
+    - docker build -t "$CI_REGISTRY_IMAGE$BRANCH:latest" .
+    - docker run --rm $CI_REGISTRY_IMAGE$BRANCH:latest ./node_modules/.bin/mocha
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker push $CI_REGISTRY_IMAGE$BRANCH:latest
+
+build_arm7:
+  stage: build
+  tags:
+    - docker
+  script:
+    - if [ "$CI_COMMIT_REF_NAME" != "master" ]; then BRANCH="/$CI_COMMIT_REF_NAME"; fi
+    - docker build -t $CI_REGISTRY_IMAGE$BRANCH:arm7 -f Dockerfile-qemu-arm7 .
+    - docker run --rm $CI_REGISTRY_IMAGE$BRANCH:arm7 ./node_modules/.bin/mocha
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker push $CI_REGISTRY_IMAGE$BRANCH:arm7
