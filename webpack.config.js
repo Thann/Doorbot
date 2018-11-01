@@ -69,6 +69,7 @@ module.exports = function(env) {
 			}),
 		);
 	}
+	if (env && env.demo) config.entry = 'app/demo.js';
 
 	return config;
 };

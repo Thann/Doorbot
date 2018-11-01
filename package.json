@@ -12,6 +12,7 @@
     "start": "node server --build",
     "test": "mocha",
     "lint": "eslint .",
+    "build": "docker build -t thann/doorbot .",
     "dkstart": "docker-compose up -d",
     "dkstop": "docker-compose down",
     "dktest": "docker-compose exec server npm run -s test",
@@ -59,10 +60,10 @@
   },
   "eslintIgnore": [
     "**/*.js",
-    "!api/",
-    "!lib/",
-    "!test/",
-    "!webapp/",
+    "!api/*.js",
+    "!lib/*.js",
+    "!test/*.js",
+    "!webapp/**/*.js",
     "!server.js",
     "!door.js",
     "!webpack.config.js"
