@@ -15,6 +15,7 @@ if (require.main === module) {
 		['p', 'port=', 'Set listen port'],
 		['',  'build', 'Compile webapp'],
 		['',  'dev',   'Compile webapp & restart server on file modification (bigger bundles)'],
+		['',  'demo',  'Run in demo mode with mocked api responses'],
 		['h', 'help'],
 	]).bindHelp(
 		'Doorbot: server w/ webui to manage users and doors.\n' +
@@ -66,12 +67,15 @@ if (options.dev) {
 	});
 
 	// Serve static files
-	app.use(express.static('dist', {setHeaders: function(res, path) {
-		if (path.endsWith('/bundle.js.gz')) {
+	const exStatic = express.static('dist');
+	app.use(function(req, res, next) {
+		if (req.url === '/bundle.js') {
+			req.url += '.gz';
 			res.setHeader('Content-Encoding', 'gzip');
 			res.setHeader('Content-Type', 'application/javascript');
 		}
-	}}));
+		exStatic(req, res, next);
+	});
 
 	// Serve index.html at all other routes
 	// app.get('*', function (req, res) {
@@ -102,9 +106,10 @@ if (options.dev) {
 }
 
 // Webpack watch
-if (options.build || options.dev) {
+if (options.build || options.dev || options.demo) {
 	const opts = ['--color'];
-	if (options.dev) opts.push('--watch', '--env.dev');
+	if (options.demo) opts.push('--watch', '--env.demo', '--env.dev');
+	else if (options.dev) opts.push('--watch', '--env.dev');
 	const watcher = require('child_process')
 		.spawn('node_modules/.bin/webpack', opts);
 

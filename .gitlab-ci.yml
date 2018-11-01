@@ -1,0 +1,46 @@
+image: docker:latest
+stages:
+  - build
+  - post
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+before_script:
+    - if [ "$CI_COMMIT_REF_NAME" != "master" ]; then BRANCH="/$CI_COMMIT_REF_NAME"; fi
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+
+build_x86:
+  stage: build
+  tags:
+    - docker
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE$BRANCH:latest" .
+    - docker run --rm "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/mocha
+    - docker push "$CI_REGISTRY_IMAGE$BRANCH:latest"
+
+build_arm7:
+  stage: build
+  #when: manual
+  tags:
+    - docker
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE$BRANCH:arm7" -f Dockerfile-qemu-arm7 .
+    - docker run --rm "$CI_REGISTRY_IMAGE$BRANCH:arm7" ./node_modules/.bin/mocha
+    - docker push "$CI_REGISTRY_IMAGE$BRANCH:arm7"
+
+pages:
+  stage: post
+  tags:
+    - docker
+  script:
+    - docker run --name=demo "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/webpack --env.demo
+    - docker cp demo:/usr/src/app/dist public
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
