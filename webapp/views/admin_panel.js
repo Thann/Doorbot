@@ -53,11 +53,39 @@ module.exports = Backbone.View.extend({
 						<div class="error" rv-text="doorError"></div>
 					</form>
 					<div rv-each-door="doors">
-						<span rv-text="door:id"></span>
+						<span rv-text="door:id"></span>.
 						<a rv-href="'#/door/' |+ door:id" rv-text="door:name"></a>
 						<span rv-hide="door:available" rv-text="door:token"></span>
 						<span rv-show="door:available" class="fa fa-check-circle"></span>
 					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="invites panel panel-default">
+			<div class="panel-heading" data-toggle="collapse" data-target=".invites .panel-collapse">
+				<div class="panel-title">
+					Invites:
+					<a class="toggle new fa fa-plus"></a>
+				</div>
+			</div>
+			<div class="panel-collapse collapse" rv-class-in="showInvites">
+				<div class="panel-body">
+					<form rv-show="creatingInvite" >
+						#TODO: edit invite permissions
+						<div class="error" rv-text="inviteError"></div>
+					</form>
+					<ol>
+						<li rv-each-invite="invites">
+							<span rv-text="invite:admin_username"></span>
+							<span rv-text="invite:date |luxon 'DATETIME_SHORT'"></span>
+							<span rv-text="invite:token |max_len 8"></span>
+							<a target="_blank"
+								rv-href="inviteMailto |+ invite:token">
+								[Send Email]
+							</a>
+						</li>
+					</ol>
 				</div>
 			</div>
 		</div>
@@ -93,6 +121,7 @@ module.exports = Backbone.View.extend({
 	events: {
 		'click .doors .new': 'createDoor',
 		'click .users .new': 'createUser',
+		'click .invites .new': 'createInvite',
 		'click .settings .update': 'updateSettings',
 	},
 	initialize: function() {
@@ -134,18 +163,30 @@ module.exports = Backbone.View.extend({
 		this.privateSettings.fetch({success: _.bind(function() {
 			this.render();
 		}, this)});
+
+		this.invites = new (Backbone.Collection.extend({
+			url: '/api/v1/site/invites',
+		}))();
+		this.invites.on('sync', () => {
+			this.render();
+		});
+		this.invites.fetch();
 	},
 	render: function() {
 		// console.log("RENDER MAIN:", Doorbot.User.get('admin'))
 		this.scope = {
 			doors: this.doors,
 			users: this.users,
+			invites: this.invites,
 			settings: Doorbot.Settings,
 			privateSettings: this.privateSettings,
 			mailto: "mailto:?subject=Doorbot&body=Hey! you've been setup on the door. Visit " +
 				window.location.toString().replace(window.location.hash, '') +
 				' and sign-in with the username and password:%0D%0A%0D%0A',
 			mail2: "   (case-sensitive)%0D%0A%0D%0ADon't forget to update your password =]",
+			inviteMailto: "mailto:?subject=Doorbot&body=Hey! you've been invited to Doorbot," +
+				' click here to create a user: ' +
+				window.location.toString().replace(window.location.hash, '') + '#token/',
 		};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);
@@ -203,6 +244,44 @@ module.exports = Backbone.View.extend({
 	// deleteDoor: function(e) {
 	// 	this.doors.find({id: this.$(e.currentTarget).data('id')}).destroy();
 	// },
+	createInvite: function(e) {
+		// if (e) {
+		// 	e.preventDefault();
+		// 	if (this.$('.invites .panel-collapse.in').length) {
+		// 		e.stopPropagation();
+		// 	} else if (this.scope.creatingInvite) {
+		// 		//TODO: delayFocus?
+		// 		setTimeout(_.bind(function() {
+		// 			this.$('.invites input[name]').focus();
+		// 		}, this));
+		// 		return;
+		// 	}
+		// }
+
+		// if (this.$(e.currentTarget).hasClass('toggle')) {
+		// 	this.scope.creatingInvite = !this.scope.creatingUser;
+		// 	this.scope.inviteError = undefined;
+		// 	if (this.scope.creatingInvite) {
+		// 		setTimeout(_.bind(function() {
+		// 			this.$('.invites input[name]').focus();
+		// 		}, this));
+		// 	}
+		// } else {
+		this.invites.create({
+			permissions: this.$('.invites form [name="permissions"]').val(),
+		}, {wait: true,
+			success: _.bind(function() {
+				console.log('INVITE CREATE DONE!', this.doors);
+				this.scope.showInvites = true;
+				this.scope.creatingInvite = false;
+			}, this),
+			error: _.bind(function(m, resp) {
+				console.warn('INVITE CREATE ERR!', resp.responseText);
+				this.scope.inviteError = resp.responseText;
+			}, this),
+		});
+		// }
+	},
 	createUser: function(e) {
 		if (e) {
 			e.preventDefault();
@@ -211,7 +290,7 @@ module.exports = Backbone.View.extend({
 			} else if (this.scope.creatingUser) {
 				//TODO: delayFocus?
 				setTimeout(_.bind(function() {
-					this.$('.doors input[name]').focus();
+					this.$('.users input[name]').focus();
 				}, this));
 				return;
 			}

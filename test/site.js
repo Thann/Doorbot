@@ -20,12 +20,16 @@ describe('Site API', function() {
 			.expect(200, {
 				token: /\w{64}/,
 				admin_id: 1,
+				admin_username: 'admin',
+				date: /[\d\-: ]+/,
 				permissions: [],
 			});
 		await agent.get('/site/invites')
 			.expect(200, [{
 				token: /\w{64}/,
 				admin_id: 1,
+				admin_username: 'admin',
+				date: /[\d\-: ]+/,
 				permissions: [],
 			}]);
 		await agent.delete('/site/invites/invalid')
@@ -34,6 +38,8 @@ describe('Site API', function() {
 			.expect(200, [{
 				token: /\w{64}/,
 				admin_id: 1,
+				admin_username: 'admin',
+				date: /[\d\-: ]+/,
 				permissions: [],
 			}]);
 		const token = (await agent.get('/site/invites')).body[0].token;

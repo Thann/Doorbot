@@ -37,6 +37,11 @@ Rivets.formatters.length = function(value) {
 	return value && value.length;
 };
 
+Rivets.formatters.max_len = function(value, arg) {
+	if (value.length > arg)
+		return value.slice(0, arg);
+};
+
 // Concatenate or add
 Rivets.formatters['+'] = function(value, arg) {
 	return value + arg;

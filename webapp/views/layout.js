@@ -20,6 +20,7 @@ module.exports = Backbone.View.extend({
 	// doorTemplate: '<div data-subview="door"></div>',
 	adminTemplate: '<div data-subview="admin"></div>',
 	loginTemplate: '<div data-subview="login"></div>',
+	registerTemplate: '<div data-subview="register"></div>',
 	events: {
 		'click #Header .toggle-left-sidebar': function() {
 			this.subviews.sidebar.toggle();
@@ -33,8 +34,10 @@ module.exports = Backbone.View.extend({
 		login: function() { return new Doorbot.Views.LoginPanel(); },
 		header: function() { return new Doorbot.Views.Header(); },
 		sidebar: function() { return new Doorbot.Views.Sidebar(); },
+		register: function() { return new Doorbot.Views.Register(); },
 	},
 	initialize: function() {
+		console.log("==== ", Doorbot.Views)
 		const layout = this;
 		this.loading = true;
 		Backbone.Subviews.add( this );
@@ -46,12 +49,20 @@ module.exports = Backbone.View.extend({
 				'admin': 'adminTemplate',
 				'user/:id': 'userTemplate',
 				// 'door/:id': 'doorTemplate',
+				'register/:token': 'registerTemplate',
 				'*notFound': '',
 			},
 			execute: function(cb, args, name) {
 				this.args = args;
+				console.warn("ARGS", args, name, cb)
 				if (!layout.loading && !Doorbot.User.isAuthed) {
+					if (name === 'registerTemplate')
+						return layout.render(layout[name]);
+					// this.navigate('login', {trigger: true});
+					// this.navigate('login', {trigger: false});
 					this.navigate('login', {trigger: true});
+					// layout.render(layout['login']);
+					// this.navigate('login'+(args? '/'+args[0] : ''), {trigger: true});
 				} else if (!Doorbot.Router.name && layout[name]) {
 					layout.render(layout[name]);
 				} else {
@@ -66,8 +77,14 @@ module.exports = Backbone.View.extend({
 			if (loggedIn) {
 				layout.render();
 			} else {
-				Doorbot.Router.navigate('login', {trigger: false});
-				layout.render(layout.loginTemplate);
+				console.log("relog..", window.location.hash, this._current_template)
+				// Doorbot.Router.navigate(window.location.hash.replace('#', ''), {trigger: true});
+				layout.loading = false;
+				Doorbot.Router.navigate(window.location.hash, {trigger: true});
+				layout.render()
+
+				// Doorbot.Router.navigate('login', {trigger: false});
+				// layout.render(layout.loginTemplate);
 			}
 		});
 
@@ -86,6 +103,7 @@ module.exports = Backbone.View.extend({
 			Doorbot.AppConfig.OrgName? ' - '+Doorbot.AppConfig.OrgName : '');
 	},
 	render: function(tmpl) {
+		console.log("layout render...")
 		this.$el.html(this.template);
 		if (tmpl)
 			this._current_template = tmpl;

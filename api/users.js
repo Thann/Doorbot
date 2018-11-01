@@ -17,6 +17,7 @@ module.exports = function(app) {
 	app. patch('/users/:username', update);
 	app.delete('/users/:username', remove);
 	app.   get('/users/:username/logs', logs);
+	app.   get('/users/:username/invited', invited);
 };
 
 // Returns the user that owns the session cookie
@@ -194,6 +195,7 @@ async function create(request, response) {
 	}
 
 	if (invite) {
+		//TODO: set permissions!
 		site.pendingInvites.del(request.body.invite);
 	}
 	//TODO: create invite permissions.
@@ -352,6 +354,33 @@ async function remove(request, response) {
 }
 
 async function logs(request, response) {
+	const user = await checkCookie(request, response);
+	const sameUser = (user.username.toLowerCase() ===
+		request.params.username.toLowerCase());
+	if (!sameUser && !user.has(Perms.ADMIN)) {
+		return response.status(403).send({error: 'must be admin'});
+	}
+
+	let lastID;
+	try {
+		lastID = parseInt(request.query.last_id);
+	} catch(e) {
+		return response.status(400).send({last_id: 'must be an int'});
+	}
+
+	const logs = await db.all(`
+		SELECT entry_logs.*, doors.name AS door FROM entry_logs
+		INNER JOIN users ON entry_logs.user_id = users.id
+		INNER JOIN doors ON entry_logs.door_id = doors.id
+		WHERE users.username = ? AND deleted_at IS NULL
+			AND entry_logs.id < COALESCE(?, 9e999)
+		ORDER BY entry_logs.id DESC LIMIT ?`,
+		request.params.username, lastID, 50);
+
+	response.send(logs);
+}
+
+async function invited(request, response) {
 	const user = await checkCookie(request, response);
 	const sameUser = (user.username.toLowerCase() ===
 		request.params.username.toLowerCase());

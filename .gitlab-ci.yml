@@ -40,8 +40,6 @@ build_arm7:
 
 pages:
   stage: post
-  tags:
-    - docker
   script:
     - echo nothing to do!
   artifacts:

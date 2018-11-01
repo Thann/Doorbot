@@ -86,6 +86,9 @@ body {
 					padding: 5px;
 				}
 			}
+			ol, ul {
+				padding-inline-start: inherit;
+			}
 		}
 		.panel-footer {
 			background: transparent;
