@@ -21,6 +21,12 @@ build_x86:
     - docker build -t "$CI_REGISTRY_IMAGE$BRANCH:latest" .
     - docker run --rm "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/mocha
     - docker push "$CI_REGISTRY_IMAGE$BRANCH:latest"
+    - docker run --name=demo "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/webpack --env.demo
+    - docker cp demo:/usr/src/app/dist public
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
 
 build_arm7:
   stage: build
@@ -37,8 +43,7 @@ pages:
   tags:
     - docker
   script:
-    - docker run --name=demo "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/webpack --env.demo
-    - docker cp demo:/usr/src/app/dist public
+    - echo nothing to do!
   artifacts:
     paths:
       - public
