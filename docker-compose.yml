@@ -1,9 +1,7 @@
 version: '2'
 services:
   server:
-    image: thann/doorbot  # x86
-    #image: thann/doorbot:arm7
-    #image: thann/doorbot:arm8
+    image: thann/portalbot  # x86
     #build:
     #  context: .
     #  dockerfile: Dockerfile

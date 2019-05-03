@@ -67,7 +67,7 @@ if (options.dev) {
 	});
 
 	// Serve static files
-	const exStatic = express.static('dist');
+	const exStatic = express.static(path.join(__dirname, 'dist'));
 	app.use(function(req, res, next) {
 		if (req.url.endsWith('.bundle.js')) {
 			req.url += '.gz';

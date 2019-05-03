@@ -39,7 +39,6 @@ COPY api /usr/src/app/api
 COPY webapp /usr/src/app/webapp
 COPY test /usr/src/app/test
 COPY server.js \
-     door.js \
      webpack.config.js \
      .eslintrc.json \
      /usr/src/app/

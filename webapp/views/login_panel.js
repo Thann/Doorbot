@@ -5,7 +5,11 @@ require('../styles/login_panel.css');
 module.exports = Backbone.View.extend({
 	id: 'LoginPanel',
 	className: 'container',
-	template: `<h2>Welcome to Portalbot <span rv-if="OrgName"> for { OrgName }</span>!</h2>
+	template: _.template(`
+		<h2>Welcome to
+			<% if (OrgName) { %> the Portal for <%= OrgName %>!
+			<% } else { %> PortalBot!<% } %>
+		</h2>
 		<h4>
 			An <a href="https://github.com/Thann/Portalbot" target="_blank" rel="nofollow">open source</a>
 			door-opening platform that respects your privacy and freedom!
@@ -18,53 +22,60 @@ module.exports = Backbone.View.extend({
 		</p>
 
 		<br>
-		<form rv-hide="user.isAuthed" action="auth" class="login form-inline">
-			<div class="form-group">
-				<input placeholder="username" type="text" name="username"
-					class="form-control" autocomplete="username">
-			</div> <div class="form-group">
-				<input placeholder="password" type="password" name="password"
-					class="form-control" autocomplete="current-password">
-			</div>
-			<input type="submit" value="Login" class="btn btn-light">
-		</form>
-		<div rv-hide="user.isAuthed" class="form-group has-error">
-			<span class="control-label">{ error }</span>
-		</div>
-
-		<p rv-show="user.attributes.requires_reset" class="bold">
-			Your password was set by an admin and requires a reset!
-		</p>
-		<form rv-show="user.attributes.requires_reset" action="auth" class="change form-inline">
-			<div class="form-group">
-				<input placeholder="username" type="hidden" name="username"
-					rv-value="user.attributes.username" autocomplete="username">
-			</div> <div class="form-group">
-				<input placeholder="new password" type="password" name="password"
-					class="form-control" autocomplete="new-password">
-			</div>
+		<% if (!user.isAuthed) { %>
+			<form action="auth" class="login form-inline">
+				<div class="form-group">
+					<input placeholder="username" type="text" name="username"
+						class="form-control" autocomplete="username">
+				</div> <div class="form-group">
+					<input placeholder="password" type="password" name="password"
+						class="form-control" autocomplete="current-password">
+				</div>
+				<input type="submit" value="Login" class="btn btn-light">
+			</form>
 			<div class="form-group has-error">
-				<span class="control-label">{ error }</span>
+				<span class="control-label"><%= error %></span>
 			</div>
-			<input type="submit" value="Reset Password" class="btn btn-light">
-		</form>
+		<% } %>
 
-		<a rv-show="user.isAuthed" class="btn btn-light" href="#">Doors</a>
-		<a rv-show="user.isAuthed" class="btn btn-light logout" href="#">Logout</a>
-		<a rv-show="user.isAuthed" class="btn btn-light"
-			rv-href="'#user/'|+ user:username">
-			User Settings
-		</a>
-	`,
+		<% if (user.attributes.requires_reset) { %>
+			<p class="bold">
+				Your password was set by an admin and requires a reset!
+			</p>
+			<form action="auth" class="change form-inline">
+				<div class="form-group">
+					<input placeholder="username" type="hidden" name="username"
+						rv-value="user.attributes.username" autocomplete="username">
+				</div> <div class="form-group">
+					<input placeholder="new password" type="password" name="password"
+						class="form-control" autocomplete="new-password">
+				</div>
+				<div class="form-group has-error">
+					<span class="control-label"><%= error %></span>
+				</div>
+				<input type="submit" value="Reset Password" class="btn btn-light">
+			</form>
+		<% } %>
+
+		<% if (user.isAuthed) { %>
+			<a class="btn btn-light" href="#">Doors</a>
+			<a class="btn btn-light logout">Logout</a>
+			<a class="btn btn-light"
+				rv-href="'#user/'|+ user:username">
+				User Settings
+			</a>
+		<% } %>
+	`),
 	events: {
 		'submit form.login': 'login',
 		'submit form.change': 'changePW',
 		'click .logout': 'logout',
 	},
 	render: function() {
-		this.scope = {user: App.User};
-		this.$el.html(this.template);
-		Rivets.bind(this.$el, this.scope);
+		this.user = App.User;
+		this.error = null;
+		this.OrgName = false;
+		this.$el.html(this.template(this));
 		return this;
 	},
 	login: function(evt) {

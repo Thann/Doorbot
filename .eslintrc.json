@@ -19,7 +19,6 @@
       "globals": {
         "App": true,
         "Backbone": true,
-        "Rivets": true,
         "_": true
       },
       "rules": {

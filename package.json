@@ -1,18 +1,19 @@
 {
-  "name": "doorbot",
+  "name": "portalbot",
   "version": "0.0.1",
-  "description": "Simple door opener and user managment system",
+  "description": "Simple generic wifi-portal and user managment system",
   "repository": {
     "type": "git",
     "url": "https://github.com/Thann/Portalbot.git"
   },
   "bin": "server.js",
+  "main": "server.js",
   "license": "AGPL-3.0+",
   "scripts": {
     "start": "node server --build",
     "test": "mocha",
     "lint": "eslint .",
-    "build": "docker build -t thann/doorbot .",
+    "build": "docker build -t thann/portalbot .",
     "dkstart": "docker-compose up -d",
     "dkstop": "docker-compose down",
     "dktest": "docker-compose exec server npm run -s test",
@@ -61,6 +62,7 @@
     "supertest": "github:thann/supertest",
     "webpack-cli": "^3.3.4"
   },
+  "files": ["**/*"],
   "eslintIgnore": [
     "**/*.js",
     "!api/*.js",

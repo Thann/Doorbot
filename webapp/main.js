@@ -2,8 +2,6 @@
 
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./jquery_extensions');
-require('./rivets_extensions');
-require('rivets-backbone-adapter');
 // include dependancies + css
 require('bootstrap');
 require('bootstrap/scss/bootstrap.scss');

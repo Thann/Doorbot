@@ -3,25 +3,31 @@ require('../styles/header.css');
 
 module.exports = Backbone.View.extend({
 	id: 'Header',
-	template: `
+	template: _.template(`
 		<a href="#">
-			<span>Portalbot</span>
-			<span rv-if="orgName">- { orgName }</span>
+			<% if (orgName) { %>
+				<span><%= orgName %> </span>
+			<% } %>
+			<span>Portal</span>
 		</a>
-		<span class="pull-right">
-			<a href="#admin" rv-show="user.isAuthed |and user.attributes.admin">
-				<i class="fa fa-cogs"></i></a>
-			<a rv-href="'#user/' |+ user.attributes.username"
-				rv-show="user.isAuthed">{ user.attributes.username }</a>
-		</span>
-	`,
+		<% if (user.isAuthed) { %>
+			<span class="pull-right">
+				<% if (user.get('admin')) { %>
+					<a href="#admin"><i class="fa fa-cogs" /></a>
+				<% } %>
+				<a href="<%= '#user/' + user.get('username') %>">
+					<%= user.get('username') %>
+				</a>
+			</span>
+		<% } %>
+	`),
+	initialize: function() {
+		this.user =  App.User,
+		this.orgName = App.AppConfig.OrgName,
+		this.listenTo(this.user, 'update', this.render);
+	},
 	render: function() {
-		this.scope = {
-			user: App.User,
-			orgName: App.AppConfig.OrgName,
-		};
-		this.$el.html(this.template);
-		Rivets.bind(this.$el, this.scope);
+		this.$el.html(this.template(this));
 		return this;
 	},
 });
