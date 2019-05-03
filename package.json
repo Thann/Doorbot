@@ -4,7 +4,7 @@
   "description": "Simple door opener and user managment system",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Thann/Doorbot.git"
+    "url": "https://github.com/Thann/Portalbot.git"
   },
   "bin": "server.js",
   "license": "AGPL-3.0+",

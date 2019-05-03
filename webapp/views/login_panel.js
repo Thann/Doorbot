@@ -5,16 +5,16 @@ require('../styles/login_panel.css');
 module.exports = Backbone.View.extend({
 	id: 'LoginPanel',
 	className: 'container',
-	template: `<h2>Welcome to Doorbot <span rv-if="OrgName"> for { OrgName }</span>!</h2>
+	template: `<h2>Welcome to Portalbot <span rv-if="OrgName"> for { OrgName }</span>!</h2>
 		<h4>
-			An <a href="https://github.com/Thann/Doorbot" target="_blank" rel="nofollow">open source</a>
+			An <a href="https://github.com/Thann/Portalbot" target="_blank" rel="nofollow">open source</a>
 			door-opening platform that respects your privacy and freedom!
 		</h4>
 		<p>
 			It's a simple user-management platform that uses a raspberry pi for opening doors and logging entry.
 		<br>
 			For help getting started see the
-			<a href="https://github.com/Thann/Doorbot/blob/master/README.md" target="_blank">readme</a>.
+			<a href="https://github.com/Thann/Portalbot/blob/master/README.md" target="_blank">readme</a>.
 		</p>
 
 		<br>

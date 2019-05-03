@@ -18,10 +18,10 @@ if (require.main === module) {
 		['',  'demo',  'Run in demo mode with mocked api responses'],
 		['h', 'help'],
 	]).bindHelp(
-		'Doorbot: server w/ webui to manage users and doors.\n' +
+		'Portalbot: server w/ webui to manage users and doors.\n' +
 		'Usage: node server [OPTION]\n\n' +
 		'[[OPTIONS]]\n\n' +
-		'Repository: https://github.com/Thann/Doorbot'
+		'Repository: https://github.com/Thann/Portalbot'
 	).error((err) => {
 		console.error(err.message + '\n\n' + getopts.getHelp());
 		process.exit(1);

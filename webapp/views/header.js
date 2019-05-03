@@ -5,7 +5,7 @@ module.exports = Backbone.View.extend({
 	id: 'Header',
 	template: `
 		<a href="#">
-			<span>Doorbot</span>
+			<span>Portalbot</span>
 			<span rv-if="orgName">- { orgName }</span>
 		</a>
 		<span class="pull-right">
