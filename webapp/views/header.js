@@ -17,8 +17,8 @@ module.exports = Backbone.View.extend({
 	`,
 	render: function() {
 		this.scope = {
-			user: Doorbot.User,
-			orgName: Doorbot.AppConfig.OrgName,
+			user: App.User,
+			orgName: App.AppConfig.OrgName,
 		};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);

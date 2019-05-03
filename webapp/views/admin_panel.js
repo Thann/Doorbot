@@ -96,9 +96,9 @@ module.exports = Backbone.View.extend({
 		'click .settings .update': 'updateSettings',
 	},
 	initialize: function() {
-		if (!Doorbot.User.get('admin')) {
+		if (!App.User.get('admin')) {
 			// console.log("NOT ADMIN!!");
-			return Doorbot.Router.navigate('', {trigger: true});
+			return App.Router.navigate('', {trigger: true});
 		}
 
 		this.doors = new (Backbone.Collection.extend({
@@ -136,11 +136,11 @@ module.exports = Backbone.View.extend({
 		}, this)});
 	},
 	render: function() {
-		// console.log("RENDER MAIN:", Doorbot.User.get('admin'))
+		// console.log("RENDER MAIN:", App.User.get('admin'))
 		this.scope = {
 			doors: this.doors,
 			users: this.users,
-			settings: Doorbot.Settings,
+			settings: App.Settings,
 			privateSettings: this.privateSettings,
 			mailto: "mailto:?subject=Doorbot&body=Hey! you've been setup on the door. Visit " +
 				window.location.toString().replace(window.location.hash, '') +
@@ -232,7 +232,7 @@ module.exports = Backbone.View.extend({
 				success: _.bind(function(m) {
 					console.log('USER CREATE DONE!', arguments);
 					this.scope.creatingUser = false;
-					Doorbot.Router.navigate('/user/'+m.get('username'),
+					App.Router.navigate('/user/'+m.get('username'),
 						{trigger: true});
 				}, this),
 				error: _.bind(function(m, resp) {

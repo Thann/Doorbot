@@ -10,7 +10,7 @@ const UserModel = Backbone.Model.extend({
 			this.trigger('relog', true);
 			if (this.redir) {
 				this.redir = false;
-				Doorbot.Router.navigate('', {trigger: true});
+				App.Router.navigate('', {trigger: true});
 			}
 		});
 

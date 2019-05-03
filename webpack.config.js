@@ -15,7 +15,7 @@ module.exports = function(env) {
 		output: {
 			path: __dirname + '/dist',
 			libraryTarget: 'var',
-			library: 'Doorbot',
+			library: 'App',
 			filename: '[name].[contenthash].bundle.js',
 		},
 		plugins: [
@@ -26,8 +26,6 @@ module.exports = function(env) {
 			new webpack.ProvidePlugin({
 				// These become available to all files.
 				_: 'underscore',
-				// TODO: remove rivets footgun
-				Rivets: 'rivets',
 			}),
 			new CompressionPlugin({
 				test: /\.js$/,

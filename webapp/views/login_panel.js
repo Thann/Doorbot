@@ -62,7 +62,7 @@ module.exports = Backbone.View.extend({
 		'click .logout': 'logout',
 	},
 	render: function() {
-		this.scope = {user: Doorbot.User};
+		this.scope = {user: App.User};
 		this.$el.html(this.template);
 		Rivets.bind(this.$el, this.scope);
 		return this;
@@ -70,7 +70,7 @@ module.exports = Backbone.View.extend({
 	login: function(evt) {
 		evt.preventDefault();
 		this.scope.error = null;
-		Doorbot.User.login(
+		App.User.login(
 			this.$('.login input[name="username"]')[0].value,
 			this.$('.login input[name="password"]')[0].value,
 			_.bind(function() { // on error
@@ -79,19 +79,19 @@ module.exports = Backbone.View.extend({
 		);
 	},
 	logout: function() {
-		Doorbot.User.logout();
+		App.User.logout();
 	},
 	changePW: function(evt) {
 		evt.preventDefault();
 		this.scope.error = null;
 		// console.log('PP',this.$('.change input[name="password"]')[0].value);
-		Doorbot.User.save({
+		App.User.save({
 			password: this.$('.change input[name="password"]')[0].value,
 		}, {
 			patch: true,
 			success: function(m) {
 				m.set({'password': undefined}, {trigger: false});
-				Doorbot.Router.navigate('', {trigger: true});
+				App.Router.navigate('', {trigger: true});
 			}, error: (m, e) => {
 				this.scope.error = (e.responseJSON.password ||
 					e.responseJSON.error);

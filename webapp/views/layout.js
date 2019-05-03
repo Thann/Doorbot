@@ -26,20 +26,20 @@ module.exports = Backbone.View.extend({
 		},
 	},
 	subviewCreators: {
-		main: function() { return new Doorbot.Views.MainPanel(); },
-		user: function() { return new Doorbot.Views.UserPanel(); },
-		// door: function() { return new Doorbot.Views.DoorPanel(); },
-		admin: function() { return new Doorbot.Views.AdminPanel(); },
-		login: function() { return new Doorbot.Views.LoginPanel(); },
-		header: function() { return new Doorbot.Views.Header(); },
-		sidebar: function() { return new Doorbot.Views.Sidebar(); },
+		main: function() { return new App.Views.MainPanel(); },
+		user: function() { return new App.Views.UserPanel(); },
+		// door: function() { return new App.Views.DoorPanel(); },
+		admin: function() { return new App.Views.AdminPanel(); },
+		login: function() { return new App.Views.LoginPanel(); },
+		header: function() { return new App.Views.Header(); },
+		sidebar: function() { return new App.Views.Sidebar(); },
 	},
 	initialize: function() {
 		const layout = this;
 		this.loading = true;
 		Backbone.Subviews.add( this );
 
-		Doorbot.Router = new (Backbone.Router.extend({
+		App.Router = new (Backbone.Router.extend({
 			routes: {
 				'': 'mainTemplate',
 				'login': 'loginTemplate',
@@ -50,9 +50,9 @@ module.exports = Backbone.View.extend({
 			},
 			execute: function(cb, args, name) {
 				this.args = args;
-				if (!layout.loading && !Doorbot.User.isAuthed) {
+				if (!layout.loading && !App.User.isAuthed) {
 					this.navigate('login', {trigger: true});
-				} else if (!Doorbot.Router.name && layout[name]) {
+				} else if (!App.Router.name && layout[name]) {
 					layout.render(layout[name]);
 				} else {
 					// route not found
@@ -61,29 +61,29 @@ module.exports = Backbone.View.extend({
 			},
 		}))();
 
-		Doorbot.User = new UserModel();
-		Doorbot.User.on('relog', function(loggedIn) {
+		App.User = new UserModel();
+		App.User.on('relog', function(loggedIn) {
 			if (loggedIn) {
 				layout.render();
 			} else {
-				Doorbot.Router.navigate('login', {trigger: false});
+				App.Router.navigate('login', {trigger: false});
 				layout.render(layout.loginTemplate);
 			}
 		});
 
-		Doorbot.Settings = new (Backbone.Model.extend({
+		App.Settings = new (Backbone.Model.extend({
 			url: '/api/v1/site/settings',
 		}))();
-		Doorbot.Settings.fetch();
+		App.Settings.fetch();
 		// Fetch on user sync?
 
 		this.setTitle();
 		Backbone.history.start();
-		Doorbot.User.init();
+		App.User.init();
 	},
 	setTitle: function() {
 		document.title = 'Doorbot '+(
-			Doorbot.AppConfig.OrgName? ' - '+Doorbot.AppConfig.OrgName : '');
+			App.AppConfig.OrgName? ' - '+App.AppConfig.OrgName : '');
 	},
 	render: function(tmpl) {
 		this.$el.html(this.template);
