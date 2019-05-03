@@ -49,8 +49,6 @@
     "nodemon": "^1.19.1",
     "popper.js": "^1.15.0",
     "querystring": "^0.2.0",
-    "rivets": "github:blikblum/rivets#971a83581611d125bb78f10a822d20b67b8d2b88",
-    "rivets-backbone-adapter": "^2.2.0",
     "rpi-gpio": "^2.0.0",
     "sass-loader": "^7.1.0",
     "sqlite": "^3.0.3",
