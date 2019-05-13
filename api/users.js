@@ -149,8 +149,8 @@ async function create(request, response) {
 	const user = await checkCookie(request, response);
 
 	if (!user.admin) {
-		if (!request.body.invite)
-			return response.status(403).send({error: 'must have invite'});
+		// if (!request.body.invite)
+		// 	return response.status(403).send({error: 'must have invite'});
 		invite = site.pendingInvites.get(request.body.invite);
 		if (!invite)
 			return response.status(400)
@@ -175,6 +175,7 @@ async function create(request, response) {
 		// }
 	}
 
+	email = request.body.email
 	// Default password to random hash.
 	pw = pw || (crypto.createHash('sha256')
 		.update(Math.random().toString()).digest('hex').substring(1, 15));
@@ -182,9 +183,9 @@ async function create(request, response) {
 	let sqlResp;
 	try {
 		sqlResp = await db.run(`
-			INSERT INTO users (username, pw_salt, password_hash, admin)
-			VALUES (?,?,?,?)`,
-			username, salt, pw, admin);
+			INSERT INTO users (username, pw_salt, password_hash, email, admin)
+			VALUES (?,?,?,?,?)`,
+			username, salt, pw, email, admin);
 	} catch(e) {
 		// console.warn('USER UPDATE ERROR:', e);
 		return response.status(400)

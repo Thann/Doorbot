@@ -33,6 +33,15 @@ module.exports = Backbone.View.extend({
 				</div>
 				<input type="submit" value="Login" class="btn btn-light">
 			</form>
+
+			To create an account, also put in an email address:
+			<form action="users" class="signup form-inline">
+				<div class="form-group">
+					<input placeholder="email" type="text" name="email"
+						class="form-control" autocomplete="email">
+				</div>
+				<input type="submit" value="Create Account" class="btn btn-default">
+			</form>
 			<div class="form-group has-error">
 				<span class="control-label"><%= error %></span>
 			</div>
@@ -68,6 +77,7 @@ module.exports = Backbone.View.extend({
 	`),
 	events: {
 		'submit form.login': 'login',
+		'submit form.signup': 'signup',
 		'submit form.change': 'changePW',
 		'click .logout': 'logout',
 	},
@@ -80,21 +90,54 @@ module.exports = Backbone.View.extend({
 	},
 	login: function(evt) {
 		evt.preventDefault();
-		this.scope.error = null;
+		this.error = null;
 		App.User.login(
 			this.$('.login input[name="username"]')[0].value,
 			this.$('.login input[name="password"]')[0].value,
 			_.bind(function() { // on error
-				this.scope.error = 'incorrect username or password (case sensitive)';
+				this.error = 'incorrect username or password (case sensitive)';
 			}, this)
 		);
+	},
+	signup: function(evt) {
+		evt.preventDefault();
+		this.error = null;
+
+		const users = new (Backbone.Collection.extend({
+			url: '/api/v1/users',
+		}))();
+
+		users.create({
+			username: this.$('.login input[name="username"]')[0].value,
+			password: this.$('.login input[name="password"]')[0].value,
+			email: this.$('.signup input[name="email"]')[0].value,
+		}, {wait: true,
+			success: _.bind(function(m) {
+				console.log('USER CREATE DONE!', arguments);
+				// this.scope.creatingUser = false;
+				// App.Router.navigate('/user/'+m.get('username'),
+				// 	{trigger: true});
+			}, this),
+			error: _.bind(function(m, resp) {
+				console.warn('USER CREATE ERR!', resp.responseText);
+				this.error = resp.responseText;
+			}, this),
+		});
+		// App.User.create(
+		// 	this.$('.login input[name="username"]')[0].value,
+		// 	this.$('.login input[name="password"]')[0].value,
+		// 	this.$('.signup input[name="email"]')[0].value,
+		// 	_.bind(function() { // on error
+		// 		this.error = 'Create Failed!';
+		// 	}, this)
+		// );
 	},
 	logout: function() {
 		App.User.logout();
 	},
 	changePW: function(evt) {
 		evt.preventDefault();
-		this.scope.error = null;
+		this.error = null;
 		// console.log('PP',this.$('.change input[name="password"]')[0].value);
 		App.User.save({
 			password: this.$('.change input[name="password"]')[0].value,
@@ -104,7 +147,7 @@ module.exports = Backbone.View.extend({
 				m.set({'password': undefined}, {trigger: false});
 				App.Router.navigate('', {trigger: true});
 			}, error: (m, e) => {
-				this.scope.error = (e.responseJSON.password ||
+				this.error = (e.responseJSON.password ||
 					e.responseJSON.error);
 			},
 		});

@@ -6,7 +6,7 @@ const UserModel = require('../models/user.js');
 module.exports = Backbone.View.extend({
 	id: 'UserPanel',
 	className: 'container',
-	template: `
+	template: _.template(`
 		<div class="user panel panel-default">
 			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
 				<div class="panel-title" rv-text="user:username"></div>
@@ -102,7 +102,7 @@ module.exports = Backbone.View.extend({
 				</div>
 			</div>
 		</div>
-	`,
+	`),
 	events: {
 		'click .update': 'update',
 		'click .fa-random.password': 'scramblePassword',
@@ -159,9 +159,8 @@ module.exports = Backbone.View.extend({
 	render: function() {
 		if (App.Router.args[0] !== this.user.get('username'))
 			return this.initialize();
-		this.$el.html(this.template);
+		this.$el.html(this.template(this));
 		//TODO: rivets throws an error because of user?
-		Rivets.bind(this.$el, this.scope);
 		return this;
 	},
 	dingleDoors: function() {

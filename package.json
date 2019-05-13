@@ -62,7 +62,9 @@
     "supertest": "github:thann/supertest",
     "webpack-cli": "^3.3.4"
   },
-  "files": ["**/*"],
+  "files": [
+    "**/*"
+  ],
   "eslintIgnore": [
     "**/*.js",
     "!api/*.js",

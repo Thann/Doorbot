@@ -3,7 +3,7 @@
 module.exports = Backbone.View.extend({
 	id: 'AdminPanel',
 	className: 'container',
-	template: `
+	template: _.template(`
 		<div class="settings panel panel-default">
 			<div class="panel-heading" data-toggle="collapse" data-target=".settings .panel-collapse">
 				<div class="panel-title">
@@ -89,7 +89,7 @@ module.exports = Backbone.View.extend({
 				</div>
 			</div>
 		</div>
-	`,
+	`),
 	events: {
 		'click .doors .new': 'createDoor',
 		'click .users .new': 'createUser',
@@ -147,8 +147,7 @@ module.exports = Backbone.View.extend({
 				' and sign-in with the username and password:%0D%0A%0D%0A',
 			mail2: "   (case-sensitive)%0D%0A%0D%0ADon't forget to update your password =]",
 		};
-		this.$el.html(this.template);
-		Rivets.bind(this.$el, this.scope);
+		this.$el.html(this.template(this));
 		return this;
 	},
 	createDoor: function(e) {
