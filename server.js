@@ -69,7 +69,7 @@ if (options.dev) {
 	// Serve static files
 	const exStatic = express.static('dist');
 	app.use(function(req, res, next) {
-		if (req.url === '/bundle.js') {
+		if (req.url.endsWith('.bundle.js')) {
 			req.url += '.gz';
 			res.setHeader('Content-Encoding', 'gzip');
 			res.setHeader('Content-Type', 'application/javascript');
@@ -107,18 +107,21 @@ if (options.dev) {
 
 // Webpack watch
 if (options.build || options.dev || options.demo) {
-	const opts = ['--color'];
-	if (options.demo) opts.push('--watch', '--env.demo', '--env.dev');
-	else if (options.dev) opts.push('--watch', '--env.dev');
-	const watcher = require('child_process')
-		.spawn('node_modules/.bin/webpack', opts);
+	const wp = require('webpack');
+	const wpCfg = require('./webpack.config');
+	const cb = (err, stats) => {
+		if (err)
+			console.error(err);
+		else
+			console.log(stats.toString({colors: true}));
+	};
 
-	watcher.stdout.on('data', function(data) {
-		console.log(data.toString());
-	});
-
-	watcher.stderr.on('data', function(data) {
-		console.log(data.toString());
-		process.exit(1);
-	});
+	if (options.build)
+		wp(wpCfg()).run(cb);
+	else {
+		wp(wpCfg({
+			dev: options.dev,
+			demo: options.demo,
+		})).watch(undefined, cb);
+	}
 }

@@ -1,6 +1,5 @@
 #TODO: use rpio which is faster and can build on node 10+
-#FROM node:alpine AS base
-FROM node:9-alpine AS base
+FROM node:alpine AS base
 EXPOSE 3000
 ENTRYPOINT ["node"]
 CMD ["server"]
@@ -33,7 +32,7 @@ FROM base
 COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
 
 # Bundle app source
-COPY dist/index.html dist/favicon* /usr/src/app/dist/
+COPY dist/favicon* /usr/src/app/dist/
 COPY migrations /usr/src/app/migrations
 COPY lib /usr/src/app/lib
 COPY api /usr/src/app/api

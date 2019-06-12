@@ -1,5 +1,3 @@
-// @import "~bootstrap/dist/css/bootstrap.css";
-// @import "~font-awesome/css/font-awesome.css";
 
 body {
 	margin: 0;
@@ -40,6 +38,7 @@ body {
 	}
 
 	input,
+	.btn-light,
 	.btn-default {
 		color: #4C78D0;
 		&:hover { color: #2c54a5; }
@@ -49,34 +48,56 @@ body {
 /* === Panels === */
 
 .container {
-	max-width: 100%;
-	@media (max-width: 767px) {
+	/* max-width: 100%; */
+	/* @media (max-width: 767px) {
 		width: 100%;
 		max-width: 750px;
+	} */
+
+	/* flex: none !important; */
+
+	&.flex {
+		max-width: 100%;
+		/* flex: inherit !important;  */
 	}
 
-	flex: none !important;
-	&.flex { flex: inherit !important; }
+ 	> .panel {
+		margin-bottom: 20px;
+		background-color: #fff;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		-webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
+		box-shadow: 0 1px 1px rgba(0,0,0,.05);
 
-	> .panel.panel-default {
-		background-color: rgba(0,0,0,0.01);
-		margin-top: 30px;
-		width: 100%;
+		.panel-heading { /* bootstrap3 */
+			padding: 10px 15px;
+			border-bottom: 1px solid transparent;
+			border-top-left-radius: 3px;
+			border-top-right-radius: 3px;
+		}
 
-		.panel-heading {
-			color: inherit;
-			font-weight: bold;
-			background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0));
-			//TODO: no selecting
+		&.panel-default {
+			background-color: rgba(0,0,0,0.01);
+			border-color: #ddd; /* bootstrap3 */
+			margin-top: 30px;
+			width: 100%;
 
-			border-bottom: none;  //HACK: hide border when collapsed
+			.panel-heading {
+				color: inherit;
+				font-weight: bold;
+				background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0));
+				//TODO: no selecting
 
-			.fa {
-				margin-left: 20px;
+				border-bottom: none;  //HACK: hide border when collapsed
+
+				.fa {
+					margin-left: 20px;
+				}
 			}
 		}
 		.panel-body {
 			border-top: 1px solid #ddd;  //HACK:
+			padding: 15px; /* bootstrap3 */
 
 			form:last-child {
 				margin-bottom: 0;
@@ -89,6 +110,11 @@ body {
 		}
 		.panel-footer {
 			background: transparent;
+			/* bootstrap3 */
+			padding: 10px 15px;
+			border-top: 1px solid #ddd;
+			border-bottom-right-radius: 3px;
+			border-bottom-left-radius: 3px;
 		}
 	}
 }

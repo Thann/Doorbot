@@ -22,7 +22,7 @@ COPY package.json \
 RUN npm install
 
 # Bundle app source
-COPY dist/index.html dist/favicon* /usr/src/app/dist/
+COPY dist/favicon* /usr/src/app/dist/
 COPY migrations /usr/src/app/migrations
 COPY lib /usr/src/app/lib
 COPY api /usr/src/app/api

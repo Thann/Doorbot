@@ -13,7 +13,7 @@ before_script:
     - if [ "$CI_COMMIT_REF_NAME" != "master" ]; then BRANCH="/$CI_COMMIT_REF_NAME"; fi
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 
-build_x86:
+build_x86: &build_x86
   stage: build
   tags:
     - docker
@@ -28,20 +28,41 @@ build_x86:
       - public
     expire_in: 1 week
 
-build_arm7:
-  stage: build
-  #when: manual
-  tags:
-    - docker
+.common_arm7: &common_arm7
+  <<: *build_x86
+  artifacts:
   script:
     - docker build -t "$CI_REGISTRY_IMAGE$BRANCH:arm7" -f Dockerfile-qemu-arm7 .
     - docker run --rm "$CI_REGISTRY_IMAGE$BRANCH:arm7" ./node_modules/.bin/mocha
     - docker push "$CI_REGISTRY_IMAGE$BRANCH:arm7"
 
+.common_arm8: &common_arm8
+  <<: *common_arm7
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE$BRANCH:arm8" -f Dockerfile-qemu-arm8 .
+    - docker run --rm "$CI_REGISTRY_IMAGE$BRANCH:arm8" ./node_modules/.bin/mocha
+    - docker push "$CI_REGISTRY_IMAGE$BRANCH:arm8"
+
+build_arm7:
+  <<: *common_arm7
+  only: [master]
+
+build_arm7_manual:
+  <<: *common_arm7
+  when: manual
+  except: [master]
+
+build_arm8:
+  <<: *common_arm8
+  only: [master]
+
+build_arm8_manual:
+  <<: *common_arm8
+  when: manual
+  except: [master]
+
 pages:
   stage: post
-  tags:
-    - docker
   script:
     - echo nothing to do!
   artifacts:

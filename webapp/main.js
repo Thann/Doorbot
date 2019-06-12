@@ -4,17 +4,25 @@ require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./jquery_extensions');
 require('./rivets_extensions');
 require('rivets-backbone-adapter');
-require('imports-loader?jQuery=jquery!bootstrap/dist/js/bootstrap.js');
+// include dependancies + css
+require('bootstrap');
+require('bootstrap/scss/bootstrap.scss');
+const { library, dom } = require('@fortawesome/fontawesome-svg-core');
+const { fas } = require('@fortawesome/free-solid-svg-icons');
+const { far } = require('@fortawesome/free-regular-svg-icons');
+const { fab } = require('@fortawesome/free-brands-svg-icons');
+library.add(fas, far, fab);
+dom.watch();
 
 // Load all views in an extensible way.
 // "views/sample_view.js" becomes "views.SampleView".
-const views = loadModule(require.context('app/views', true, /\.js$/));
+const views = loadModule(require.context('./views', true, /\.js$/));
 
 // Make PUBLIC modules accessible.
 module.exports = {
 
 	Views: views,
-	AppConfig: require('app/config.json'),
+	AppConfig: require('./config.json'),
 
 	// Run this after extensions have been loaded.
 	init: function() {

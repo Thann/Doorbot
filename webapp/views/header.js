@@ -1,5 +1,5 @@
 
-require('styles/header.css');
+require('../styles/header.css');
 
 module.exports = Backbone.View.extend({
 	id: 'Header',
@@ -9,8 +9,8 @@ module.exports = Backbone.View.extend({
 			<span rv-if="orgName">- { orgName }</span>
 		</a>
 		<span class="pull-right">
-			<a href="#admin" rv-show="user.isAuthed |and user.attributes.admin"
-				class="fa fa-cogs"></a>
+			<a href="#admin" rv-show="user.isAuthed |and user.attributes.admin">
+				<i class="fa fa-cogs"></i></a>
 			<a rv-href="'#user/' |+ user.attributes.username"
 				rv-show="user.isAuthed">{ user.attributes.username }</a>
 		</span>

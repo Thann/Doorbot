@@ -1,8 +1,8 @@
 // Layout - The parent view of the whole app, and also the router.
 
-require('styles/layout.css');
+require('../styles/layout.css');
 
-const UserModel = require('models/user.js');
+const UserModel = require('../models/user.js');
 
 module.exports = Backbone.View.extend({
 	el: 'body',

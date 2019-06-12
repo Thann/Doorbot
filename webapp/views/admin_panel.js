@@ -32,7 +32,7 @@ module.exports = Backbone.View.extend({
 					</table>
 				</div>
 				<div class="panel-footer">
-					<input type="submit" value="Update" class="update btn btn-default">
+					<input type="submit" value="Update" class="update btn btn-light">
 					<div class="error" rv-text="settingsError"></div>
 				</div>
 			</div>
@@ -45,11 +45,11 @@ module.exports = Backbone.View.extend({
 					<a class="toggle new fa fa-plus"></a>
 				</div>
 			</div>
-			<div class="panel-collapse collapse in">
+			<div class="panel-collapse collapse show">
 				<div class="panel-body">
 					<form rv-show="creatingDoor" >
 						<input type="text" name="name" placeholder="Name" required>
-						<input type="submit" class="new btn btn-default" value="Create">
+						<input type="submit" class="new btn btn-light" value="Create">
 						<div class="error" rv-text="doorError"></div>
 					</form>
 					<div rv-each-door="doors">
@@ -70,11 +70,11 @@ module.exports = Backbone.View.extend({
 				</div>
 			</div>
 
-			<div class="panel-collapse collapse in">
+			<div class="panel-collapse collapse show">
 				<div class="panel-body">
 					<form rv-show="creatingUser">
 						<input type="text" name="name" placeholder="Name" required>
-						<input type="submit" class="new btn btn-default" value="Create">
+						<input type="submit" class="new btn btn-light" value="Create">
 						<div class="error" rv-text="userError"></div>
 					</form>
 					<div rv-each-user="users">
@@ -154,7 +154,7 @@ module.exports = Backbone.View.extend({
 	createDoor: function(e) {
 		if (e) {
 			e.preventDefault();
-			if (this.$('.doors .panel-collapse.in').length) {
+			if (this.$('.doors .panel-collapse.show').length) {
 				e.stopPropagation();
 			} else if (this.scope.creatingDoor) {
 				//TODO: delayFocus?
@@ -206,7 +206,7 @@ module.exports = Backbone.View.extend({
 	createUser: function(e) {
 		if (e) {
 			e.preventDefault();
-			if (this.$('.users .panel-collapse.in').length) {
+			if (this.$('.users .panel-collapse.show').length) {
 				e.stopPropagation();
 			} else if (this.scope.creatingUser) {
 				//TODO: delayFocus?

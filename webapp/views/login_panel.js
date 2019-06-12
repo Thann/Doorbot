@@ -1,6 +1,6 @@
 // LoginPanel
 
-require('styles/login_panel.css');
+require('../styles/login_panel.css');
 
 module.exports = Backbone.View.extend({
 	id: 'LoginPanel',
@@ -26,7 +26,7 @@ module.exports = Backbone.View.extend({
 				<input placeholder="password" type="password" name="password"
 					class="form-control" autocomplete="current-password">
 			</div>
-			<input type="submit" value="Login" class="btn btn-default">
+			<input type="submit" value="Login" class="btn btn-light">
 		</form>
 		<div rv-hide="user.isAuthed" class="form-group has-error">
 			<span class="control-label">{ error }</span>
@@ -46,12 +46,12 @@ module.exports = Backbone.View.extend({
 			<div class="form-group has-error">
 				<span class="control-label">{ error }</span>
 			</div>
-			<input type="submit" value="Reset Password" class="btn btn-default">
+			<input type="submit" value="Reset Password" class="btn btn-light">
 		</form>
 
-		<a rv-show="user.isAuthed" class="btn btn-default" href="#">Doors</a>
-		<a rv-show="user.isAuthed" class="btn btn-default logout">Logout</a>
-		<a rv-show="user.isAuthed" class="btn btn-default"
+		<a rv-show="user.isAuthed" class="btn btn-light" href="#">Doors</a>
+		<a rv-show="user.isAuthed" class="btn btn-light logout" href="#">Logout</a>
+		<a rv-show="user.isAuthed" class="btn btn-light"
 			rv-href="'#user/'|+ user:username">
 			User Settings
 		</a>

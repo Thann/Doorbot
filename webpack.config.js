@@ -2,26 +2,31 @@
 
 const webpack = require('webpack');
 const CompressionPlugin = require('compression-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = function(env) {
 	const config = {
 		context: __dirname,
-		entry: 'app/main.js',
+		mode: env && (env.dev || env.demo)? 'development': 'production',
+		entry: {
+			app: './webapp/main.js',
+		},
 		output: {
 			path: __dirname + '/dist',
 			libraryTarget: 'var',
 			library: 'Doorbot',
-			filename: 'bundle.js',
+			filename: '[name].[contenthash].bundle.js',
 		},
-		resolve: { alias: {
-			app: __dirname + '/webapp',
-			models: 'app/models',
-			styles: 'app/styles',
-		} },
 		plugins: [
+			new HtmlWebpackPlugin({
+				inject: 'head',
+				template: 'webapp/index.html',
+			}),
 			new webpack.ProvidePlugin({
 				// These become available to all files.
 				_: 'underscore',
+				// TODO: remove rivets footgun
 				Rivets: 'rivets',
 			}),
 			new CompressionPlugin({
@@ -29,10 +34,12 @@ module.exports = function(env) {
 				algorithm: 'gzip',
 				asset: '[path].gz[query]',
 			}),
+			new CleanWebpackPlugin({
+				cleanOnceBeforeBuildPatterns: ['*.bundle.*'],
+			}),
 		],
 		module: {
-			loaders: [
-				{ test:  /\.json$/, use: 'hson-loader' },
+			rules: [
 				{ test:  /\.s?css$/,
 					use: [
 						{ loader: 'style-loader' },
@@ -51,26 +58,37 @@ module.exports = function(env) {
 			],
 		},
 		devtool: 'source-map',
+		performance: {
+			maxAssetSize: 200 * 10000,
+			maxEntrypointSize: 200 * 10000,
+		},
+		optimization: {
+			minimize: true,
+			splitChunks: {
+				chunks: 'all',
+				cacheGroups: {
+					vendor: {
+						// minSize: 0,
+						// maxSize: 244,
+						name: 'vendor',
+						test: /[\\/]node_modules[\\/]/,
+						reuseExistingChunk: true,
+					},
+					default: false,
+				},
+			},
+		},
 	};
 
 	if (env && env.dev) {
-		config.module.loaders.push({
+		config.module.rules.push({
 			test: /\.js$/,
 			use: ['eslint-loader'],
 			exclude: /node_modules/,
 			enforce: 'pre',
 		});
-	} else {
-		config.plugins.push(
-			new webpack.optimize.UglifyJsPlugin({
-				minimize: true,
-				sourceMap: true,
-				compress: {warnings: false},
-			}),
-		);
 	}
-	if (env && env.demo) config.entry = 'app/demo.js';
+	if (env && env.demo) config.entry.app = './webapp/demo.js';
 
 	return config;
 };
-

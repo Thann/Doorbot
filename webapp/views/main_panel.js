@@ -1,6 +1,6 @@
 // MainPanel
 
-require('styles/main_panel.css');
+require('../styles/main_panel.css');
 
 module.exports = Backbone.View.extend({
 	id: 'MainPanel',
@@ -11,7 +11,7 @@ module.exports = Backbone.View.extend({
 				<button
 					rv-show="door:available"
 					rv-data-id="door:id"
-					class="btn btn-default open-door">
+					class="btn btn-light open-door">
 						{ door:name }
 				</button>
 			</div>

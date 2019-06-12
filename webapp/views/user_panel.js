@@ -1,7 +1,7 @@
 // UserPanel
 
-// require('styles/user.css');
-const UserModel = require('models/user.js');
+// require('../styles/user.css');
+const UserModel = require('../models/user.js');
 
 module.exports = Backbone.View.extend({
 	id: 'UserPanel',
@@ -11,7 +11,7 @@ module.exports = Backbone.View.extend({
 			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
 				<div class="panel-title" rv-text="user:username"></div>
 			</div>
-			<div class="panel-collapse collapse in">
+			<div class="panel-collapse collapse show">
 				<div class="panel-body">
 					<form>
 						<table>
@@ -28,7 +28,7 @@ module.exports = Backbone.View.extend({
 										name="current_password" class="form-control"
 										placeholder="current password" autocomplete="current-password">
 									<button rv-show="self:admin" rv-disabled="me"
-										class="btn btn-default fa fa-random password"></button>
+										class="btn btn-light"><i class="fa fa-random password"></i></button>
 									<span rv-show="user:requires_reset" class="fa fa-warning text-danger">
 										requires reset</span>
 									<input placeholder="username" type="hidden" name="username"
@@ -48,10 +48,10 @@ module.exports = Backbone.View.extend({
 					</form>
 				</div>
 				<div class="panel-footer">
-					<input type="submit" value="Update" class="update btn btn-default">
+					<input type="submit" value="Update" class="update btn btn-light">
 					<span rv-text="updateSuccess"></span>
 					<span class="text-danger" rv-text="updateError"></span>
-					<a rv-show="me" class="btn btn-default pull-right logout">logout</a>
+					<a rv-show="me" class="btn btn-light pull-right logout" href="#">logout</a>
 					<span rv-show="self:admin">
 						<a rv-hide="me" class="btn btn-danger delete pull-right">
 						Delete</a>
@@ -64,7 +64,7 @@ module.exports = Backbone.View.extend({
 			<div class="panel-heading" data-toggle="collapse" data-target=".doors .panel-collapse">
 				<div class="panel-title">Doors</div>
 			</div>
-			<div class="panel-collapse collapse in">
+			<div class="panel-collapse collapse show">
 				<div class="panel-body">
 					<div rv-each-door="doors">
 						<a rv-show="door:allowed" rv-data-id="door:id" rv-class-deny="self:admin">
@@ -96,7 +96,7 @@ module.exports = Backbone.View.extend({
 					</table>
 				</div>
 				<div class="panel-footer">
-					<input type="submit" value="More" class="more btn btn-default"
+					<input type="submit" value="More" class="more btn btn-light"
 						rv-enabled="logs.hasMore">
 					<div class="error" rv-text="logsError"></div>
 				</div>
