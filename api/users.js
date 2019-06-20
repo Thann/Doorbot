@@ -175,7 +175,7 @@ async function create(request, response) {
 		// }
 	}
 
-	email = request.body.email
+	const email = request.body.email
 	// Default password to random hash.
 	pw = pw || (crypto.createHash('sha256')
 		.update(Math.random().toString()).digest('hex').substring(1, 15));

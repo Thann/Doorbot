@@ -40,7 +40,7 @@ module.exports = Backbone.View.extend({
 					<input placeholder="email" type="text" name="email"
 						class="form-control" autocomplete="email">
 				</div>
-				<input type="submit" value="Create Account" class="btn btn-default">
+				<input type="submit" value="Create Account" class="btn btn-light">
 			</form>
 			<div class="form-group has-error">
 				<span class="control-label"><%= error %></span>
