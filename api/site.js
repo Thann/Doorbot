@@ -24,6 +24,7 @@ module.exports = function(app) {
 
 const publicSettings = {
 	org_name: null,
+	require_invites: true,
 };
 
 const privateSettings = {

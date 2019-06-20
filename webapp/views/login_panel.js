@@ -54,7 +54,7 @@ module.exports = Backbone.View.extend({
 			<form action="auth" class="change form-inline">
 				<div class="form-group">
 					<input placeholder="username" type="hidden" name="username"
-						rv-value="user.attributes.username" autocomplete="username">
+						value="<%= user.attributes.username %>" autocomplete="username">
 				</div> <div class="form-group">
 					<input placeholder="new password" type="password" name="password"
 						class="form-control" autocomplete="new-password">
@@ -68,9 +68,9 @@ module.exports = Backbone.View.extend({
 
 		<% if (user.isAuthed) { %>
 			<a class="btn btn-light" href="#">Doors</a>
-			<a class="btn btn-light logout">Logout</a>
+			<a class="btn btn-light logout" href="#login">Logout</a>
 			<a class="btn btn-light"
-				rv-href="'#user/'|+ user:username">
+				href="<%= '#user/' + user.attributes.username %>">
 				User Settings
 			</a>
 		<% } %>

@@ -1,5 +1,7 @@
 # Portalbot
-Whitelable friendly wifi-login portal forked from [doorbot](https://gitlab.com/thann/doorbot)
+Whitelable friendly wifi-login portal + much more forked from [doorbot](https://gitlab.com/thann/doorbot)
+
+This will become Doorbot 2.0 and will be a generic portal to distribute/sell access to anything!
 
 `docker-compose up -d`
 

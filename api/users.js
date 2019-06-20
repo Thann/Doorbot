@@ -55,7 +55,7 @@ async function auth(request, response) {
 	}
 	//TODO: rate-limit by ip address also.
 	if (userAuthRates.get(request.body.username) >=
-		site.privateSettings['auth_attempts_per_hour']) {
+		site.privateSettings.auth_attempts_per_hour) {
 		return response.status(429)
 			.send({error: 'too many auth attempts'});
 	}
@@ -149,10 +149,10 @@ async function create(request, response) {
 	const user = await checkCookie(request, response);
 
 	if (!user.admin) {
-		// if (!request.body.invite)
-		// 	return response.status(403).send({error: 'must have invite'});
+		if (!request.body.invite && site.publicSettings.require_invites)
+			return response.status(403).send({error: 'must have invite'});
 		invite = site.pendingInvites.get(request.body.invite);
-		if (!invite)
+		if (!invite && site.publicSettings.require_invites)
 			return response.status(400)
 				.send({error: 'invalid or expired invite'});
 		if (request.body.password) {
@@ -175,7 +175,7 @@ async function create(request, response) {
 		// }
 	}
 
-	const email = request.body.email
+	const email = request.body.email;
 	// Default password to random hash.
 	pw = pw || (crypto.createHash('sha256')
 		.update(Math.random().toString()).digest('hex').substring(1, 15));

@@ -40,7 +40,7 @@ CREATE TABLE transactions (
 	user_to INTEGER REFERENCES users(id),
 	user_from INTEGER REFERENCES users(id),
 	note VARCHAR(255) NULL,
-	amount FLOAT,
+	amount INTEGER,
 	created_at DATETIME
 );
 

@@ -49,29 +49,35 @@ describe('Site API', function() {
 		await agent.get('/site/settings')
 			.expect(200, {
 				org_name: null,
+				require_invites: true,
 			});
 		await agent.patch('/site/settings')
 			.send({org_name: 'noobs'})
 			.expect(200, {
 				org_name: 'noobs',
+				require_invites: true,
 			});
 		await agent.patch('/site/settings')
 			.send({})
 			.expect(200, {
 				org_name: 'noobs',
+				require_invites: true,
 			});
 		await agent.get('/site/settings')
 			.expect(200, {
 				org_name: 'noobs',
+				require_invites: true,
 			});
 		await agent.patch('/site/settings')
 			.send({org_name: null})
 			.expect(200, {
 				org_name: null,
+				require_invites: true,
 			});
 		await agent.get('/site/settings')
 			.expect(200, {
 				org_name: null,
+				require_invites: true,
 			});
 	});
 
@@ -130,6 +136,7 @@ describe('Site API', function() {
 			await agent.get('/site/settings')
 				.expect(200, {
 					org_name: null,
+					require_invites: true,
 				});
 			await agent.patch('/site/settings')
 				.send({org_name: 'noobs'})

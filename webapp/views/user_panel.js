@@ -9,15 +9,15 @@ module.exports = Backbone.View.extend({
 	template: _.template(`
 		<div class="user panel panel-default">
 			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
-				<div class="panel-title" rv-text="user:username"></div>
+				<div class="panel-title"><%= user.attributes.username %></div>
 			</div>
 			<div class="panel-collapse collapse show">
 				<div class="panel-body">
 					<form>
 						<table>
-							<tr rv-show="user:admin">
-								<td>Admin</td>
-							</tr>
+							<% if (user.attributes.admin) { %>
+								<tr> <td>Admin</td> </tr>
+							<% } %>
 							<tr>
 								<td>Password</td>
 								<td class="form-inline">
