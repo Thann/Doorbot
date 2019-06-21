@@ -11,7 +11,7 @@ CREATE TABLE users (
     session_cookie VARCHAR(255) UNIQUE,
     session_created DATETIME,
     email VARCHAR(255) UNIQUE COLLATE NOCASE,
-    balance INTEGER,
+    balance INTEGER, -- #TODO: wtf
     -- oauth_id VARCHAR(255),
     -- oauth_token VARCHAR(255),
     -- oauth_domain VARCHAR(255),

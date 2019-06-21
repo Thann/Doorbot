@@ -20,6 +20,7 @@ module.exports = Backbone.View.extend({
 	// doorTemplate: '<div data-subview="door"></div>',
 	adminTemplate: '<div data-subview="admin"></div>',
 	loginTemplate: '<div data-subview="login"></div>',
+	registerTemplate: '<div data-subview="register"></div>',
 	events: {
 		'click #Header .toggle-left-sidebar': function() {
 			this.subviews.sidebar.toggle();
@@ -35,6 +36,7 @@ module.exports = Backbone.View.extend({
 		sidebar: function() { return new App.Views.Sidebar(); },
 	},
 	initialize: function() {
+		console.log("==== ", App.Views)
 		const layout = this;
 		this.loading = true;
 		Backbone.Subviews.add( this );
@@ -46,6 +48,7 @@ module.exports = Backbone.View.extend({
 				'admin': 'adminTemplate',
 				'user/:id': 'userTemplate',
 				// 'door/:id': 'doorTemplate',
+				'register/:token': 'registerTemplate',
 				'*notFound': '',
 			},
 			execute: function(cb, args, name) {
@@ -86,6 +89,7 @@ module.exports = Backbone.View.extend({
 			App.AppConfig.OrgName? ' - '+App.AppConfig.OrgName : '');
 	},
 	render: function(tmpl) {
+		console.log("layout render...")
 		this.$el.html(this.template);
 		if (tmpl)
 			this._current_template = tmpl;

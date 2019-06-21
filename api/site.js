@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const users = require('./users');
 const crypto = require('crypto');
+const Perms = require('../lib/permissions');
 const MemCache = require('../lib/memcache');
 
 const settingsFile = (process.env.NODE_ENV === 'test' ? null :
@@ -41,7 +42,7 @@ module.exports.privateSettings = privateSettings;
 
 async function indexInvites(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -49,8 +50,10 @@ async function indexInvites(request, response) {
 		pendingInvites.map(function(k, v) {
 			return {
 				token: k,
+				date: v.date,
 				admin_id: v.admin_id,
 				permissions: v.permissions,
+				admin_username: v.admin_username,
 			};
 		})
 	);
@@ -58,27 +61,32 @@ async function indexInvites(request, response) {
 
 async function createInvite(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
+	const date = new Date().toISOString().slice(0, 19).replace('T', ' ');
 	const token = crypto.createHash('sha256')
 		.update(Math.random().toString()).digest('hex');
 	pendingInvites.set(token, {
+		date,
 		admin_id: user.id,
+		admin_username: user.username,
 		permissions: request.body.permissions || [],
 	});
 
 	response.status(200).send({
+		date,
 		token: token,
 		admin_id: user.id,
+		admin_username: user.username,
 		permissions: request.body.permissions || [],
 	});
 }
 
 async function deleteInvite(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -92,7 +100,7 @@ async function readSettings(request, response) {
 
 async function updateSettings(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -102,7 +110,7 @@ async function updateSettings(request, response) {
 
 async function readPrivateSettings(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
@@ -111,7 +119,7 @@ async function readPrivateSettings(request, response) {
 
 async function updatePrivateSettings(request, response) {
 	const user = await users.checkCookie(request, response);
-	if (!user.admin) {
+	if (!user.has(Perms.ADMIN)) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 

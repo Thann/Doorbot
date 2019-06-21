@@ -19,7 +19,6 @@ const options = {
 const getopts = require('node-getopt').create([
 	['x', 'dummy',     "Don't use GPIO, print instead"],
 	['g', 'gpio=',     'GPIO pins to open the door'],
-	['d', 'door=',     'Connect to server with door_id'],
 	['t', 'token=',    'Connect to server with token (required)'],
 	['s', 'server=',   'Connect to server at address'],
 	['p', 'port=',     'Connect to server on port'],
@@ -58,6 +57,7 @@ process.on('unhandledRejection', function(err, promise) {
 let lock = false;
 if (!options.dummy)
 	gpio.setup(parseInt(options.gpio));
+
 function open() {
 	if (options.dummy)
 		return console.log('Dummy Open');
@@ -76,11 +76,10 @@ let pongTimeout;
 function connect() {
 	if (ws) ws.terminate();
 	ws = new WebSocket(
-		util.format('ws%s://%s:%s/api/v1/doors/%s/connect',
+		util.format('ws%s://%s:%s/api/v1/doors',
 			options.insecure?'':'s',
 			options.server,
 			options.port,
-			options.door
 		), {
 			headers: {
 				'Authorization': options.token,
@@ -154,6 +153,7 @@ if (options.keypad !== undefined && !options.dummy) {
 }
 
 function safeExit() {
+	console.log('shutting down..');
 	if (!options.dummy) {
 		gpio.write(options.gpio, false, function() {
 			process.exit(0);

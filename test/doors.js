@@ -54,7 +54,7 @@ describe('Doors API', function() {
 			.expect(200, {
 				id: 1,
 				name: 'front',
-				// token: /\w+/
+				token: /\w+/,
 			});
 	});
 
@@ -128,6 +128,7 @@ describe('Doors API', function() {
 				user_id: 1,
 				username: 'admin',
 				method: 'web:::ffff:127.0.0.1',
+				deleted_at: null,
 				time: /[\d\-: ]+/,
 			}]);
 		await agent.post('/doors/1/open').expect(204);
@@ -138,6 +139,7 @@ describe('Doors API', function() {
 				user_id: 1,
 				username: 'admin',
 				method: 'web:::ffff:127.0.0.1',
+				deleted_at: null,
 				time: /[\d\-: ]+/,
 			}]);
 		await agent.get('/doors/1/logs?last_id=x')
@@ -147,6 +149,7 @@ describe('Doors API', function() {
 				user_id: 1,
 				username: 'admin',
 				method: 'web:::ffff:127.0.0.1',
+				deleted_at: null,
 				time: /[\d\-: ]+/,
 			}, {
 				id: 1,
@@ -154,16 +157,21 @@ describe('Doors API', function() {
 				user_id: 1,
 				username: 'admin',
 				method: 'web:::ffff:127.0.0.1',
+				deleted_at: null,
 				time: /[\d\-: ]+/,
 			}]);
 		await agent.get('/doors/2/logs')
 			.expect(200, []);
 	});
 
+	// ===================================
 	describe('as an under-privileged user', function() {
 		beforeEach('auth', async function() {
 			await agent.post('/users')
-				.send({username: 'door_dummy', password: 'door_dummy'})
+				.send({
+					admin: 1,
+					username: 'door_dummy',
+					password: 'door_dummy'})
 				.expect(200);
 			await agent.post('/doors/1/permit/door_dummy')
 				.expect(200);
