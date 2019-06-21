@@ -15,12 +15,6 @@ module.exports = Backbone.View.extend({
 		<div class="footer hidden"></div>
 	`,
 	loading: true,
-	mainTemplate: '<div data-subview="main"></div>',
-	userTemplate: '<div data-subview="user"></div>',
-	// doorTemplate: '<div data-subview="door"></div>',
-	adminTemplate: '<div data-subview="admin"></div>',
-	loginTemplate: '<div data-subview="login"></div>',
-	registerTemplate: '<div data-subview="register"></div>',
 	events: {
 		'click #Header .toggle-left-sidebar': function() {
 			this.subviews.sidebar.toggle();
@@ -36,41 +30,46 @@ module.exports = Backbone.View.extend({
 		sidebar: function() { return new App.Views.Sidebar(); },
 	},
 	initialize: function() {
-		console.log("==== ", App.Views)
 		const layout = this;
 		this.loading = true;
 		Backbone.Subviews.add( this );
 
 		App.Router = new (Backbone.Router.extend({
 			routes: {
-				'': 'mainTemplate',
-				'login': 'loginTemplate',
-				'admin': 'adminTemplate',
-				'user/:id': 'userTemplate',
-				// 'door/:id': 'doorTemplate',
-				'register/:token': 'registerTemplate',
-				'*notFound': '',
+				'': 'main',
+				'login': 'login',
+				'admin': 'admin',
+				'user/:id': 'user',
+				// 'door/:id': 'door',
+				'*notFound': 'main',
 			},
+			unauthRoutes: ['login'],
 			execute: function(cb, args, name) {
 				this.args = args;
-				if (!layout.loading && !App.User.isAuthed) {
+				if (!layout.loading && !App.User.isAuthed
+						&& !this.lastRouteUnauthed()) {
 					this.navigate('login', {trigger: true});
-				} else if (!App.Router.name && layout[name]) {
-					layout.render(layout[name]);
+				} else if (!App.Router.name
+						&& layout.subviewCreators[name]) {
+					this.lastRoute = name;
+					layout.render(name);
 				} else {
 					// route not found
 					this.navigate('', {trigger: true});
 				}
 			},
+			lastRouteUnauthed: function() {
+				return this.unauthRoutes.indexOf(this.lastRoute) >= 0;
+			},
 		}))();
 
 		App.User = new UserModel();
-		App.User.on('relog', function(loggedIn) {
-			if (loggedIn) {
+		this.listenTo(App.User, 'relog', function(loggedIn) {
+			if (loggedIn || App.Router.lastRouteUnauthed()) {
 				layout.render();
 			} else {
 				App.Router.navigate('login', {trigger: false});
-				layout.render(layout.loginTemplate);
+				layout.render('login');
 			}
 		});
 
@@ -89,10 +88,9 @@ module.exports = Backbone.View.extend({
 			App.AppConfig.OrgName? ' - '+App.AppConfig.OrgName : '');
 	},
 	render: function(tmpl) {
-		console.log("layout render...")
 		this.$el.html(this.template);
 		if (tmpl)
-			this._current_template = tmpl;
+			this._current_template = `<div data-subview="${tmpl}"></div>`;
 		if (!this.loading) {
 			this.$('.main-panel').html(this._current_template);
 		}
