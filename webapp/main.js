@@ -4,6 +4,7 @@
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./jquery_extensions');
 require('bootstrap'); // css gets included by layout.css
+// compile font-awesome
 const { library, dom } = require('@fortawesome/fontawesome-svg-core');
 const { fas } = require('@fortawesome/free-solid-svg-icons');
 const { far } = require('@fortawesome/free-regular-svg-icons');
@@ -17,7 +18,6 @@ const views = loadModule(require.context('./views', true, /\.js$/));
 
 // Make PUBLIC modules accessible.
 module.exports = {
-
 	Views: views,
 	AppConfig: require('./config.json'),
 
@@ -28,6 +28,15 @@ module.exports = {
 			self.Layout = new self.Views.Layout();
 		});
 	},
+};
+
+const { DateTime } = require('luxon');
+// Luxon helper to convert database timestamps into human-readable strings
+Backbone.View.prototype.lux = function lux(time, format) {
+	return DateTime
+		.fromSQL(time, {zone: 'UTC'})
+		.setZone('local')
+		.toLocaleString(format && DateTime[format] || DateTime.DATETIME_FULL);
 };
 
 // Load all files from a "context" into a single object.

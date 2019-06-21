@@ -6,7 +6,7 @@ module.exports = Backbone.View.extend({
 	template: _.template(`
 		<a href="#">
 			<% if (orgName) { %>
-				<span><%= orgName %> </span>
+				<span><%- orgName %> </span>
 			<% } %>
 			<span>Portal</span>
 		</a>
@@ -15,8 +15,8 @@ module.exports = Backbone.View.extend({
 				<% if (user.get('admin')) { %>
 					<a href="#admin"><i class="fa fa-cogs" /></a>
 				<% } %>
-				<a href="<%= '#user/' + user.get('username') %>">
-					<%= user.get('username') %>
+				<a href="<%- '#user/' + user.get('username') %>">
+					<%- user.get('username') %>
 				</a>
 			</span>
 		<% } %>

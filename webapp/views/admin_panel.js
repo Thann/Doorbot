@@ -76,15 +76,17 @@ module.exports = Backbone.View.extend({
 						<div class="error" rv-text="inviteError"></div>
 					</form>
 					<ol>
-						<li rv-each-invite="invites">
-							<span rv-text="invite:admin_username"></span>
-							<span rv-text="invite:date |luxon 'DATETIME_SHORT'"></span>
-							<span rv-text="invite:token |max_len 8"></span>
-							<a target="_blank"
-								rv-href="inviteMailto |+ invite:token">
-								[Send Email]
-							</a>
-						</li>
+						<% for (const invite of invites && invites.models || []) { %>
+							<li>
+								<span><%- invite.get('admin_username') %></span>
+								<span><%- lux(invite.get('date'), 'DATETIME_SHORT') %></span>
+								<span><%- invite.get('token', '').slice(0, 8) %></span>
+								<a target="_blank"
+									rv-href="inviteMailto |+ invite:token">
+									[Send Email]
+								</a>
+							</li>
+						<% } %>
 					</ol>
 				</div>
 			</div>
@@ -174,10 +176,10 @@ module.exports = Backbone.View.extend({
 	},
 	render: function() {
 		// console.log("RENDER MAIN:", App.User.get('admin'))
-		this.scope = {
-			doors: this.doors,
-			users: this.users,
-			invites: this.invites,
+		Object.assign(this, {
+			// doors: this.doors,
+			// users: this.users,
+			invites: this.invites, // TODO: WTF
 			settings: App.Settings,
 			privateSettings: this.privateSettings,
 			mailto: "mailto:?subject=Portalbot&body=Hey! you've been setup on the door. Visit " +
@@ -187,7 +189,7 @@ module.exports = Backbone.View.extend({
 			inviteMailto: "mailto:?subject=Doorbot&body=Hey! you've been invited to Doorbot," +
 				' click here to create a user: ' +
 				window.location.toString().replace(window.location.hash, '') + '#token/',
-		};
+		});
 		this.$el.html(this.template(this));
 		return this;
 	},

@@ -9,7 +9,7 @@ module.exports = Backbone.View.extend({
 	template: _.template(`
 		<div class="user panel panel-default">
 			<div class="panel-heading" data-toggle="collapse" data-target=".user .panel-collapse">
-				<div class="panel-title"><%= user.attributes.username %></div>
+				<div class="panel-title"><%- user.attributes.username %></div>
 			</div>
 			<div class="panel-collapse collapse show">
 				<div class="panel-body">
@@ -21,10 +21,10 @@ module.exports = Backbone.View.extend({
 							<tr>
 								<td>Password</td>
 								<td class="form-inline">
-									<input type="<%= me ? 'password': 'text' %>"
+									<input type="<%- me ? 'password': 'text' %>"
 										placeholder="new password"
 										name="password" class="form-control"
-										value="<%= user.attributes.password %>"
+										value="<%- user.attributes.password %>"
 										autocomplete="new-password">
 									<% if (me && !this.user.get('requires_reset')) { %>
 										<input type="password" placeholder="current password"
@@ -32,7 +32,7 @@ module.exports = Backbone.View.extend({
 											autocomplete="current-password">
 									<% } %>
 									<% if (this.user.get('admin') && !me) { %>
-										<button disabled="<%= me? 'true': 'false' %>"
+										<button disabled="<%- me? 'true': 'false' %>"
 											class="btn btn-light">
 											<i class="fa fa-random password"></i>
 										</button>
@@ -53,7 +53,7 @@ module.exports = Backbone.View.extend({
 									<td class="form-inline">
 										<input name="keycode" min="0" max="99999999"
 											placeholder="hidden" class="form-control"
-											value="<%= user.attributes.keycode %>" type="number">
+											value="<%- user.attributes.keycode %>" type="number">
 										<span>(8 digits, so 1 becomes 00000001)</span>
 									</td>
 								</tr>
@@ -63,8 +63,8 @@ module.exports = Backbone.View.extend({
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-light">
-					<span><%= updateSuccess %></span>
-					<span class="text-danger"><%= updateError %></span>
+					<span><%- updateSuccess %></span>
+					<span class="text-danger"><%- updateError %></span>
 					<% if (me) { %>
 						<a class="btn btn-light pull-right logout" href="#">logout</a>
 					<% } else if (self.attributes.admin) { %>
@@ -84,10 +84,10 @@ module.exports = Backbone.View.extend({
 					<div class="panel-body">
 						<% for (const door of doors) { %>
 							<div>
-								<a data-id="<%= door.id %>"
-									class="<%= self.admin? (door.allowed? 'deny': 'permit'): ''%>self:admin">
-									<span><%= door.attributes.name %></span>
-									<span class="fa fa-<%= door.attributes.allowed? 'check-circle': 'ban' %>"></span>
+								<a data-id="<%- door.id %>"
+									class="<%- self.admin? (door.allowed? 'deny': 'permit'): ''%>self:admin">
+									<span><%- door.attributes.name %></span>
+									<span class="fa fa-<%- door.attributes.allowed? 'check-circle': 'ban' %>"></span>
 								</a>
 							</div>
 						<% } %>
@@ -100,15 +100,18 @@ module.exports = Backbone.View.extend({
 			<div class="panel-heading fetch" data-toggle="collapse" data-target=".logs .panel-collapse">
 				<div class="panel-title">Logs</div>
 			</div>
-			<div class="panel-collapse collapse" rv-class-in="logs.length |gt 50">
+			<div class="panel-collapse collapse"
+				class="<%- logs.length > 50? '': 'show' %>">
 				<div class="panel-body">
 					<table>
-					<tr rv-each-log="logs">
-						<td rv-text="log:door"></td>
-						<td rv-text="log:time |luxon 'DATE_FULL'"></td>
-						<td rv-text="log:time |luxon 'TIME_WITH_SHORT_OFFSET'"></td>
-						<td rv-text="log:method"></td>
-					</tr>
+						<% for (const log of logs) { %>
+							<tr>
+								<td><%- log.attributes.door %></td>
+								<td><%- lux(log.get('time'), 'DATE_FULL') %></td>
+								<td><%- lux(log.get('time'), 'TIME_WITH_SHORT_OFFSET') %></td>
+								<td><%- log.attributes.method %></td>
+							</tr>
+						<% } %>
 					</table>
 				</div>
 				<div class="panel-footer">
@@ -156,6 +159,7 @@ module.exports = Backbone.View.extend({
 		}))();
 		this.moreLogs();
 
+		this.self = App.User;
 		this.me = this.user.id === App.User.id;
 		this.updateError = null;
 		this.updateSuccess = null;
@@ -192,7 +196,7 @@ module.exports = Backbone.View.extend({
 	moreLogs: function() {
 		this.logs.fetch({ add: true, remove: false,
 			success: _.bind(function(coll, newLogs) {
-				if (newLogs.length < 50)
+				if (newLogs && newLogs.length < 50)
 					this.logs.hasMore = false;
 			}, this),
 		});

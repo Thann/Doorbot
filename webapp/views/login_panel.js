@@ -7,7 +7,7 @@ module.exports = Backbone.View.extend({
 	className: 'container',
 	template: _.template(`
 		<h2>Welcome to
-			<% if (OrgName) { %> the Portal for <%= OrgName %>!
+			<% if (OrgName) { %> the Portal for <%- OrgName %>!
 			<% } else { %> PortalBot!<% } %>
 		</h2>
 		<h4>
@@ -43,7 +43,7 @@ module.exports = Backbone.View.extend({
 				<input type="submit" value="Create Account" class="btn btn-light">
 			</form>
 			<div class="form-group has-error">
-				<span class="control-label"><%= error %></span>
+				<span class="control-label"><%- error %></span>
 			</div>
 		<% } %>
 
@@ -54,13 +54,13 @@ module.exports = Backbone.View.extend({
 			<form action="auth" class="change form-inline">
 				<div class="form-group">
 					<input placeholder="username" type="hidden" name="username"
-						value="<%= user.attributes.username %>" autocomplete="username">
+						value="<%- user.attributes.username %>" autocomplete="username">
 				</div> <div class="form-group">
 					<input placeholder="new password" type="password" name="password"
 						class="form-control" autocomplete="new-password">
 				</div>
 				<div class="form-group has-error">
-					<span class="control-label"><%= error %></span>
+					<span class="control-label"><%- error %></span>
 				</div>
 				<input type="submit" value="Reset Password" class="btn btn-light">
 			</form>
@@ -70,7 +70,7 @@ module.exports = Backbone.View.extend({
 			<a class="btn btn-light" href="#">Doors</a>
 			<a class="btn btn-light logout" href="#login">Logout</a>
 			<a class="btn btn-light"
-				href="<%= '#user/' + user.attributes.username %>">
+				href="<%- '#user/' + user.attributes.username %>">
 				User Settings
 			</a>
 		<% } %>
