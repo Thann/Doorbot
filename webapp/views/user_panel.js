@@ -21,64 +21,80 @@ module.exports = Backbone.View.extend({
 							<tr>
 								<td>Password</td>
 								<td class="form-inline">
-									<input rv-type="pwType" placeholder="hidden"
+									<input type="<%= me ? 'password': 'text' %>"
+										placeholder="new password"
 										name="password" class="form-control"
-										rv-value="user:password" autocomplete="new-password">
-									<input rv-if="showCurrent" type="password"
-										name="current_password" class="form-control"
-										placeholder="current password" autocomplete="current-password">
-									<button rv-show="self:admin" rv-disabled="me"
-										class="btn btn-light"><i class="fa fa-random password"></i></button>
-									<span rv-show="user:requires_reset" class="fa fa-warning text-danger">
-										requires reset</span>
+										value="<%= user.attributes.password %>"
+										autocomplete="new-password">
+									<% if (me && !this.user.get('requires_reset')) { %>
+										<input type="password" placeholder="current password"
+											name="current_password" class="form-control"
+											autocomplete="current-password">
+									<% } %>
+									<% if (this.user.get('admin') && !me) { %>
+										<button disabled="<%= me? 'true': 'false' %>"
+											class="btn btn-light">
+											<i class="fa fa-random password"></i>
+										</button>
+									<% } %>
+									<% if (this.user.get('requires_reset')) { %>
+										<span class="text-danger">
+											requires reset
+											<i class="fa fa-warning" />
+										</span>
+									<% } %>
 									<input placeholder="username" type="hidden" name="username"
 										rv-value="user:username" autocomplete="username">
 								</td>
 							</tr>
-							<tr rv-show="me">
-								<td>Keycode</td>
-								<td class="form-inline">
-									<input name="keycode" min="0" max="99999999"
-										placeholder="hidden" class="form-control"
-										rv-value="user.keycode" type="number">
-									<span>(8 digits, so 1 becomes 00000001)</span>
-								</td>
-							</tr>
+							<% if (me) { %>
+								<tr >
+									<td>Keycode</td>
+									<td class="form-inline">
+										<input name="keycode" min="0" max="99999999"
+											placeholder="hidden" class="form-control"
+											value="<%= user.attributes.keycode %>" type="number">
+										<span>(8 digits, so 1 becomes 00000001)</span>
+									</td>
+								</tr>
+							<% } %>
 						</table>
 					</form>
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-light">
-					<span rv-text="updateSuccess"></span>
-					<span class="text-danger" rv-text="updateError"></span>
-					<a rv-show="me" class="btn btn-light pull-right logout" href="#">logout</a>
-					<span rv-show="self:admin">
-						<a rv-hide="me" class="btn btn-danger delete pull-right">
-						Delete</a>
-					</span>
+					<span><%= updateSuccess %></span>
+					<span class="text-danger"><%= updateError %></span>
+					<% if (me) { %>
+						<a class="btn btn-light pull-right logout" href="#">logout</a>
+					<% } else if (self.attributes.admin) { %>
+						<a class="btn btn-danger pull-right delete" href="#">Delete</a>
+					<% } %>
 				</div>
 			</div>
 		</div>
 
-		<div class="doors panel panel-default" rv-hide="user:admin">
-			<div class="panel-heading" data-toggle="collapse" data-target=".doors .panel-collapse">
-				<div class="panel-title">Doors</div>
-			</div>
-			<div class="panel-collapse collapse show">
-				<div class="panel-body">
-					<div rv-each-door="doors">
-						<a rv-show="door:allowed" rv-data-id="door:id" rv-class-deny="self:admin">
-							<span rv-text="door:name"></span>
-							<span class="fa fa-check-circle"></span>
-						</a>
-						<a rv-hide="door:allowed" rv-data-id="door:id" rv-class-permit="self:admin">
-							<span rv-text="door:name"></span>
-							<span class="fa fa-ban"></span>
-						</a>
+
+		<% if (!user.attributes.admin) { %>
+			<div class="doors panel panel-default">
+				<div class="panel-heading" data-toggle="collapse" data-target=".doors .panel-collapse">
+					<div class="panel-title">Doors</div>
+				</div>
+				<div class="panel-collapse collapse show">
+					<div class="panel-body">
+						<% for (const door of doors) { %>
+							<div>
+								<a data-id="<%= door.id %>"
+									class="<%= self.admin? (door.allowed? 'deny': 'permit'): ''%>self:admin">
+									<span><%= door.attributes.name %></span>
+									<span class="fa fa-<%= door.attributes.allowed? 'check-circle': 'ban' %>"></span>
+								</a>
+							</div>
+						<% } %>
 					</div>
 				</div>
 			</div>
-		</div>
+		<% } %>
 
 		<div class="logs panel panel-default">
 			<div class="panel-heading fetch" data-toggle="collapse" data-target=".logs .panel-collapse">
@@ -140,18 +156,10 @@ module.exports = Backbone.View.extend({
 		}))();
 		this.moreLogs();
 
-		const me = this.user.id === App.User.id;
-		this.scope = {
-			me,
-			user: this.user,
-			logs: this.logs,
-			doors: this.doors,
-			self: App.User,
-			pwType: me ? 'password': 'text',
-			showCurrent: !this.user.get('requires_reset') && me,
-		};
+		this.me = this.user.id === App.User.id;
+		this.updateError = null;
+		this.updateSuccess = null;
 
-		//TODO: render should not be nessicary
 		this.logs.on('sync', _.bind(this.render, this));
 		this.user.on('sync', _.bind(this.dingleDoors, this));
 		this.doors.on('sync', _.bind(this.dingleDoors, this));
@@ -160,7 +168,6 @@ module.exports = Backbone.View.extend({
 		if (App.Router.args[0] !== this.user.get('username'))
 			return this.initialize();
 		this.$el.html(this.template(this));
-		//TODO: rivets throws an error because of user?
 		return this;
 	},
 	dingleDoors: function() {
@@ -202,17 +209,17 @@ module.exports = Backbone.View.extend({
 			data.keycode = undefined;
 		else
 			this.user.keycode = data.keycode.toString().padStart(8, '0');
-		this.scope.updateError = null;
-		this.scope.updateSuccess = null;
+		this.updateError = null;
+		this.updateSuccess = null;
 
 		this.user.save(data, {patch: true, wait: true,
 			success: () => {
 				//console.log("YAY!", arguments)
-				this.scope.updateSuccess = 'Saved';
+				this.updateSuccess = 'Saved';
 			},
 			error: (m, e) => {
 				//console.log("ERROR!", e)
-				this.scope.updateError = e.responseText;
+				this.updateError = e.responseText;
 			},
 		});
 	},
@@ -220,12 +227,12 @@ module.exports = Backbone.View.extend({
 		e.preventDefault();
 		if (confirm('Are you sure you want to scramble the password for: '
 								+this.user.get('username')+'?')) {
-			this.scope.updateError = null;
-			this.scope.updateSuccess = null;
+			this.updateError = null;
+			this.updateSuccess = null;
 			this.user.save({password: false}, {patch: true, wait: true,
 				success: function() {
 					//console.log("YAY!", arguments)
-					this.scope.updateSuccess = 'Saved';
+					this.updateSuccess = 'Saved';
 				},
 			});
 		}

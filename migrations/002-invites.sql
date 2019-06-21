@@ -30,6 +30,7 @@ SELECT
 FROM temp_users;
 
 DROP TABLE temp_users;
+-- Transition to bitwise permissions
 UPDATE users SET admin = 0x7fffffff WHERE admin > 0;
 UPDATE users SET admin = 0xffffffff WHERE id = 1 AND admin > 0;
 

@@ -130,8 +130,12 @@ body {
 	background-color: transparent;
 }
 
+/* bootstrap3 */
 .btn-default {
 	@extend .btn-light;
+}
+.pull-right{
+	@extend .float-right;
 }
 
 /* === Utilities === */
