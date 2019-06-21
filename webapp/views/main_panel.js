@@ -22,12 +22,11 @@ module.exports = Backbone.View.extend({
 		<div class="row">
 			<% for (const door of doors) { %>
 				<div class="col-md-12">
-					<button
-						rv-show="door:available"
-						rv-data-id="door:id"
-						class="btn btn-light open-door">
-							{ door:name }
-					</button>
+					<% if (door.available) { %>
+						<button data-id="<%- door.id %>" class="btn btn-light open-door">
+							<%- door.get('name') %>
+						</button>
+					<% } %>
 				</div>
 			<% } %>
 		</div>

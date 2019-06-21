@@ -14,26 +14,26 @@ module.exports = Backbone.View.extend({
 				<div class="panel-body">
 					<table>
 						<form class="public">
-							<tr rv-each-attr="settings.attributes |to_a">
-								<td rv-text="attr.key"></td>
-								<td>
-									<input rv-value="attr.value">
-								</td>
-							</tr>
+							<% for (const [key, val] of Object.entries(settings.attributes)) { %>
+								<tr>
+									<td><%- key %></td>
+									<td><input value="<%- val %>"></td>
+								</tr>
+							<% } %>
 						</form>
 						<form class="private">
-							<tr rv-each-attr="privateSettings.attributes |to_a">
-								<td rv-text="attr.key"></td>
-								<td>
-									<input rv-value="attr.value">
-								</td>
-							</tr>
+							<% for (const [key, val] of Object.entries(privateSettings.attributes)) { %>
+								<tr>
+									<td><%- key %></td>
+									<td><input value="<%- val %>"></td>
+								</tr>
+							<% } %>
 						</form>
 					</table>
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="Update" class="update btn btn-light">
-					<div class="error" rv-text="settingsError"></div>
+					<div class="error"><%- settingsError %></div>
 				</div>
 			</div>
 		</div>
@@ -47,17 +47,24 @@ module.exports = Backbone.View.extend({
 			</div>
 			<div class="panel-collapse collapse show">
 				<div class="panel-body">
-					<form rv-show="creatingDoor" >
-						<input type="text" name="name" placeholder="Name" required>
-						<input type="submit" class="new btn btn-light" value="Create">
-						<div class="error" rv-text="doorError"></div>
-					</form>
-					<div rv-each-door="doors">
-						<span rv-text="door:id"></span>.
-						<a rv-href="'#/door/' |+ door:id" rv-text="door:name"></a>
-						<span rv-hide="door:available" rv-text="door:token"></span>
-						<span rv-show="door:available" class="fa fa-check-circle"></span>
-					</div>
+					<% if (creatingDoor) { %>
+						<form>
+							<input type="text" name="name" placeholder="Name" required>
+							<input type="submit" class="new btn btn-light" value="Create">
+							<div class="error"><%- doorError %></div>
+						</form>
+					<% } %>
+					<% for (const door of doors.models) { %>
+						<div>
+							<span><%- door.get('id') %></span>.
+							<a href="#door/<%- door.id %>"><%- door.get('name')%></a>
+							<% if (door.get('available')) { %>
+								<span class="fa fa-check-circle"></span>
+							<% } else { %>
+								<span><%- door.get('token') %></span>
+							<% } %>
+						</div>
+					<% } %>
 				</div>
 			</div>
 		</div>
@@ -69,20 +76,22 @@ module.exports = Backbone.View.extend({
 					<a class="toggle new fa fa-plus"></a>
 				</div>
 			</div>
-			<div class="panel-collapse collapse" rv-class-in="showInvites">
+			<div class="panel-collapse collapse" class="<%- showInvites? 'show': '' %>">
 				<div class="panel-body">
-					<form rv-show="creatingInvite" >
-						#TODO: edit invite permissions
-						<div class="error" rv-text="inviteError"></div>
-					</form>
+					<% if (creatingInvite) { %>
+						<form>
+							#TODO: edit invite permissions
+							<div class="error"><%- inviteError %></div>
+						</form>
+					<% } %>
 					<ol>
 						<% for (const invite of invites && invites.models || []) { %>
 							<li>
 								<span><%- invite.get('admin_username') %></span>
 								<span><%- lux(invite.get('date'), 'DATETIME_SHORT') %></span>
-								<span><%- invite.get('token', '').slice(0, 8) %></span>
+								<span><%- (invite.get('token')||'').slice(0, 8) %></span>
 								<a target="_blank"
-									rv-href="inviteMailto |+ invite:token">
+									href="<%- inviteMailto + invite.get('token') %>">
 									[Send Email]
 								</a>
 							</li>
@@ -102,20 +111,27 @@ module.exports = Backbone.View.extend({
 
 			<div class="panel-collapse collapse show">
 				<div class="panel-body">
-					<form rv-show="creatingUser">
-						<input type="text" name="name" placeholder="Name" required>
-						<input type="submit" class="new btn btn-light" value="Create">
-						<div class="error" rv-text="userError"></div>
-					</form>
-					<div rv-each-user="users">
-						<a rv-href="'#user/' |+ user:username" rv-text="user:username"></a>
-						<span rv-text="user:password"></span>
-						<span rv-text="user.doors"></span>
-						<a rv-show="user:password |and user:id |gt 1" target="_blank"
-							rv-href="mailto |+ user:username |+ ' ' |+ user:password |+ mail2">
-							[Send Email]
-						</a>
-					</div>
+					<% if (creatingUser) { %>
+						<form>
+							<input type="text" name="name" placeholder="Name" required>
+							<input type="submit" class="new btn btn-light" value="Create">
+							<div class="error"><%- userError %></div>
+						</form>
+					<% } %>
+					<% for (const user of users && users.models || []) { %>
+						<div>
+							<a href="#user/<%- user.get('username') %>">
+								<%- user.get('username') %></a>
+							<span><%- user.get('password') %></span>
+							<span><%- user.doors %></span>
+							<% if (user.get('password') && user.id > 1) { %>
+								<a target="_blank"
+									href="<%- mailto + user.get('username') + ' ' + user.get('password') + mail2%>">
+									[Send Email]
+								</a>
+							<% } %>
+						</div>
+					<% } %>
 				</div>
 			</div>
 		</div>
@@ -132,6 +148,7 @@ module.exports = Backbone.View.extend({
 			return App.Router.navigate('', {trigger: true});
 		}
 
+		this.settings = App.Settings;
 		this.doors = new (Backbone.Collection.extend({
 			url: '/api/v1/doors',
 		}))();
@@ -142,7 +159,6 @@ module.exports = Backbone.View.extend({
 			//TODO: render should not be nessicary
 			this.render();
 		}, this));
-		this.doors.fetch();
 
 		this.users = new (Backbone.Collection.extend({
 			url: '/api/v1/users',
@@ -162,9 +178,6 @@ module.exports = Backbone.View.extend({
 		this.privateSettings = new (Backbone.Model.extend({
 			url: '/api/v1/site/private_settings',
 		}))();
-		this.privateSettings.fetch({success: _.bind(function() {
-			this.render();
-		}, this)});
 
 		this.invites = new (Backbone.Collection.extend({
 			url: '/api/v1/site/invites',
@@ -172,16 +185,21 @@ module.exports = Backbone.View.extend({
 		this.invites.on('sync', () => {
 			this.render();
 		});
+
+		this.doors.fetch();
 		this.invites.fetch();
+		this.privateSettings.fetch({success: _.bind(function() {
+			this.render();
+		}, this)});
 	},
+	settingsError: null,
+	creatingDoor: null,
+	creatingUser: null,
+	creatingInvite: null,
+	showInvites: null,
 	render: function() {
 		// console.log("RENDER MAIN:", App.User.get('admin'))
 		Object.assign(this, {
-			// doors: this.doors,
-			// users: this.users,
-			invites: this.invites, // TODO: WTF
-			settings: App.Settings,
-			privateSettings: this.privateSettings,
 			mailto: "mailto:?subject=Portalbot&body=Hey! you've been setup on the door. Visit " +
 				window.location.toString().replace(window.location.hash, '') +
 				' and sign-in with the username and password:%0D%0A%0D%0A',
@@ -198,7 +216,7 @@ module.exports = Backbone.View.extend({
 			e.preventDefault();
 			if (this.$('.doors .panel-collapse.show').length) {
 				e.stopPropagation();
-			} else if (this.scope.creatingDoor) {
+			} else if (this.creatingDoor) {
 				//TODO: delayFocus?
 				setTimeout(_.bind(function() {
 					this.$('.doors input[name]').focus();
@@ -208,12 +226,12 @@ module.exports = Backbone.View.extend({
 		}
 
 		if (this.$(e.currentTarget).hasClass('toggle')) {
-			this.scope.creatingDoor = !this.scope.creatingDoor;
-			this.scope.doorError = undefined;
-			if (this.scope.creatingDoor) {
-				setTimeout(_.bind(function() {
+			this.creatingDoor = !this.creatingDoor;
+			this.doorError = undefined;
+			if (this.creatingDoor) {
+				setTimeout(() => {
 					this.$('.doors input[name]').focus();
-				}, this));
+				});
 			}
 		} else {
 			// console.log('CREEATING DOOR');
@@ -222,11 +240,11 @@ module.exports = Backbone.View.extend({
 			}, {wait: true,
 				success: _.bind(function() {
 					console.log('DOOR CREATE DONE!', this.doors);
-					this.scope.creatingDoor = false;
+					this.creatingDoor = false;
 				}, this),
 				error: _.bind(function(m, resp) {
 					console.warn('DOOR CREATE ERR!', resp.responseText);
-					this.scope.doorError = resp.responseText;
+					this.doorError = resp.responseText;
 				}, this),
 			});
 		}
@@ -234,9 +252,9 @@ module.exports = Backbone.View.extend({
 	//TODO: door_panel
 	// editDoor: function(e) {
 	// 	var id = $(e.currentTarget).data('id');
-	// 	if (!this.scope.editingDoor) {
-	// 		this.scope.editingDoor = id;
-	// 		self.scope.error = undefined;
+	// 	if (!this.editingDoor) {
+	// 		this.editingDoor = id;
+	// 		self.error = undefined;
 	// 	} else {
 	// 		var door = this.doors.find({id: id});
 	// 		// door.sync(null, this, {url: door.url()+'/open', method: 'PO
@@ -250,7 +268,7 @@ module.exports = Backbone.View.extend({
 		// 	e.preventDefault();
 		// 	if (this.$('.invites .panel-collapse.in').length) {
 		// 		e.stopPropagation();
-		// 	} else if (this.scope.creatingInvite) {
+		// 	} else if (this.creatingInvite) {
 		// 		//TODO: delayFocus?
 		// 		setTimeout(_.bind(function() {
 		// 			this.$('.invites input[name]').focus();
@@ -260,9 +278,9 @@ module.exports = Backbone.View.extend({
 		// }
 
 		// if (this.$(e.currentTarget).hasClass('toggle')) {
-		// 	this.scope.creatingInvite = !this.scope.creatingUser;
-		// 	this.scope.inviteError = undefined;
-		// 	if (this.scope.creatingInvite) {
+		// 	this.creatingInvite = !this.creatingUser;
+		// 	this.inviteError = undefined;
+		// 	if (this.creatingInvite) {
 		// 		setTimeout(_.bind(function() {
 		// 			this.$('.invites input[name]').focus();
 		// 		}, this));
@@ -273,12 +291,12 @@ module.exports = Backbone.View.extend({
 		}, {wait: true,
 			success: _.bind(function() {
 				console.log('INVITE CREATE DONE!', this.doors);
-				this.scope.showInvites = true;
-				this.scope.creatingInvite = false;
+				this.showInvites = true;
+				this.creatingInvite = false;
 			}, this),
 			error: _.bind(function(m, resp) {
 				console.warn('INVITE CREATE ERR!', resp.responseText);
-				this.scope.inviteError = resp.responseText;
+				this.inviteError = resp.responseText;
 			}, this),
 		});
 		// }
@@ -288,7 +306,7 @@ module.exports = Backbone.View.extend({
 			e.preventDefault();
 			if (this.$('.users .panel-collapse.show').length) {
 				e.stopPropagation();
-			} else if (this.scope.creatingUser) {
+			} else if (this.creatingUser) {
 				//TODO: delayFocus?
 				setTimeout(_.bind(function() {
 					this.$('.users input[name]').focus();
@@ -298,9 +316,9 @@ module.exports = Backbone.View.extend({
 		}
 
 		if (this.$(e.currentTarget).hasClass('toggle')) {
-			this.scope.creatingUser = !this.scope.creatingUser;
-			this.scope.userError = undefined;
-			if (this.scope.creatingUser) {
+			this.creatingUser = !this.creatingUser;
+			this.userError = undefined;
+			if (this.creatingUser) {
 				setTimeout(_.bind(function() {
 					this.$('.users input[name]').focus();
 				}, this));
@@ -311,13 +329,13 @@ module.exports = Backbone.View.extend({
 			}, {wait: true,
 				success: _.bind(function(m) {
 					console.log('USER CREATE DONE!', arguments);
-					this.scope.creatingUser = false;
+					this.creatingUser = false;
 					App.Router.navigate('/user/'+m.get('username'),
 						{trigger: true});
 				}, this),
 				error: _.bind(function(m, resp) {
 					console.warn('USER CREATE ERR!', resp.responseText);
-					this.scope.userError = resp.responseText;
+					this.userError = resp.responseText;
 				}, this),
 			});
 		}

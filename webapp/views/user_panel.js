@@ -31,9 +31,8 @@ module.exports = Backbone.View.extend({
 											name="current_password" class="form-control"
 											autocomplete="current-password">
 									<% } %>
-									<% if (this.user.get('admin') && !me) { %>
-										<button disabled="<%- me? 'true': 'false' %>"
-											class="btn btn-light">
+									<% if (self.get('admin') && !me) { %>
+										<button class="btn btn-light">
 											<i class="fa fa-random password"></i>
 										</button>
 									<% } %>
@@ -44,11 +43,11 @@ module.exports = Backbone.View.extend({
 										</span>
 									<% } %>
 									<input placeholder="username" type="hidden" name="username"
-										rv-value="user:username" autocomplete="username">
+										value="<%- user.get('username') %>" autocomplete="username">
 								</td>
 							</tr>
 							<% if (me) { %>
-								<tr >
+								<tr>
 									<td>Keycode</td>
 									<td class="form-inline">
 										<input name="keycode" min="0" max="99999999"
@@ -116,8 +115,8 @@ module.exports = Backbone.View.extend({
 				</div>
 				<div class="panel-footer">
 					<input type="submit" value="More" class="more btn btn-light"
-						rv-enabled="logs.hasMore">
-					<div class="error" rv-text="logsError"></div>
+						disabled="<%- logs.hasMore %>">
+					<div class="error"><%- logsError %></div>
 				</div>
 			</div>
 		</div>
@@ -168,6 +167,7 @@ module.exports = Backbone.View.extend({
 		this.user.on('sync', _.bind(this.dingleDoors, this));
 		this.doors.on('sync', _.bind(this.dingleDoors, this));
 	},
+	logsError: null,
 	render: function() {
 		if (App.Router.args[0] !== this.user.get('username'))
 			return this.initialize();
