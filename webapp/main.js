@@ -1,10 +1,9 @@
 // Portalbot - loads the libraries and exports the global variable "Portalbot".
 
+// include dependancies
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./jquery_extensions');
-// include dependancies + css
-require('bootstrap');
-require('bootstrap/scss/bootstrap.scss');
+require('bootstrap'); // css gets included by layout.css
 const { library, dom } = require('@fortawesome/fontawesome-svg-core');
 const { fas } = require('@fortawesome/free-solid-svg-icons');
 const { far } = require('@fortawesome/free-regular-svg-icons');
