@@ -15,7 +15,7 @@ module.exports = Backbone.View.extend({
 				<% if (user.get('admin')) { %>
 					<a href="#admin"><i class="fa fa-cogs" /></a>
 				<% } %>
-				<a href="<%- '#user/' + user.get('username') %>">
+				<a href="#user/<%- user.get('username') %>">
 					<%- user.get('username') %>
 				</a>
 			</span>
@@ -25,9 +25,5 @@ module.exports = Backbone.View.extend({
 		this.user =  App.User,
 		this.orgName = App.AppConfig.OrgName,
 		this.listenTo(this.user, 'update', this.render);
-	},
-	render: function() {
-		this.$el.html(this.template(this));
-		return this;
 	},
 });

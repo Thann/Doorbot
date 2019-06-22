@@ -47,10 +47,6 @@ module.exports = Backbone.View.extend({
 		}, this));
 		this.doors.fetch();
 	},
-	render: function() {
-		this.$el.html(this.template(this));
-		return this;
-	},
 	openDoor: function(e) {
 		const target = this.$(e.currentTarget);
 		const door = this.doors.find({id: target.data('id')});

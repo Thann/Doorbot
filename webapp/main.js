@@ -3,6 +3,7 @@
 // include dependancies
 require('backbone-subviews'); // also makes "Backbone" globally available.
 require('./jquery_extensions');
+require('./backbone_extensions');
 require('bootstrap'); // css gets included by layout.css
 // compile font-awesome
 const { library, dom } = require('@fortawesome/fontawesome-svg-core');
@@ -23,20 +24,10 @@ module.exports = {
 
 	// Run this after extensions have been loaded.
 	init: function() {
-		const self = this;
-		Backbone.$(document).ready(function() {
-			self.Layout = new self.Views.Layout();
+		Backbone.$(document).ready(() => {
+			this.Layout = new this.Views.Layout();
 		});
 	},
-};
-
-const { DateTime } = require('luxon');
-// Luxon helper to convert database timestamps into human-readable strings
-Backbone.View.prototype.lux = function lux(time, format) {
-	return DateTime
-		.fromSQL(time, {zone: 'UTC'})
-		.setZone('local')
-		.toLocaleString(format && DateTime[format] || DateTime.DATETIME_FULL);
 };
 
 // Load all files from a "context" into a single object.

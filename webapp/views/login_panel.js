@@ -47,14 +47,14 @@ module.exports = Backbone.View.extend({
 			</div>
 		<% } %>
 
-		<% if (user.attributes.requires_reset) { %>
+		<% if (user.get('requires_reset')) { %>
 			<p class="bold">
 				Your password was set by an admin and requires a reset!
 			</p>
 			<form action="auth" class="change form-inline">
 				<div class="form-group">
 					<input placeholder="username" type="hidden" name="username"
-						value="<%- user.attributes.username %>" autocomplete="username">
+						value="<%- user.get('username') %>" autocomplete="username">
 				</div> <div class="form-group">
 					<input placeholder="new password" type="password" name="password"
 						class="form-control" autocomplete="new-password">
@@ -70,7 +70,7 @@ module.exports = Backbone.View.extend({
 			<a class="btn btn-light" href="#">Doors</a>
 			<a class="btn btn-light logout" href="#login">Logout</a>
 			<a class="btn btn-light"
-				href="<%- '#user/' + user.attributes.username %>">
+				href="#user/<%- user.get('username') %>">
 				User Settings
 			</a>
 		<% } %>
@@ -81,12 +81,10 @@ module.exports = Backbone.View.extend({
 		'submit form.change': 'changePW',
 		'click .logout': 'logout',
 	},
-	render: function() {
+	error: null,
+	OrgName: false,
+	initialize: function() {
 		this.user = App.User;
-		this.error = null;
-		this.OrgName = false;
-		this.$el.html(this.template(this));
-		return this;
 	},
 	login: function(evt) {
 		evt.preventDefault();
