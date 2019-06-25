@@ -116,21 +116,24 @@ async function index(request, response) {
 	const users = await db.all(`
 		SELECT users.*, '['||
 			GROUP_CONCAT( '{'||
-				'"id":'          || permissions.door_id ||','||
-				'"name":"'       || IFNULL(doors.name, '') ||'",'||
+				'"id":'          || permissions.service_id ||','||
+				'"type":"'       || IFNULL(services.type, '') ||'",'||
+				'"name":"'       || IFNULL(services.name, '') ||'",'||
 				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
 				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
 				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
-			'}' ) ||']' AS doors FROM users
+			'}' ) ||']' AS services FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
-		LEFT JOIN doors ON permissions.door_id = doors.id
-		WHERE deleted_at IS NULL GROUP BY users.id`);
+		LEFT JOIN services ON permissions.service_id = services.id
+		WHERE users.deleted_at IS NULL
+			AND (services.deleted_at IS NULL OR services.deleted_at > CURRENT_TIMESTAMP)
+		GROUP BY users.id`);
 
 	const userList = [];
 	for (const usr of users) {
 		userList.push({
 			id: usr.id,
-			doors: JSON.parse(usr.doors) || [],
+			services: JSON.parse(usr.services) || [],
 			admin: usr.admin || 0,
 			username: usr.username,
 			password: usr.pw_salt? undefined : usr.password_hash,
@@ -223,15 +226,17 @@ async function read(request, response) {
 	const usr = await db.get(`
 		SELECT users.*, '['||
 			GROUP_CONCAT( '{'||
-				'"id":'          || permissions.door_id ||','||
-				'"name":"'       || IFNULL(doors.name, '') ||'",'||
+				'"id":'          || permissions.service_id ||','||
+				'"type":"'       || IFNULL(services.type, '') ||'",'||
+				'"name":"'       || IFNULL(services.name, '') ||'",'||
 				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
 				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
 				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
-			'}' ) ||']' AS doors FROM users
+			'}' ) ||']' AS services FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
-		LEFT JOIN doors ON permissions.door_id = doors.id
-		WHERE username = ? AND deleted_at IS NULL`,
+		LEFT JOIN services ON permissions.service_id = services.id
+		WHERE username = ? AND users.deleted_at IS NULL AND
+			(services.deleted_at IS NULL OR services.deleted_at > CURRENT_TIMESTAMP)`,
 		request.params.username);
 
 	if (!usr.id) {
@@ -239,7 +244,7 @@ async function read(request, response) {
 	}
 	response.send({
 		id: usr.id,
-		doors: JSON.parse(usr.doors) || [],
+		services: JSON.parse(usr.services) || [],
 		admin: usr.admin || 0,
 		username: usr.username,
 		// TODO: formalize permission
@@ -319,20 +324,22 @@ async function update(request, response) {
 	const usr = await db.get(`
 		SELECT users.*, '['||
 			GROUP_CONCAT( '{'||
-				'"id":'          || permissions.door_id ||','||
-				'"name":"'       || IFNULL(doors.name, '') ||'",'||
+				'"id":'          || permissions.service_id ||','||
+				'"type":"'       || IFNULL(services.type, '') ||'",'||
+				'"name":"'       || IFNULL(services.name, '') ||'",'||
 				'"creation":"'   || IFNULL(permissions.creation, '') ||'",'||
 				'"expiration":"' || IFNULL(permissions.expiration, '') ||'",'||
 				'"constraints":"'|| IFNULL(permissions.constraints, '') ||'"'||
-			'}' ) ||']' AS doors FROM users
+			'}' ) ||']' AS services FROM users
 		LEFT JOIN permissions ON users.id = permissions.user_id
-		LEFT JOIN doors ON permissions.door_id = doors.id
-		WHERE username = ? AND deleted_at IS NULL`,
+		LEFT JOIN services ON permissions.service_id = services.id
+		WHERE username = ? AND users.deleted_at IS NULL AND
+			(services.deleted_at IS NULL OR services.deleted_at > CURRENT_TIMESTAMP)`,
 		request.params.username);
 
 	response.send({
 		id: usr.id,
-		doors: JSON.parse(usr.doors) || [],
+		services: JSON.parse(usr.services) || [],
 		admin: usr.admin || 0,
 		username: usr.username,
 		password: user.admin && !usr.pw_salt && usr.password_hash || undefined,
@@ -370,15 +377,33 @@ async function logs(request, response) {
 	}
 
 	const logs = await db.all(`
-		SELECT entry_logs.*, doors.name AS door FROM entry_logs
-		INNER JOIN users ON entry_logs.user_id = users.id
-		INNER JOIN doors ON entry_logs.door_id = doors.id
-		WHERE users.username = ? AND deleted_at IS NULL
-			AND entry_logs.id < COALESCE(?, 9e999)
-		ORDER BY entry_logs.id DESC LIMIT ?`,
+		SELECT service_logs.*, services.id AS service_id,
+			services.name AS service_name, services.type AS service_type
+			FROM service_logs
+		INNER JOIN users ON service_logs.user_id = users.id
+		INNER JOIN services ON service_logs.service_id = services.id
+		WHERE users.username = ? AND users.deleted_at IS NULL
+			AND service_logs.id < COALESCE(?, 9e999)
+			AND (services.deleted_at IS NULL OR services.deleted_at > CURRENT_TIMESTAMP)
+		ORDER BY service_logs.id DESC LIMIT ?`,
 		request.params.username, lastID, 50);
 
-	response.send(logs);
+	// response.send(logs);
+	const logList = [];
+	for (const log of logs) {
+		if (log.id)
+			logList.push({
+				id: log.id,
+				service: {
+					id: log.service_id,
+					type: log.service_type,
+					name: log.service_name,
+				},
+				time: log.time,
+				note: log.note,
+			});
+	}
+	response.send(logList);
 }
 
 async function invited(request, response) {
@@ -397,12 +422,12 @@ async function invited(request, response) {
 	}
 
 	const logs = await db.all(`
-		SELECT entry_logs.*, doors.name AS door FROM entry_logs
-		INNER JOIN users ON entry_logs.user_id = users.id
-		INNER JOIN doors ON entry_logs.door_id = doors.id
-		WHERE users.username = ? AND deleted_at IS NULL
-			AND entry_logs.id < COALESCE(?, 9e999)
-		ORDER BY entry_logs.id DESC LIMIT ?`,
+		SELECT service_logs.*, services.name AS door FROM service_logs
+		INNER JOIN users ON service_logs.user_id = users.id
+		INNER JOIN services ON service_logs.door_id = services.id
+		WHERE users.username = ? AND users.deleted_at IS NULL
+			AND service_logs.id < COALESCE(?, 9e999) AND services.deleted_at < CURRENT_TIMESTAMP
+		ORDER BY service_logs.id DESC LIMIT ?`,
 		request.params.username, lastID, 50);
 
 	response.send(logs);

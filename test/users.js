@@ -75,7 +75,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
-				doors: [],
+				services: [],
 				admin: 0xffffffff,
 				password: 'admin',
 				username: 'admin',
@@ -84,7 +84,7 @@ describe('Users API', function() {
 		await agent.get('/users/dummy')
 			.expect(200, {
 				id: 2,
-				doors: [],
+				services: [],
 				admin: false,
 				password: /\w+/,
 				username: 'Dummy',
@@ -100,8 +100,9 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
-				doors: [{
+				services: [{
 					'id': 1,
+					'type': 'door',
 					'name': 'main',
 					'creation': /.+/,
 					'expiration': '',
@@ -115,14 +116,16 @@ describe('Users API', function() {
 		await agent.get('/users/Dummy')
 			.expect(200, {
 				id: 2,
-				doors: [{
+				services: [{
 					'id': 1,
+					'type': 'door',
 					'name': 'main',
 					'creation': /.+/,
 					'expiration': '',
 					'constraints': 'ip:192.168.1.1/30',
 				}, {
 					'id': 2,
+					'type': 'door',
 					'name': 'rear',
 					'creation': /.+/,
 					'expiration': '',
@@ -139,14 +142,14 @@ describe('Users API', function() {
 		await agent.get('/users')
 			.expect(200, [{
 				id: 1,
-				doors: [],
+				services: [],
 				admin: 0xffffffff,
 				password: 'admin',
 				username: 'admin',
 				requires_reset: true,
 			}, {
 				id: 2,
-				doors: [],
+				services: [],
 				admin: false,
 				password: /\w+/,
 				username: 'Dummy',
@@ -160,12 +163,13 @@ describe('Users API', function() {
 		await agent.get('/users')
 			.expect(200, [{
 				id: 1,
-				doors: [{
-					'id': 1,
-					'name': 'main',
-					'creation': /\w+/,
-					'expiration': '',
-					'constraints': '',
+				services: [{
+					id: 1,
+					type: 'door',
+					name: 'main',
+					creation: /\w+/,
+					expiration: '',
+					constraints: '',
 				}],
 				admin: 0xffffffff,
 				password: 'admin',
@@ -173,20 +177,22 @@ describe('Users API', function() {
 				requires_reset: true,
 			}, {
 				id: 2,
-				doors: [{
-					'id': 1,
-					'name': 'main',
-					'creation': /\w+/,
-					'expiration': '',
-					'constraints': 'ip:192.168.1.1/30',
+				services: [{
+					id: 1,
+					type: 'door',
+					name: 'main',
+					creation: /\w+/,
+					expiration: '',
+					constraints: 'ip:192.168.1.1/30',
 				}, {
-					'id': 2,
-					'name': 'rear',
-					'creation': /\w+/,
-					'expiration': '',
-					'constraints': '',
+					id: 2,
+					type: 'door',
+					name: 'rear',
+					creation: /\w+/,
+					expiration: '',
+					constraints: '',
 				}],
-				admin: false,
+				admin: 0,
 				password: /\w+/,
 				username: 'Dummy',
 				requires_reset: true,
@@ -201,8 +207,8 @@ describe('Users API', function() {
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
-				doors: [],
-				admin: false,
+				services: [],
+				admin: 0,
 				username: 'Dummy',
 				password: 'dummy',
 				requires_reset: true,
@@ -211,7 +217,7 @@ describe('Users API', function() {
 			.send({password: 'admin', keycode: 1})
 			.expect(200, {
 				id: 1,
-				doors: [],
+				services: [],
 				admin: 0xffffffff,
 				username: 'admin',
 				requires_reset: false,
@@ -219,7 +225,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
-				doors: [],
+				services: [],
 				admin: 0xffffffff,
 				username: 'admin',
 				requires_reset: false,
@@ -238,20 +244,22 @@ describe('Users API', function() {
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
-				doors: [{
+				services: [{
 					'id': 1,
+					'type': 'door',
 					'name': 'main',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': 'ip:192.168.1.1/30',
 				}, {
 					'id': 2,
+					'type': 'door',
 					'name': 'rear',
 					'creation': /\w+/,
 					'expiration': '',
 					'constraints': '',
 				}],
-				admin: false,
+				admin: 0,
 				username: 'Dummy',
 				password: 'dummy',
 				requires_reset: true,
@@ -283,7 +291,7 @@ describe('Users API', function() {
 		await agent.get('/users/delete_me')
 			.expect(200, {
 				id: 4,
-				doors: [],  // ensure no permissions
+				services: [],  // ensure no permissions
 				admin: false,
 				username: 'delete_me',
 				password: /\w{14}/,
@@ -305,21 +313,25 @@ describe('Users API', function() {
 		await agent.get('/users/admin/logs')
 			.expect(200, [{
 				id: 1,
-				door_id: 1,
-				user_id: 1,
-				door: 'main',
+				service: {
+					id: 1,
+					type: 'door',
+					name: 'main',
+				},
 				time: /[\d\-: ]+/,
-				method: 'web:::ffff:127.0.0.1',
+				note: 'web:::ffff:127.0.0.1',
 			}]);
 		await agent.post('/doors/1/open').expect(204);
 		await agent.get('/users/admin/logs?last_id=2')
 			.expect(200, [{
 				id: 1,
-				door_id: 1,
-				user_id: 1,
-				door: 'main',
+				service: {
+					id: 1,
+					type: 'door',
+					name: 'main',
+				},
 				time: /[\d\-: ]+/,
-				method: 'web:::ffff:127.0.0.1',
+				note: 'web:::ffff:127.0.0.1',
 			}]);
 		await agent.get('/users/Dummy/logs')
 			.expect(200, []);
@@ -374,14 +386,15 @@ describe('Users API', function() {
 			await agent.get('/users/Dummy')
 				.expect(200, {
 					id: 2,
-					doors: [{
-						'id': 1,
-						'name': 'main',
-						'creation': /\w+/,
-						'expiration': '',
-						'constraints': '',
+					services: [{
+						id: 1,
+						type: 'door',
+						name: 'main',
+						creation: /\w+/,
+						expiration: '',
+						constraints: '',
 					}],
-					admin: false,
+					admin: 0,
 					username: 'Dummy',
 					requires_reset: true,
 				});
@@ -407,28 +420,30 @@ describe('Users API', function() {
 				.send({password: 'door_dummy'})
 				.expect(200, {
 					id: 2,
-					doors: [{
+					services: [{
 						'id': 1,
+						type: 'door',
 						'name': 'main',
 						'creation': /\w+/,
 						'expiration': '',
 						'constraints': '',
 					}],
-					admin: false,
+					admin: 0,
 					username: 'Dummy',
 					requires_reset: false,
 				});
 			await agent.get('/users/Dummy')
 				.expect(200, {
 					id: 2,
-					doors: [{
+					services: [{
 						'id': 1,
+						type: 'door',
 						'name': 'main',
 						'creation': /\w+/,
 						'expiration': '',
 						'constraints': '',
 					}],
-					admin: false,
+					admin: 0,
 					username: 'Dummy',
 					requires_reset: false,
 				});
@@ -496,11 +511,13 @@ describe('Users API', function() {
 			await agent.get('/users/dummy/logs')
 				.expect(200, [{
 					id: 1,
-					door_id: 1,
-					user_id: 2,
-					door: 'main',
+					service: {
+						id: 1,
+						type: 'door',
+						name: 'main',
+					},
 					time: /[\d\-: ]+/,
-					method: 'web:::ffff:127.0.0.1',
+					note: 'web:::ffff:127.0.0.1',
 				}]);
 		});
 
