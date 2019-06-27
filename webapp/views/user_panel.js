@@ -84,7 +84,8 @@ module.exports = Backbone.View.extend({
 						<% for (const door of doors) { %>
 							<div>
 								<a data-id="<%- door.id %>"
-									class="<%- self.admin? (door.allowed? 'deny': 'permit'): ''%>self:admin">
+									<% if (self.attributes.admin) { %> href="#" <% } %>
+									class="<%- door.allowed? 'deny': 'permit' %>">
 									<span><%- door.attributes.name %></span>
 									<span class="fa fa-<%- door.attributes.allowed? 'check-circle': 'ban' %>"></span>
 								</a>
@@ -105,10 +106,10 @@ module.exports = Backbone.View.extend({
 					<table>
 						<% for (const log of logs) { %>
 							<tr>
-								<td><%- log.attributes.door %></td>
+								<td><%- log.attributes.service.name %></td>
 								<td><%- lux(log.get('time'), 'DATE_FULL') %></td>
 								<td><%- lux(log.get('time'), 'TIME_WITH_SHORT_OFFSET') %></td>
-								<td><%- log.attributes.method %></td>
+								<td><%- log.attributes.note %></td>
 							</tr>
 						<% } %>
 					</table>
@@ -175,13 +176,13 @@ module.exports = Backbone.View.extend({
 		return this;
 	},
 	dingleDoors: function() {
-		if (!this.user.get('doors'))
+		if (!this.user.get('services'))
 			return this.render();
-		this.doors.each(_.bind(function(d) {
-			if (_.findWhere(this.user.get('doors'), {id: d.id})) {
+		this.doors.each((d) => {
+			if (_.findWhere(this.user.get('services'), {id: d.id})) {
 				d.set('allowed', true);
 			}
-		}, this));
+		});
 		this.render();
 	},
 	fetch: function() {

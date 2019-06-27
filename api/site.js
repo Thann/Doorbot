@@ -24,6 +24,7 @@ module.exports = function(app) {
 // === Default Settings ===
 
 const publicSettings = {
+	app_name: null,
 	org_name: null,
 	require_invites: true,
 };

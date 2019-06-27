@@ -9,11 +9,16 @@ const Users = [
 		id: 2,
 		admin: 0,
 		username: 'lacky',
-		doors: [{id: 1}, {id: 2}],
+		services: [
+			{id: 1, type: 'door', name: 'Front Door'},
+			{id: 2, type: 'door', name: 'Back Door'},
+		],
 	}, {
 		id: 3,
 		admin: 0,
-		doors: [{id: 1}],
+		services: [
+			{id: 1, type: 'door', name: 'Front Door'},
+		],
 		username: 'newb',
 		password: '77bcc639bb33e4',
 		requires_reset: true,
@@ -22,9 +27,13 @@ const Users = [
 
 const MockData = {
 	'site/settings': {
-		orgName: 'DemoOrg',
+		app_name: null,
+		org_name: 'DemoOrg',
+		require_invites: true,
 	},
-	'site/private_settings': {},
+	'site/private_settings': {
+		auth_attempts_per_hour: 15,
+	},
 	'users/me': {
 		id: 1,
 		admin: 1,
@@ -50,17 +59,23 @@ const MockData = {
 		{
 			id: 3,
 			user_id: 1,
-			door_id: 1,
-			method: 'web:10.1.1.101',
+			service: {
+				id: 1,
+				type: 'door',
+				name: 'Front Door',
+			},
+			note: 'web:10.1.1.101',
 			time: '2018-11-01 01:45:02',
-			door: 'Front Door',
 		},{
 			id: 2,
 			user_id: 1,
-			door_id: 1,
-			method: 'web:10.1.1.101',
+			service: {
+				id: 1,
+				type: 'door',
+				name: 'Front Door',
+			},
+			note: 'web:10.1.1.101',
 			time: '2018-10-23 20:38:17',
-			door: 'Front Door',
 		},
 	],
 	'users/lacky': Users[1],
@@ -68,10 +83,13 @@ const MockData = {
 		{
 			id: 5,
 			user_id: 2,
-			door_id: 1,
-			method: 'web:10.1.1.101',
+			service: {
+				id: 1,
+				type: 'door',
+				name: 'Front Door',
+			},
+			note: 'web:10.1.1.101',
 			time: '2018-10-23 20:38:17',
-			door: 'Front Door',
 		},
 	],
 	'users/newb': Users[2],

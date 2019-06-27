@@ -123,7 +123,9 @@ module.exports = Backbone.View.extend({
 							<a href="#user/<%- user.get('username') %>">
 								<%- user.get('username') %></a>
 							<span><%- user.get('password') %></span>
-							<span><%- user.doors %></span>
+							<% for (const service of user.get('services') || []) { %>
+								<span class="comma"><%- service.name %></span>
+							<% } %>
 							<% if (user.get('password') && user.id > 1) { %>
 								<a target="_blank"
 									href="<%- mailto + user.get('username') + ' ' + user.get('password') + mail2%>">
@@ -144,7 +146,6 @@ module.exports = Backbone.View.extend({
 	},
 	initialize: function() {
 		if (!App.User.get('admin')) {
-			// console.log("NOT ADMIN!!");
 			return App.Router.navigate('', {trigger: true});
 		}
 
@@ -152,28 +153,10 @@ module.exports = Backbone.View.extend({
 		this.doors = new (Backbone.Collection.extend({
 			url: '/api/v1/doors',
 		}))();
-		this.doors.on('sync', _.bind(function() {
-			if (this.users) {
-				this.users.fetch();
-			}
-			//TODO: render should not be nessicary
-			this.render();
-		}, this));
 
 		this.users = new (Backbone.Collection.extend({
 			url: '/api/v1/users',
 		}))();
-		this.users.on('sync', _.bind(function(coll) {
-			// Turn door numbers into names
-			if (coll.each)
-				coll.each(_.bind(function(user) {
-					user.doors = _.map(user.get('doors'), _.bind(function(d) {
-						return this.doors.findWhere({id: d.id}).get('name');
-					}, this));
-				}, this));
-			//TODO: render should not be nessicary
-			this.render();
-		}, this));
 
 		this.privateSettings = new (Backbone.Model.extend({
 			url: '/api/v1/site/private_settings',
@@ -182,15 +165,18 @@ module.exports = Backbone.View.extend({
 		this.invites = new (Backbone.Collection.extend({
 			url: '/api/v1/site/invites',
 		}))();
-		this.invites.on('sync', () => {
-			this.render();
-		});
 
+		for (const model of [
+			this.doors, this.users, this.privateSettings, this.invites]) {
+			this.listenTo(model, 'sync', () => {
+				this.render();
+			});
+		}
+
+		this.users.fetch();
 		this.doors.fetch();
 		this.invites.fetch();
-		this.privateSettings.fetch({success: _.bind(function() {
-			this.render();
-		}, this)});
+		this.privateSettings.fetch();
 	},
 	settingsError: null,
 	creatingDoor: null,

@@ -147,3 +147,7 @@ body {
 .disabled {
 	color: grey;
 }
+
+.comma:not(:last-of-type):after {
+  content: ",";
+}
