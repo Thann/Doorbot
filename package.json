@@ -35,15 +35,16 @@
     "clean-webpack-plugin": "^3.0.0",
     "compression-webpack-plugin": "^1.1.12",
     "cookie": "^0.3.1",
-    "css-loader": "^3.0.0",
+    "css-loader": "^3.1.0",
     "eslint": "^5.16.0",
-    "eslint-loader": "^2.1.2",
+    "eslint-loader": "^2.2.1",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
+    "health": "github:thann/health.js",
     "html-webpack-plugin": "^3.2.0",
     "imports-loader": "^0.8.0",
     "jquery": "^3.4.1",
-    "luxon": "^1.16.0",
+    "luxon": "^1.17.1",
     "node-getopt": "^0.3.2",
     "node-sass": "^4.12.0",
     "nodemon": "^1.19.1",
@@ -55,13 +56,13 @@
     "sass-loader": "^7.1.0",
     "sqlite": "^3.0.3",
     "style-loader": "^0.19.1",
-    "webpack": "^4.33.0",
+    "webpack": "^4.36.1",
     "ws": "^5.2.2"
   },
   "devDependencies": {
     "mocha": "^5.2.0",
     "supertest": "github:thann/supertest",
-    "webpack-cli": "^3.3.4"
+    "webpack-cli": "^3.3.6"
   },
   "eslintIgnore": [
     "**/*.js",
