@@ -11,7 +11,7 @@ CREATE TABLE users (
     session_cookie VARCHAR(255) UNIQUE,
     session_created DATETIME,
     email VARCHAR(255) UNIQUE COLLATE NOCASE,
-    balance INTEGER, -- #TODO: wtf
+    balances VARCHAR(512), -- # JSON
     -- oauth_id VARCHAR(255),
     -- oauth_token VARCHAR(255),
     -- oauth_domain VARCHAR(255),
@@ -65,21 +65,36 @@ INSERT INTO service_logs
   FROM entry_logs;
 DROP TABLE entry_logs;
 
+-- plans -- templates for permissions
+CREATE TABLE plans (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER, -- creator
+    service_id INTEGER,
+    data VARCHAR(512), --JSON
+    expiration DATETIME,
+    creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    constraints VARCHAR(255),
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(service_id) REFERENCES services(id)
+);
+
 -- permissions
 ALTER TABLE permissions RENAME TO temp_permissions;
 CREATE TABLE permissions (
     id INTEGER PRIMARY KEY,
     user_id INTEGER,
+    plan_id INTEGER,
     service_id INTEGER,
     expiration DATETIME,
     creation DATETIME DEFAULT CURRENT_TIMESTAMP,
     constraints VARCHAR(255),
     FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(plan_id) REFERENCES plans(id),
     FOREIGN KEY(service_id) REFERENCES services(id),
     UNIQUE(user_id, service_id)
 );
 INSERT INTO permissions
-  SELECT id, user_id, door_id, expiration, creation, constraints
+  SELECT id, user_id, NULL, door_id, expiration, creation, constraints
   FROM temp_permissions;
 DROP TABLE temp_permissions;
 
@@ -88,7 +103,8 @@ CREATE TABLE transactions (
 	user_to INTEGER REFERENCES users(id),
 	user_from INTEGER REFERENCES users(id),
 	note VARCHAR(255) NULL,
-	amount INTEGER,
+	currency VARCHAR(32),
+	amount FLOAT,
 	created_at DATETIME
 );
 
@@ -157,3 +173,4 @@ DROP TABLE service_logs;
 DROP TABLE temp_permissions;
 DROP TABLE services;
 DROP TABLE transactions;
+DROP TABLE plans;
