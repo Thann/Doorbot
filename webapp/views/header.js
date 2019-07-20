@@ -8,7 +8,7 @@ module.exports = Backbone.View.extend({
 			<% if (orgName) { %>
 				<span><%- orgName %> </span>
 			<% } %>
-			<span>Portal</span>
+			<span>Doorbot</span>
 		</a>
 		<% if (user.isAuthed) { %>
 			<span class="pull-right">

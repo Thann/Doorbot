@@ -8,7 +8,7 @@ module.exports = Backbone.View.extend({
 	template: _.template(`
 		<h2>Welcome to
 			<% if (OrgName) { %> the Portal for <%- OrgName %>!
-			<% } else { %> PortalBot!<% } %>
+			<% } else { %> Doorbot!<% } %>
 		</h2>
 		<h4>
 			An <a href="https://github.com/Thann/Doorbot" target="_blank" rel="nofollow">open source</a>
