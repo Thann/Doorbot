@@ -46,6 +46,37 @@ const checkCookie = async function(request, response) {
 };
 module.exports.checkCookie = checkCookie;
 
+const updateUserBalances = async function(username) {
+	//TODO: possible to simplify into one query?
+	const gains = await db.all(`
+		SELECT SUM(G.amount) amount, G.currency FROM users
+			LEFT JOIN transactions as G ON G.user_to = users.id
+		WHERE users.username = ? AND deleted_at IS NULL GROUP BY currency`,
+		username);
+	const losses = await db.all(`
+		SELECT SUM(L.amount) amount, L.currency FROM users
+			LEFT JOIN transactions as L ON L.user_from = users.id
+		WHERE users.username = ? AND deleted_at IS NULL GROUP BY currency`,
+		username);
+	// calculate balances
+	const balances = {};
+	for (const gain of gains) {
+		if (gain.currency)
+			balances[gain.currency] = gain.amount;
+	}
+	for (const loss of losses) {
+		if (loss.currency)
+			balances[loss.currency] -= loss.amount;
+	}
+	// console.log({gains, losses, balances})
+	const resp = await db.run(`
+		UPDATE users SET balances = ?
+		WHERE username = ? AND deleted_at IS NULL`,
+		JSON.stringify(balances), username);
+	return resp.stmt.changes;
+};
+module.exports.updateUserBalances = updateUserBalances;
+
 const site = require('./site');  //TODO: remove circular require.
 const userAuthRates = new MemCache();
 
@@ -133,6 +164,7 @@ async function index(request, response) {
 	for (const usr of users) {
 		userList.push({
 			id: usr.id,
+			balances: JSON.parse(usr.balances),
 			services: JSON.parse(usr.services) || [],
 			admin: usr.admin || 0,
 			username: usr.username,
@@ -244,9 +276,10 @@ async function read(request, response) {
 	}
 	response.send({
 		id: usr.id,
-		services: JSON.parse(usr.services) || [],
 		admin: usr.admin || 0,
 		username: usr.username,
+		balances: JSON.parse(usr.balances),
+		services: JSON.parse(usr.services) || [],
 		// TODO: formalize permission
 		password: (user.has(Perms.ADMIN) &&
 			!usr.pw_salt && usr.password_hash) || undefined,
@@ -339,6 +372,7 @@ async function update(request, response) {
 
 	response.send({
 		id: usr.id,
+		balances: JSON.parse(usr.balances),
 		services: JSON.parse(usr.services) || [],
 		admin: usr.admin || 0,
 		username: usr.username,

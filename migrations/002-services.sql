@@ -11,7 +11,7 @@ CREATE TABLE users (
     session_cookie VARCHAR(255) UNIQUE,
     session_created DATETIME,
     email VARCHAR(255) UNIQUE COLLATE NOCASE,
-    balances VARCHAR(512), -- # JSON
+    balances VARCHAR(512) DEFAULT '{}', -- # JSON
     -- oauth_id VARCHAR(255),
     -- oauth_token VARCHAR(255),
     -- oauth_domain VARCHAR(255),
@@ -70,7 +70,7 @@ CREATE TABLE plans (
     id INTEGER PRIMARY KEY,
     user_id INTEGER, -- creator
     service_id INTEGER,
-    data VARCHAR(512), --JSON
+    data VARCHAR(512) DEFAULT '{}', -- # JSON
     expiration DATETIME,
     creation DATETIME DEFAULT CURRENT_TIMESTAMP,
     constraints VARCHAR(255),
@@ -102,10 +102,10 @@ CREATE TABLE transactions (
 	id INTEGER PRIMARY KEY,
 	user_to INTEGER REFERENCES users(id),
 	user_from INTEGER REFERENCES users(id),
-	note VARCHAR(255) NULL,
-	currency VARCHAR(32),
+	note VARCHAR(255),
+	currency VARCHAR(16) NOT NULL,
 	amount FLOAT,
-	created_at DATETIME
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- DOWN

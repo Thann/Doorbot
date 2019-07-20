@@ -1,6 +1,7 @@
 'use strict';
 
 const db = require('../lib/db');
+const users = require('../api/users');
 const server = require('../server');
 const agent = require('supertest').agent(server, {prefix: '/api/v1'});
 
@@ -75,6 +76,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
+				balances: {},
 				services: [],
 				admin: 0xffffffff,
 				password: 'admin',
@@ -84,6 +86,7 @@ describe('Users API', function() {
 		await agent.get('/users/dummy')
 			.expect(200, {
 				id: 2,
+				balances: {},
 				services: [],
 				admin: false,
 				password: /\w+/,
@@ -100,6 +103,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
+				balances: {},
 				services: [{
 					'id': 1,
 					'type': 'door',
@@ -116,6 +120,7 @@ describe('Users API', function() {
 		await agent.get('/users/Dummy')
 			.expect(200, {
 				id: 2,
+				balances: {},
 				services: [{
 					'id': 1,
 					'type': 'door',
@@ -142,6 +147,7 @@ describe('Users API', function() {
 		await agent.get('/users')
 			.expect(200, [{
 				id: 1,
+				balances: {},
 				services: [],
 				admin: 0xffffffff,
 				password: 'admin',
@@ -149,6 +155,7 @@ describe('Users API', function() {
 				requires_reset: true,
 			}, {
 				id: 2,
+				balances: {},
 				services: [],
 				admin: false,
 				password: /\w+/,
@@ -163,6 +170,7 @@ describe('Users API', function() {
 		await agent.get('/users')
 			.expect(200, [{
 				id: 1,
+				balances: {},
 				services: [{
 					id: 1,
 					type: 'door',
@@ -177,6 +185,7 @@ describe('Users API', function() {
 				requires_reset: true,
 			}, {
 				id: 2,
+				balances: {},
 				services: [{
 					id: 1,
 					type: 'door',
@@ -207,6 +216,7 @@ describe('Users API', function() {
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
+				balances: {},
 				services: [],
 				admin: 0,
 				username: 'Dummy',
@@ -217,6 +227,7 @@ describe('Users API', function() {
 			.send({password: 'admin', keycode: 1})
 			.expect(200, {
 				id: 1,
+				balances: {},
 				services: [],
 				admin: 0xffffffff,
 				username: 'admin',
@@ -225,6 +236,7 @@ describe('Users API', function() {
 		await agent.get('/users/admin')
 			.expect(200, {
 				id: 1,
+				balances: {},
 				services: [],
 				admin: 0xffffffff,
 				username: 'admin',
@@ -244,6 +256,7 @@ describe('Users API', function() {
 			.send({password: 'dummy'})
 			.expect(200, {
 				id: 2,
+				balances: {},
 				services: [{
 					'id': 1,
 					'type': 'door',
@@ -291,6 +304,7 @@ describe('Users API', function() {
 		await agent.get('/users/delete_me')
 			.expect(200, {
 				id: 4,
+				balances: {},
 				services: [],  // ensure no permissions
 				admin: false,
 				username: 'delete_me',
@@ -386,6 +400,7 @@ describe('Users API', function() {
 			await agent.get('/users/Dummy')
 				.expect(200, {
 					id: 2,
+					balances: {},
 					services: [{
 						id: 1,
 						type: 'door',
@@ -420,6 +435,7 @@ describe('Users API', function() {
 				.send({password: 'door_dummy'})
 				.expect(200, {
 					id: 2,
+					balances: {},
 					services: [{
 						'id': 1,
 						type: 'door',
@@ -435,6 +451,7 @@ describe('Users API', function() {
 			await agent.get('/users/Dummy')
 				.expect(200, {
 					id: 2,
+					balances: {},
 					services: [{
 						'id': 1,
 						type: 'door',
@@ -530,5 +547,86 @@ describe('Users API', function() {
 			await agent.delete('/auth')
 				.expect(401);
 		});
+	});
+});
+
+describe('Users Balances', function() {
+	beforeEach(async function() {
+		await db.reset();
+		await agent.post('/auth')
+			.send({username: 'admin', password: 'admin'}).expect(200);
+	});
+
+	it('should work', async function() {
+		await agent.get('/users/me')
+			.expect(200, {
+				id: 1,
+				balances: {},
+				services: [],
+				admin: 0xffffffff,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+			});
+
+		await users.updateUserBalances('admin');
+		await agent.get('/users/me')
+			.expect(200, {
+				id: 1,
+				balances: {},
+				services: [],
+				admin: 0xffffffff,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+			});
+
+		// DEPOSIT 0.01 BTC
+		await db.run(`
+			INSERT INTO transactions (user_to, currency, amount) VALUES (?,?,?)`,
+			1, 'BTC', 0.01);
+		await agent.get('/users/me')
+			.expect(200, {
+				id: 1,
+				balances: {},
+				services: [],
+				admin: 0xffffffff,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+			});
+
+		await users.updateUserBalances('admin');
+		await agent.get('/users/me')
+			.expect(200, {
+				id: 1,
+				services: [],
+				admin: 0xffffffff,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+				balances: {
+					'BTC': 0.01,
+				},
+			});
+
+		// DEPOSIT 0.001 BCH
+		await db.run(`
+			INSERT INTO transactions (user_to, currency, amount) VALUES (?,?,?)`,
+			1, 'BCH', 0.001);
+		await users.updateUserBalances('admin');
+		await agent.get('/users/me')
+			.expect(200, {
+				id: 1,
+				services: [],
+				admin: 0xffffffff,
+				password: 'admin',
+				username: 'admin',
+				requires_reset: true,
+				balances: {
+					'BTC': 0.01,
+					'BCH': 0.001,
+				},
+			});
 	});
 });
