@@ -1,4 +1,4 @@
-// Portalbot - loads the libraries and exports the global variable "Portalbot".
+// Doorbot - loads the libraries and exports the global variable "Doorbot".
 
 // include dependancies
 require('backbone-subviews'); // also makes "Backbone" globally available.

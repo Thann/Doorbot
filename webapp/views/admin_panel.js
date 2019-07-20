@@ -186,7 +186,7 @@ module.exports = Backbone.View.extend({
 	render: function() {
 		// console.log("RENDER MAIN:", App.User.get('admin'))
 		Object.assign(this, {
-			mailto: "mailto:?subject=Portalbot&body=Hey! you've been setup on the door. Visit " +
+			mailto: "mailto:?subject=Doorbot&body=Hey! you've been setup on the door. Visit " +
 				window.location.toString().replace(window.location.hash, '') +
 				' and sign-in with the username and password:%0D%0A%0D%0A',
 			mail2: "   (case-sensitive)%0D%0A%0D%0ADon't forget to update your password =]",

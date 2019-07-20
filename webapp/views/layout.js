@@ -84,7 +84,7 @@ module.exports = Backbone.View.extend({
 		App.User.init();
 	},
 	setTitle: function() {
-		document.title = 'Portalbot '+(
+		document.title = 'Doorbot '+(
 			App.AppConfig.OrgName? ' - '+App.AppConfig.OrgName : '');
 	},
 	render: function(tmpl) {
