@@ -21,6 +21,7 @@ const views = loadModule(require.context('./views', true, /\.js$/));
 module.exports = {
 	Views: views,
 	AppConfig: require('./config.json'),
+	Permissions: require('../lib/permissions'),
 
 	// Run this after extensions have been loaded.
 	init: function() {

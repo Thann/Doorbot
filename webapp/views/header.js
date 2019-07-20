@@ -12,7 +12,7 @@ module.exports = Backbone.View.extend({
 		</a>
 		<% if (user.isAuthed) { %>
 			<span class="pull-right">
-				<% if (user.get('admin')) { %>
+				<% if (user.has(App.Permissions.ADMIN)) { %>
 					<a href="#admin"><i class="fa fa-cogs" /></a>
 				<% } %>
 				<a href="#user/<%- user.get('username') %>">

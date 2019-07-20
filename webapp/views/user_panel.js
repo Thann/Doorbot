@@ -31,7 +31,7 @@ module.exports = Backbone.View.extend({
 											name="current_password" class="form-control"
 											autocomplete="current-password">
 									<% } %>
-									<% if (self.get('admin') && !me) { %>
+									<% if (self.has(App.Permissions.ADMIN) && !me) { %>
 										<button class="btn btn-light">
 											<i class="fa fa-random password"></i>
 										</button>

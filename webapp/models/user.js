@@ -7,6 +7,7 @@ const UserModel = Backbone.Model.extend({
 	init: function() {
 		this.on('sync', function(m) {
 			this.isAuthed = true;
+			this.has = new App.Permissions(this.attributes.admin).has;
 			this.trigger('relog', true);
 			if (this.redir) {
 				this.redir = false;

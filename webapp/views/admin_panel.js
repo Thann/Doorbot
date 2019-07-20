@@ -145,7 +145,7 @@ module.exports = Backbone.View.extend({
 		'click .settings .update': 'updateSettings',
 	},
 	initialize: function() {
-		if (!App.User.get('admin')) {
+		if (!App.User.has(App.Permissions.ADMIN)) {
 			return App.Router.navigate('', {trigger: true});
 		}
 
