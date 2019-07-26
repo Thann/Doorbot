@@ -1,10 +1,12 @@
 // REST API for users.
 'use strict';
 
+let plugins;
 const db = require('../lib/db');
 const crypto = require('crypto');
 const cookie = require('cookie');
 const errors = require('../lib/errors');
+const validate = require('../lib/validate');
 const Perms = require('../lib/permissions');
 const MemCache = require('../lib/memcache');
 
@@ -14,10 +16,13 @@ module.exports = function(app) {
 	app.   get('/users', index);
 	app.  post('/users', create);
 	app.   get('/users/:username', read);
-	app. patch('/users/:username', update);
+	app. patch('/users/:username', ...update);
 	app.delete('/users/:username', remove);
-	app.   get('/users/:username/logs', logs);
-	app.   get('/users/:username/invited', invited);
+	app.   get('/users/:username/logs', ...logs);
+	app.   get('/users/:username/invited', ...invited);
+	app.  post('/users/:username/transactions', ...payment);
+	app.   get('/users/:username/transactions', ...transactions);
+	plugins = this.plugins;
 };
 
 // Returns the user that owns the session cookie
@@ -287,7 +292,12 @@ async function read(request, response) {
 	});
 }
 
-async function update(request, response) {
+const update = [validate({
+	body: {
+		admin: parseInt,
+		keycode: parseInt,
+	},
+}), async function(request, response) {
 	const user = await checkCookie(request, response);
 	if (!user.has(Perms.SUPERUSER) && (
 		request.body.password && request.body.password.length < 8)) {
@@ -379,7 +389,7 @@ async function update(request, response) {
 		password: user.admin && !usr.pw_salt && usr.password_hash || undefined,
 		requires_reset: !usr.pw_salt,
 	});
-}
+}];
 
 async function remove(request, response) {
 	const user = await checkCookie(request, response);
@@ -395,7 +405,9 @@ async function remove(request, response) {
 	response.status(r.stmt.changes? 204 : 404).end();
 }
 
-async function logs(request, response) {
+const logs = [validate({
+	query: {last_id: parseInt},
+}), async function (request, response) {
 	const user = await checkCookie(request, response);
 	const sameUser = (user.username.toLowerCase() ===
 		request.params.username.toLowerCase());
@@ -438,9 +450,11 @@ async function logs(request, response) {
 			});
 	}
 	response.send(logList);
-}
+}];
 
-async function invited(request, response) {
+const invited = [validate({
+	query: {last_id: parseInt},
+}), async function(request, response) {
 	const user = await checkCookie(request, response);
 	const sameUser = (user.username.toLowerCase() ===
 		request.params.username.toLowerCase());
@@ -448,12 +462,7 @@ async function invited(request, response) {
 		return response.status(403).send({error: 'must be admin'});
 	}
 
-	let lastID;
-	try {
-		lastID = parseInt(request.query.last_id);
-	} catch(e) {
-		return response.status(400).send({last_id: 'must be an int'});
-	}
+	const lastID = request.query.last_id;
 
 	const logs = await db.all(`
 		SELECT service_logs.*, services.name AS door FROM service_logs
@@ -465,7 +474,83 @@ async function invited(request, response) {
 		request.params.username, lastID, 50);
 
 	response.send(logs);
-}
+}];
+
+const payment = [validate({
+	body: {
+		amount: parseFloat,
+	},
+}), async function(request, response) {
+	const user = await checkCookie(request, response);
+
+	let from = null;
+	let note = null;
+	const via = request.body.via;
+	if (plugins.indexOf(via) < 0) {
+		return response.status(400).send({
+			via: `payment method not supported: ${via}`,
+		});
+	}
+	const plugin  = plugins[plugins.indexOf(via)];
+	const userTo = request.body.user_to || user.id;
+	const amount = request.body.amount;
+	const currency = request.body.currency;
+
+	try {
+		plugin({
+			userTo,
+			amount,
+			currency,
+		});
+	} catch(e) {
+		return response.status(500).send({
+			plugin_error: 'not a valid amount',
+		});
+	}
+
+	let resp;
+	try {
+		resp = await db.run(`
+			INSERT INTO transactions (user_from, user_to, amount, currency, note)
+			VALUES (?,?,?,?)`,
+			from, userTo, amount, note);
+	} catch(e) {
+		return response.status(400)
+			.send({user_to: 'username doesnt exist'});
+	}
+
+	const tx = await db.get(
+		'SELECT * FROM transactions WHERE id = ?',
+		resp.stmt.lastID);
+
+	return response.send(tx);
+}];
+
+const transactions = [validate({
+	query: {last_id: parseInt},
+}), async function(request, response) {
+	const user = await checkCookie(request, response);
+	const sameUser = (user.username.toLowerCase() ===
+		request.params.username.toLowerCase());
+	if (!sameUser && !user.has(Perms.ADMIN)) {
+		return response.status(403).send({error: 'must be admin'});
+	}
+
+	const lastID = request.query.last_id;
+
+	const txs = await db.all(`
+		SELECT transactions.*, services.name AS name, services.type AS type
+		FROM transactions
+		INNER JOIN users ON transactions.user_to = users.id
+		LEFT JOIN permissions ON transactions.permission_id = permissions.id
+		LEFT JOIN services ON permissions.service_id = services.id
+		WHERE users.username = ? AND users.deleted_at IS NULL
+			AND transactions.id < COALESCE(?, 9e999)
+		ORDER BY transactions.id DESC LIMIT ?`,
+		request.params.username, lastID, 50);
+
+	response.send(txs);
+}];
 
 // Hashing helper for passwords
 function hash(input, salt) {

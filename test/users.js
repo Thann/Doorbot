@@ -349,6 +349,10 @@ describe('Users API', function() {
 			}]);
 		await agent.get('/users/Dummy/logs')
 			.expect(200, []);
+		await agent.get('/users/admin/logs?last_id=fail')
+			.expect(400, {
+				last_id: 'invalid value',
+			});
 	});
 
 	it('logout', async function() {
@@ -557,7 +561,7 @@ describe('Users Balances', function() {
 			.send({username: 'admin', password: 'admin'}).expect(200);
 	});
 
-	it('should work', async function() {
+	it('update', async function() {
 		await agent.get('/users/me')
 			.expect(200, {
 				id: 1,

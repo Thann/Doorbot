@@ -40,9 +40,10 @@ if (require.main === module) {
 
 if (options.dev) {
 	// Fork server
+	console.debug(' == Forking dev server');
 	require('nodemon')({
 		script: 'server.js',
-		watch: ['api','lib'],
+		watch: ['server.js', 'api','lib', 'plugins'],
 		args: ['--port', options.port.toString()],
 		ext: 'js',
 	}).on('crash', () => {
@@ -52,6 +53,7 @@ if (options.dev) {
 	// Init server
 	const app = express();
 	module.exports = app;
+	app.plugins = {};
 
 	// Load middleware
 	require('express-ws')(app);
@@ -59,12 +61,18 @@ if (options.dev) {
 
 	// Load all controllers from the api directory.
 	const apiRouter = express.Router();
-	const controllers = path.join(__dirname, 'api');
-	app.use('/api/v1', apiRouter);
-	fs.readdirSync(controllers).forEach(function(file) {
-		if (file.endsWith('.js'))
-			require(path.join(controllers, file))(apiRouter);
-	});
+	app.loadControllers = function(location, version='v1') {
+		console.debug(` == Loading controllers from: ${location}`);
+		app.use(`/api/${version}`, apiRouter);
+		const controllers = path.join(__dirname, location);
+		fs.readdirSync(controllers).forEach(function(file) {
+			if (file.endsWith('.js')) {
+				console.debug(`    --> ${file}`);
+				require(path.join(controllers, file)).call(app, apiRouter);
+			}
+		});
+	};
+	app.loadControllers('api');
 
 	// Serve static files
 	const exStatic = express.static(path.join(__dirname, 'dist'));
@@ -97,10 +105,24 @@ if (options.dev) {
 		});
 	}
 
+	// load all plugins
+	app.loadPlugins = function loadPlugins(location) {
+		const folder = path.join(__dirname, location);
+		console.debug(` == Loading plugins from: ${location}`);
+		fs.readdirSync(folder).forEach(function(file) {
+			if (file.endsWith('.js')) {
+				const name = file.substr(0, file.length-3); // Trim '.js'
+				console.debug(`    --> ${name}`);
+				app.plugins[name] = require(path.join(folder, file));
+			}
+		});
+	};
+	app.loadPlugins('plugins');
+
 	// Start server
 	if (require.main === module) {
 		app.listen(options.port, function() {
-			console.log('listening on', options.port);
+			console.log(' == Listening on', options.port);
 		});
 	}
 }
@@ -116,6 +138,7 @@ if (options.build || options.dev || options.demo) {
 			console.log(stats.toString({colors: true}));
 	};
 
+	console.debug(' == Forking webpack');
 	if (options.build)
 		wp(wpCfg()).run(cb);
 	else {

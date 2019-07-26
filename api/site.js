@@ -19,12 +19,14 @@ module.exports = function(app) {
 	app. patch('/site/settings', updateSettings);
 	app.   get('/site/private_settings', readPrivateSettings);
 	app. patch('/site/private_settings', updatePrivateSettings);
+	app.   get('/site/secrets', readSecrets);
+	app. patch('/site/secrets', updateSecrets);
 };
 
 // === Default Settings ===
 
 const publicSettings = {
-	app_name: null,
+	// app_name: null,
 	org_name: null,
 	require_invites: true,
 };
@@ -33,11 +35,14 @@ const privateSettings = {
 	auth_attempts_per_hour: 15,  // per username
 };
 
+const secrets = {};
+
 const pendingInvites = new MemCache();
 
 module.exports.pendingInvites = pendingInvites;
 module.exports.publicSettings = publicSettings;
 module.exports.privateSettings = privateSettings;
+module.exports.secrets = secrets;
 
 // === API ===
 
@@ -128,6 +133,25 @@ async function updatePrivateSettings(request, response) {
 	response.status(200).send(privateSettings);
 }
 
+async function readSecrets(request, response) {
+	const user = await users.checkCookie(request, response);
+	if (!user.has(Perms.ADMIN)) {
+		return response.status(403).send({error: 'must be admin'});
+	}
+
+	response.status(200).send(_censor(secrets));
+}
+
+async function updateSecrets(request, response) {
+	const user = await users.checkCookie(request, response);
+	if (!user.has(Perms.ADMIN)) {
+		return response.status(403).send({error: 'must be admin'});
+	}
+
+	_saveSettings(secrets, request.body);
+	response.status(200).send(_censor(secrets));
+}
+
 // === Helpers ===
 
 function _saveSettings(settings, updates) {
@@ -147,8 +171,17 @@ function _saveSettings(settings, updates) {
 		fs.writeFileSync(settingsFile, JSON.stringify({
 			public: publicSettings,
 			private: privateSettings,
+			secrets: secrets,
 		}));
 	}
+}
+
+function _censor(secrets) {
+	const sec = {};
+	for (const [k,v] of Object.entries(secrets)) {
+		sec[k] = v? '*****' : null;
+	}
+	return sec;
 }
 
 // === Init ===

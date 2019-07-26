@@ -37,7 +37,7 @@ UPDATE users SET admin = 0xffffffff WHERE id = 1 AND admin > 0;
 -- doors => services
 CREATE TABLE services (
     id INTEGER PRIMARY KEY,
-    type VARCHAR(255),
+    type VARCHAR(64),
     name VARCHAR(255) UNIQUE,
     token VARCHAR(255) UNIQUE,
     deleted_at DATETIME
@@ -100,13 +100,15 @@ DROP TABLE temp_permissions;
 
 CREATE TABLE transactions (
 	id INTEGER PRIMARY KEY,
+	permission_id INTEGER REFERENCES permissions(id),
 	user_to INTEGER REFERENCES users(id),
 	user_from INTEGER REFERENCES users(id),
 	note VARCHAR(255),
 	currency VARCHAR(16) NOT NULL,
 	amount FLOAT,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	creation DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX idx_tx_perms ON transactions (permission_id);
 
 -- DOWN
 ALTER TABLE users RENAME TO temp_users;

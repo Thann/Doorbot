@@ -29,6 +29,7 @@ module.exports = {
 			this.Layout = new this.Views.Layout();
 		});
 	},
+	loadModule,
 };
 
 // Load all files from a "context" into a single object.

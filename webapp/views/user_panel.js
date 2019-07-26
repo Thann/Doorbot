@@ -96,6 +96,33 @@ module.exports = Backbone.View.extend({
 			</div>
 		<% } %>
 
+		<div class="transactions panel panel-default">
+			<div class="panel-heading" data-toggle="collapse" data-target=".transactions .panel-collapse">
+				<div class="panel-title">Transactions</div>
+			</div>
+			<div class="panel-collapse collapse"
+				class="<%- transactions.length > 50? '': 'show' %>">
+				<div class="panel-body">
+					<table>
+						<% for (const tx of transactions) { %>
+							<tr>
+								<td><%- lux(tx.get('creation'), 'DATE_FULL') %></td>
+								<td><%- lux(tx.get('creation'), 'TIME_WITH_SHORT_OFFSET') %></td>
+								<td><%- tx.attributes.amount %></td>
+								<td><%- tx.attributes.currency %></td>
+								<td><%- log.attributes.note %></td>
+							</tr>
+						<% } %>
+					</table>
+				</div>
+				<div class="panel-footer">
+					<input type="submit" value="More" class="more btn btn-light"
+						disabled="<%- transactions.hasMore %>">
+					<div class="error"><%- transactions.error %></div>
+				</div>
+			</div>
+		</div>
+
 		<div class="logs panel panel-default">
 			<div class="panel-heading fetch" data-toggle="collapse" data-target=".logs .panel-collapse">
 				<div class="panel-title">Logs</div>
@@ -117,7 +144,7 @@ module.exports = Backbone.View.extend({
 				<div class="panel-footer">
 					<input type="submit" value="More" class="more btn btn-light"
 						disabled="<%- logs.hasMore %>">
-					<div class="error"><%- logsError %></div>
+					<div class="error"><%- logs.error %></div>
 				</div>
 			</div>
 		</div>
@@ -129,6 +156,8 @@ module.exports = Backbone.View.extend({
 		'click .delete': 'delUser',
 		'click .permit': 'permit',
 		'click .deny': 'deny',
+		'click .transactions .toggle': 'toggleTxs',
+		'click .transactions .more': 'moreTxs',
 		'click .logs .toggle': 'toggleLogs',
 		'click .logs .more': 'moreLogs',
 	},
@@ -149,6 +178,16 @@ module.exports = Backbone.View.extend({
 		}))();
 		this.doors.fetch();
 
+		this.transactions = new (Backbone.Collection.extend({
+			hasMore: true,
+			url: function() {
+				const lastID = this.models.length &&
+					this.models[this.models.length-1].id || '';
+				return '/api/v1/users/'+username+'/transactions?last_id='+lastID;
+			},
+		}))();
+		this.moreTxs();
+
 		this.logs = new (Backbone.Collection.extend({
 			hasMore: true,
 			url: function() {
@@ -168,7 +207,6 @@ module.exports = Backbone.View.extend({
 		this.user.on('sync', _.bind(this.dingleDoors, this));
 		this.doors.on('sync', _.bind(this.dingleDoors, this));
 	},
-	logsError: null,
 	render: function() {
 		if (App.Router.args[0] !== this.user.get('username'))
 			return this.initialize();
@@ -191,15 +229,26 @@ module.exports = Backbone.View.extend({
 			this.logs.hasMore = true;
 		}
 	},
+	toggleTxs: function() {
+		this.txs.open = !this.txs.open;
+	},
+	moreTxs: function() {
+		this.transactions.fetch({ add: true, remove: false,
+			success: (coll, newTxs) => {
+				if (newTxs && newTxs.length < 50)
+					this.transactions.hasMore = false;
+			},
+		});
+	},
 	toggleLogs: function() {
 		this.logs.open = !this.logs.open;
 	},
 	moreLogs: function() {
 		this.logs.fetch({ add: true, remove: false,
-			success: _.bind(function(coll, newLogs) {
+			success: (coll, newLogs) => {
 				if (newLogs && newLogs.length < 50)
 					this.logs.hasMore = false;
-			}, this),
+			},
 		});
 	},
 	logout: function() {

@@ -21,7 +21,7 @@ module.exports = function(env) {
 		plugins: [
 			new HtmlWebpackPlugin({
 				inject: 'head',
-				template: 'webapp/index.html',
+				template: './webapp/index.html',
 			}),
 			new webpack.ProvidePlugin({
 				// These become available to all files.

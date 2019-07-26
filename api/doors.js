@@ -22,7 +22,6 @@ module.exports = function(app) {
 };
 
 async function index(request, response) {
-	console.log('indexing users...');
 	const user = await users.checkCookie(request, response);
 	let doors;
 	// TODO: formalize permissions
