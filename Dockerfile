@@ -8,40 +8,41 @@ HEALTHCHECK --start-period=5s \
         CMD curl --fail localhost:3000/api/v1/health || exit 1
 
 # Create app directory
-RUN mkdir -p /usr/src/app/dist
-WORKDIR /usr/src/app
+RUN mkdir -p /app/dist
+WORKDIR /app
 
 # Install updates
-RUN apk update  && \
-    apk upgrade && \
-    apk add curl
+RUN apk upgrade --no-cache && \
+    apk add --no-cache curl
 
 COPY package.json \
      package-lock.json \
-     /usr/src/app/
+     /app/
 
 # Install build dependencies
 FROM base AS build
-RUN apk add git python make g++
+RUN apk add --no-cache git python make g++
 
 # Install app dependencies
 RUN npm install
 
 # Make app
 FROM base
-COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
+COPY --from=build /app/node_modules /app/node_modules
 
 # Bundle app source
-COPY dist/favicon* /usr/src/app/dist/
-COPY migrations /usr/src/app/migrations
-COPY lib /usr/src/app/lib
-COPY api /usr/src/app/api
-COPY webapp /usr/src/app/webapp
-COPY test /usr/src/app/test
+COPY dist/favicon* /app/dist/
+COPY migrations /app/migrations
+COPY plugins /app/plugins
+COPY lib /app/lib
+COPY api /app/api
+COPY webapp /app/webapp
+COPY test /app/test
 COPY server.js \
+     door.js \
      webpack.config.js \
      .eslintrc.json \
-     /usr/src/app/
+     /app/
 
 # Build webapp
 RUN node_modules/.bin/webpack

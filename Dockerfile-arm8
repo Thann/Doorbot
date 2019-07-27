@@ -11,28 +11,29 @@ RUN apt update && \
     apt upgrade -y
 
 # Create app directory
-RUN mkdir -p /usr/src/app/dist
-WORKDIR /usr/src/app
+RUN mkdir -p /app/dist
+WORKDIR /app
 
 # Install app dependencies
 COPY package.json \
      package-lock.json \
-     /usr/src/app/
+     /app/
 
 RUN npm install
 
 # Bundle app source
-COPY dist/favicon* /usr/src/app/dist/
-COPY migrations /usr/src/app/migrations
-COPY lib /usr/src/app/lib
-COPY api /usr/src/app/api
-COPY webapp /usr/src/app/webapp
-COPY test /usr/src/app/test
+COPY dist/favicon* /app/dist/
+COPY migrations /app/migrations
+COPY plugins /app/plugins
+COPY lib /app/lib
+COPY api /app/api
+COPY webapp /app/webapp
+COPY test /app/test
 COPY server.js \
      door.js \
      webpack.config.js \
      .eslintrc.json \
-     /usr/src/app/
+     /app/
 
 # Build
 RUN node_modules/.bin/webpack

@@ -9,12 +9,12 @@ HEALTHCHECK --start-period=5s \
 RUN [ "cross-build-start" ]
 
 # Create app directory
-RUN mkdir -p /usr/src/app/dist
-WORKDIR /usr/src/app
+RUN mkdir -p /app/dist
+WORKDIR /app
 
 COPY package.json \
      package-lock.json \
-     /usr/src/app/
+     /app/
 
 # Install updates
 RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - && \
@@ -31,20 +31,21 @@ RUN npm install
 
 # Make app
 FROM base
-COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
+COPY --from=build /app/node_modules /app/node_modules
 
 # Bundle app source
-COPY dist/favicon* /usr/src/app/dist/
-COPY migrations /usr/src/app/migrations
-COPY lib /usr/src/app/lib
-COPY api /usr/src/app/api
-COPY webapp /usr/src/app/webapp
-COPY test /usr/src/app/test
+COPY dist/favicon* /app/dist/
+COPY migrations /app/migrations
+COPY plugins /app/plugins
+COPY lib /app/lib
+COPY api /app/api
+COPY webapp /app/webapp
+COPY test /app/test
 COPY server.js \
      door.js \
      webpack.config.js \
      .eslintrc.json \
-     /usr/src/app/
+     /app/
 
 # Build webapp
 RUN node_modules/.bin/webpack

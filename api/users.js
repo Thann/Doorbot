@@ -512,7 +512,7 @@ const payment = [validate({
 	try {
 		resp = await db.run(`
 			INSERT INTO transactions (user_from, user_to, amount, currency, note)
-			VALUES (?,?,?,?)`,
+			VALUES (?,?,?,?,?)`,
 			from, userTo, amount, note);
 	} catch(e) {
 		return response.status(400)
