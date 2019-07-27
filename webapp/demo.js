@@ -1,13 +1,15 @@
 // Poison Backbone models & collections to sync mock data
 module.exports = require('./main');
+const Perms = require('../lib/permissions');
 
 const Users = [
 	{
-		admin: 1,
+		id: 1,
+		admin: Perms.ADMIN,
 		username: 'DemoAdmin',
 	}, {
 		id: 2,
-		admin: 0,
+		admin: Perms.NOOB,
 		username: 'lacky',
 		services: [
 			{id: 1, type: 'door', name: 'Front Door'},
@@ -15,7 +17,7 @@ const Users = [
 		],
 	}, {
 		id: 3,
-		admin: 0,
+		admin: Perms.NOOB,
 		services: [
 			{id: 1, type: 'door', name: 'Front Door'},
 		],
@@ -34,11 +36,7 @@ const MockData = {
 	'site/private_settings': {
 		auth_attempts_per_hour: 15,
 	},
-	'users/me': {
-		id: 1,
-		admin: 1,
-		username: 'DemoAdmin',
-	},
+	'users/me': Users[0],
 	'doors': [
 		{
 			id: 1,

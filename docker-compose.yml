@@ -17,6 +17,7 @@ services:
     # Handy for dev
     #  - ./api:/app/api
     #  - ./webapp:/app/webapp
+    #  - ./plugins:/app/plugins
     #  - ./test:/app/test
     #  - ./lib:/app/lib
     #command: server --dev

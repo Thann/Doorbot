@@ -14,7 +14,7 @@ if (require.main === module) {
 	const getopts = require('node-getopt').create([
 		['p', 'port=', 'Set listen port'],
 		['',  'build', 'Compile webapp'],
-		['',  'dev',   'Compile webapp & restart server on file modification (bigger bundles)'],
+		['',  'dev',   'Compile webapp & restart server on file modification'],
 		['',  'demo',  'Run in demo mode with mocked api responses'],
 		['h', 'help'],
 	]).bindHelp(
@@ -40,7 +40,6 @@ if (require.main === module) {
 
 if (options.dev) {
 	// Fork server
-	console.debug(' == Forking dev server');
 	require('nodemon')({
 		script: 'server.js',
 		watch: ['server.js', 'api','lib', 'plugins'],
@@ -51,6 +50,7 @@ if (options.dev) {
 	}).on('quit', process.exit);
 } else {
 	// Init server
+	console.log(' ==== Starting server ====');
 	const app = express();
 	module.exports = app;
 	app.plugins = {};
@@ -138,7 +138,7 @@ if (options.build || options.dev || options.demo) {
 			console.log(stats.toString({colors: true}));
 	};
 
-	console.debug(' == Forking webpack');
+	console.debug(' == Starting webpack');
 	if (options.build)
 		wp(wpCfg()).run(cb);
 	else {

@@ -8,9 +8,9 @@ require('bootstrap'); // css gets included by layout.css
 // compile font-awesome
 const { library, dom } = require('@fortawesome/fontawesome-svg-core');
 const { fas } = require('@fortawesome/free-solid-svg-icons');
-const { far } = require('@fortawesome/free-regular-svg-icons');
-const { fab } = require('@fortawesome/free-brands-svg-icons');
-library.add(fas, far, fab);
+// const { far } = require('@fortawesome/free-regular-svg-icons');
+// const { fab } = require('@fortawesome/free-brands-svg-icons');
+library.add(fas); //, far, fab);
 dom.watch();
 
 // Load all views in an extensible way.
