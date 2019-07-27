@@ -1,7 +1,8 @@
 'use strict';
 
-const Perms = require('../lib/permissions');
 const assert = require('assert');
+const Perms = require('../lib/permissions');
+const { ProgrammerError } = require('../lib/errors');
 
 describe('Permissions module', function() {
 	it('has', async function() {
@@ -24,5 +25,12 @@ describe('Permissions module', function() {
 	it('superuser', async function() {
 		const B = new Perms(Perms.SUPERUSER);
 		assert(B.has(0b1));
+	});
+
+	it('explodes', async function() {
+		Perms.SUPERUSER;
+		assert.throws(() => Perms.NON_EXISTANT, ProgrammerError);
+		assert.throws(() => Perms.NON_EXISTANT = 1, ProgrammerError);
+		assert.throws(() => Perms.ADMIN = 1, ProgrammerError);
 	});
 });

@@ -217,7 +217,7 @@ async function _openDoor(userId, doorId, method, response) {
 	} catch(e) {
 		console.warn('ERROR: could not open door:', e);
 		response.status(503).send({error: 'door could not be opened'});
-		throw errors.HandledError();
+		throw new errors.HandledError();
 		//TODO: error.UserError(...)
 	}
 
