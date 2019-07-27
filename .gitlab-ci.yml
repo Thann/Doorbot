@@ -21,7 +21,7 @@ build_x86: &build_x86
     - docker run --rm "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/mocha
     - docker push "$CI_REGISTRY_IMAGE$BRANCH:latest"
     - docker run --name=demo "$CI_REGISTRY_IMAGE$BRANCH:latest" ./node_modules/.bin/webpack --env.demo
-    - docker cp demo:/usr/src/app/dist public
+    - docker cp demo:/app/dist public
     # Publish tag
     - >
       if [ ! -z "$CI_COMMIT_TAG" ]; then
@@ -31,8 +31,8 @@ build_x86: &build_x86
     - >
       if [ -z "$BRANCH" ] && [ ! -z "$DOCKERHUB_PASSWORD" ]; then
         docker login -u "$DOCKERHUB_LOGIN" -p "$DOCKERHUB_PASSWORD";
-        docker tag "$CI_REGISTRY_IMAGE$BRANCH:latest" thann/portalbot;
-        docker push thann/portalbot; fi
+        docker tag "$CI_REGISTRY_IMAGE$BRANCH:latest" thann/doorbot;
+        docker push thann/doorbot; fi
   artifacts:
     paths:
       - public
