@@ -28,6 +28,7 @@ describe('Permissions module', function() {
 	});
 
 	it('explodes', async function() {
+		/* eslint-disable no-return-assign */
 		Perms.SUPERUSER;
 		assert.throws(() => Perms.NON_EXISTANT, ProgrammerError);
 		assert.throws(() => Perms.NON_EXISTANT = 1, ProgrammerError);

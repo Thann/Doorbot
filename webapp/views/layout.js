@@ -29,7 +29,7 @@ module.exports = Backbone.View.extend({
 		header: function() { return new App.Views.Header(); },
 		sidebar: function() { return new App.Views.Sidebar(); },
 	},
-	initialize: function() {
+	initialize() {
 		const layout = this;
 		this.loading = true;
 		Backbone.Subviews.add( this );
@@ -79,15 +79,21 @@ module.exports = Backbone.View.extend({
 		App.Settings.fetch();
 		// Fetch on user sync?
 
+		// Enable bootstrap tooltips!
+		this.$el.tooltip({
+			container: '.main-panel',
+			selector: '[data-toggle="tooltip"]',
+		});
+
 		this.setTitle();
 		Backbone.history.start();
 		App.User.init();
 	},
-	setTitle: function() {
+	setTitle() {
 		document.title = 'Doorbot '+(
 			App.AppConfig.OrgName? ' - '+App.AppConfig.OrgName : '');
 	},
-	render: function(tmpl) {
+	render(tmpl) {
 		this.$el.html(this.template);
 		if (tmpl)
 			this._current_template = `<div data-subview="${tmpl}"></div>`;

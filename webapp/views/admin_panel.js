@@ -29,6 +29,14 @@ module.exports = Backbone.View.extend({
 								</tr>
 							<% } %>
 						</form>
+						<form class="secrets">
+							<% for (const [key, val] of Object.entries(secrets.attributes)) { %>
+								<tr>
+									<td><%- key %></td>
+									<td><input value="<%- val %>"></td>
+								</tr>
+							<% } %>
+						</form>
 					</table>
 				</div>
 				<div class="panel-footer">
@@ -61,6 +69,11 @@ module.exports = Backbone.View.extend({
 							<% if (door.get('available')) { %>
 								<span class="fa fa-check-circle"></span>
 							<% } else { %>
+								<a href="https://gitlab.com/thann/doorbot"
+									target="_blank" style="text-decoration: none"
+									data-toggle="tooltip" data-placement="right" title="not connected">
+									<span class="fa fa-question-circle text-warning"></span>
+								</a>
 								<span><%- door.get('token') %></span>
 							<% } %>
 						</div>
@@ -162,6 +175,10 @@ module.exports = Backbone.View.extend({
 			url: '/api/v1/site/private_settings',
 		}))();
 
+		this.secrets = new (Backbone.Model.extend({
+			url: '/api/v1/site/secrets',
+		}))();
+
 		this.invites = new (Backbone.Collection.extend({
 			url: '/api/v1/site/invites',
 		}))();
@@ -176,6 +193,7 @@ module.exports = Backbone.View.extend({
 		this.users.fetch();
 		this.doors.fetch();
 		this.invites.fetch();
+		this.secrets.fetch();
 		this.privateSettings.fetch();
 	},
 	settingsError: null,

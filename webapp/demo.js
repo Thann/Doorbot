@@ -1,4 +1,5 @@
 // Poison Backbone models & collections to sync mock data
+
 module.exports = require('./main');
 const Perms = require('../lib/permissions');
 
@@ -35,6 +36,9 @@ const MockData = {
 	},
 	'site/private_settings': {
 		auth_attempts_per_hour: 15,
+	},
+	'site/secrets': {
+		coinbase_key: '*****',
 	},
 	'users/me': Users[0],
 	'doors': [
