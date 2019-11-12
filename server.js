@@ -40,14 +40,8 @@ if (require.main === module) {
 
 if (options.dev) {
 	// Fork server
-	require('nodemon')({
-		script: 'server.js',
-		watch: ['server.js', 'api','lib', 'plugins'],
-		args: ['--port', options.port.toString()],
-		ext: 'js',
-	}).on('crash', () => {
-		process.exit(1);
-	}).on('quit', process.exit);
+	if (require('nodemon')(null, {ignored: /.*\/(dist|node_modules)\/.*/}))
+		return;
 } else {
 	// Init server
 	console.log(' ==== Starting server ====');
