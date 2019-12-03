@@ -46,7 +46,7 @@
     "jquery": "^3.4.1",
     "luxon": "^1.17.2",
     "node-getopt": "^0.3.2",
-    "node-sass": "^4.12.0",
+    "node-sass": "^4.13.0",
     "nodemon": "github:thann/nodemon",
     "popper.js": "^1.15.0",
     "querystring": "^0.2.0",
